@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { Leaf } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { signIn } from '@/lib/supabase/actions'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
 import Link from 'next/link'
@@ -31,76 +30,139 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f2d0a] via-[#1a4a12] to-[#2d6b28] flex flex-col items-center justify-center p-4">
-      {/* Language switcher */}
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher light />
+    <div className="min-h-screen flex">
+
+      {/* ── Sol panel: Fotoğraf ────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
+        <Image
+          src="/images/olive-grove.jpg"
+          alt="Olive Garden 3 - Didim Akbük"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-black/25 to-transparent" />
+
+        {/* İçerik */}
+        <div className="relative z-10 flex flex-col justify-between p-12 h-full w-full">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/images/olive-branch.png"
+              alt="Olive Garden 3"
+              width={44}
+              height={44}
+              className="drop-shadow-lg"
+            />
+            <span className="text-white text-xl font-bold tracking-tight drop-shadow">
+              Olive Garden 3
+            </span>
+          </Link>
+
+          {/* Alt: tagline */}
+          <div className="text-white space-y-3">
+            <div className="w-12 h-0.5 bg-white/50 rounded-full" />
+            <h2 className="text-3xl font-bold leading-snug drop-shadow-lg">
+              Saydam & Güvenilir<br />Site Yönetimi
+            </h2>
+            <p className="text-white/70 text-sm">Didim Akbük · Türkiye</p>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-sm space-y-6">
-        {/* Logo */}
-        <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-white font-bold text-xl">
-            <div className="h-9 w-9 rounded-full bg-green-700 flex items-center justify-center">
-              <Leaf className="h-4.5 w-4.5 text-green-100" />
-            </div>
-            Olive Garden 3
-          </Link>
-          <p className="text-green-200/60 text-sm mt-1">Didim Akbük</p>
+      {/* ── Sağ panel: Form ────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#f8faf5] px-6 py-10 relative">
+        {/* Dil seçici */}
+        <div className="absolute top-5 right-5">
+          <LanguageSwitcher />
         </div>
 
-        <Card className="border-green-900/30 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-gray-900">{t('title')}</CardTitle>
-            <CardDescription>{t('subtitle')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="email">{t('email')}</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="ornek@email.com"
-                  required
-                  autoComplete="email"
-                  className="border-gray-200 focus:border-green-500"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="password">{t('password')}</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  className="border-gray-200 focus:border-green-500"
-                />
-              </div>
+        <div className="w-full max-w-[360px] space-y-8">
 
-              {error && (
-                <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{error}</p>
-              )}
+          {/* Mobile logo (sadece küçük ekranlarda) */}
+          <div className="lg:hidden flex flex-col items-center gap-2">
+            <Image
+              src="/images/olive-branch.png"
+              alt="Olive Garden 3"
+              width={64}
+              height={64}
+            />
+            <h1 className="text-xl font-bold text-green-800">Olive Garden 3</h1>
+            <p className="text-sm text-gray-400">Didim Akbük</p>
+          </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-green-700 hover:bg-green-800"
-                disabled={loading}
-              >
-                {loading ? t('loading') : t('submit')}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          {/* Başlık */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">{t('title')}</h2>
+            <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
+          </div>
 
-        <p className="text-center text-sm text-green-200/60">
-          <Link href="/" className="hover:text-white transition-colors">
-            {t('back')}
-          </Link>
-        </p>
+          {/* Form */}
+          <form action={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-gray-700 text-sm font-medium">
+                {t('email')}
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="ornek@email.com"
+                required
+                autoComplete="email"
+                className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
+                {t('password')}
+              </Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+                className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400"
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">
+                {error}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full h-11 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl shadow-sm transition-colors"
+              disabled={loading}
+            >
+              {loading ? t('loading') : t('submit')}
+            </Button>
+          </form>
+
+          {/* Alt bağlantı */}
+          <p className="text-center text-sm text-gray-400">
+            <Link href="/" className="hover:text-green-700 transition-colors">
+              {t('back')}
+            </Link>
+          </p>
+        </div>
+
+        {/* Alt köşe: zeytin dalı dekorasyon */}
+        <div className="absolute bottom-0 left-0 opacity-10 pointer-events-none">
+          <Image
+            src="/images/olive-branch.png"
+            alt=""
+            width={180}
+            height={180}
+            className="rotate-[210deg]"
+          />
+        </div>
       </div>
     </div>
   )
