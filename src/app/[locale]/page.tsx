@@ -1,11 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { formatDate } from '@/lib/utils'
 import { Megaphone, LogIn, ShieldCheck, Bell, Users, ChevronDown } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
+import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -197,19 +195,7 @@ export default async function HomePage({
           ) : (
             <div className="space-y-4">
               {announcements.map((a) => (
-                <Card key={a.id} className="border-green-100 bg-white hover:shadow-md transition-shadow rounded-2xl">
-                  <CardContent className="py-5 px-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-1">{a.title}</h3>
-                        <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{a.content}</p>
-                      </div>
-                      <Badge className="shrink-0 text-xs bg-green-100 text-green-700 border-0 hover:bg-green-100">
-                        {formatDate(a.created_at)}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ExpandableAnnouncement key={a.id} a={a} />
               ))}
             </div>
           )}
