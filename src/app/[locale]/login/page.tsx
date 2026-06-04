@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
         <Image
           src="/images/olive-grove.jpg"
-          alt="Olive Garden 3 - Didim Akbük"
+          alt="Olive Garden 2 - Didim Akbük"
           fill
           className="object-cover"
           priority
@@ -50,13 +50,13 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/images/olive-branch.png"
-              alt="Olive Garden 3"
+              alt="Olive Garden 2"
               width={44}
               height={44}
               className="drop-shadow-lg"
             />
             <span className="text-white text-xl font-bold tracking-tight drop-shadow">
-              Olive Garden 3
+              Olive Garden 2
             </span>
           </Link>
 
@@ -84,11 +84,11 @@ export default function LoginPage() {
           <div className="lg:hidden flex flex-col items-center gap-2">
             <Image
               src="/images/olive-branch.png"
-              alt="Olive Garden 3"
+              alt="Olive Garden 2"
               width={64}
               height={64}
             />
-            <h1 className="text-xl font-bold text-green-800">Olive Garden 3</h1>
+            <h1 className="text-xl font-bold text-green-800">Olive Garden 2</h1>
             <p className="text-sm text-gray-400">Didim Akbük</p>
           </div>
 

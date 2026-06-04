@@ -6,8 +6,8 @@ import './globals.css'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Olive Garden 3 Site Yönetimi',
-  description: 'Olive Garden 3 Sitesi Yönetim Paneli',
+  title: 'Olive Garden 2 Site Yönetimi',
+  description: 'Olive Garden 2 Sitesi Yönetim Paneli',
 }
 
 export default function RootLayout({

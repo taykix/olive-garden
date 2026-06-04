@@ -37,13 +37,13 @@ export default async function HomePage({
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/images/olive-branch.png"
-              alt="Olive Garden 3"
+              alt="Olive Garden 2"
               width={32}
               height={32}
               className="object-contain"
             />
             <span className="font-bold text-green-900 text-base tracking-tight hidden sm:inline">
-              Olive Garden 3
+              Olive Garden 2
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -63,7 +63,7 @@ export default async function HomePage({
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <Image
           src="/images/olive-grove.jpg"
-          alt="Olive Garden 3 - Didim Akbük"
+          alt="Olive Garden 2 - Didim Akbük"
           fill
           className="object-cover"
           priority
@@ -122,14 +122,14 @@ export default async function HomePage({
             <div className="relative h-[480px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/hero.jpg"
-                alt="Olive Garden 3 bahçesi"
+                alt="Olive Garden 2 bahçesi"
                 fill
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
               <div className="absolute bottom-4 left-4">
                 <span className="text-white text-sm bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full">
-                  Olive Garden 3 · Didim Akbük
+                  Olive Garden 2 · Didim Akbük
                 </span>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default async function HomePage({
           <div className="space-y-6">
             <div>
               <p className="text-green-600 font-medium text-sm uppercase tracking-widest mb-2">
-                Olive Garden 3
+                Olive Garden 2
               </p>
               <h2 className="text-4xl font-bold text-gray-900 leading-tight">
                 {t('features_title')}

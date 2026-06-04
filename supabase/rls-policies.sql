@@ -1,4 +1,4 @@
--- Olive Garden 3 - Row Level Security Policies
+-- Olive Garden 2 - Row Level Security Policies
 -- Run this AFTER schema.sql in Supabase SQL Editor
 
 -- Helper function: check if current user is admin

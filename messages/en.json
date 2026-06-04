@@ -10,13 +10,13 @@
     "de": "Deutsch"
   },
   "home": {
-    "badge": "Olive Garden 3 Property Management",
+    "badge": "Olive Garden 2 Property Management",
     "hero_title": "Transparent & Reliable",
     "hero_title_accent": "Property Management",
-    "hero_subtitle": "A modern management platform for the residents of Olive Garden 3 in Didim Akbük — clear access to financial information and community announcements.",
+    "hero_subtitle": "A modern management platform for the residents of Olive Garden 2 in Didim Akbük — clear access to financial information and community announcements.",
     "hero_cta": "Sign In to Your Account",
     "hero_scroll": "View Announcements",
-    "features_title": "Why Olive Garden 3?",
+    "features_title": "Why Olive Garden 2?",
     "features_subtitle": "We embrace a modern management approach to provide the best service to our residents.",
     "feat1_title": "Transparent Management",
     "feat1_desc": "All income and expense records are easily accessible to our residents.",
@@ -31,7 +31,7 @@
     "cta_title": "Are you a resident or manager?",
     "cta_subtitle": "Sign in with your account to access your personal dashboard.",
     "cta_btn": "Sign In",
-    "footer": "Olive Garden 3 Property Management · Didim Akbük"
+    "footer": "Olive Garden 2 Property Management · Didim Akbük"
   },
   "login": {
     "title": "Login",
@@ -46,7 +46,7 @@
   },
   "resident": {
     "greeting": "Hello",
-    "subtitle": "Olive Garden 3 Resident Portal",
+    "subtitle": "Olive Garden 2 Resident Portal",
     "financial_title": "Financial Summary",
     "income": "Total Income",
     "expenses": "Total Expenses",

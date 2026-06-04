@@ -1,4 +1,4 @@
--- Olive Garden 3 Site Yönetimi - Database Schema
+-- Olive Garden 2 Site Yönetimi - Database Schema
 -- Run this in Supabase SQL Editor
 
 -- ─── profiles ────────────────────────────────────────────────────────────────
