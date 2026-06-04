@@ -1,4 +1,5 @@
-import { BarChart3, Printer } from 'lucide-react'
+import { BarChart3, Printer, PieChart, TrendingUp } from 'lucide-react'
+import { ExpensePieChart, MonthlyBarChart } from './charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -62,6 +63,26 @@ export default async function RaporlarPage() {
   const paymentList: Payment[] = paymentsRes.data ?? []
 
   const monthlyReport = buildMonthlyReport(incomeList, expenseList)
+
+  // Expense breakdown by category for pie chart
+  const expenseCategoryMap = expenseList.reduce<Record<string, number>>((acc, e) => {
+    const cat = e.category ?? 'Diğer'
+    acc[cat] = (acc[cat] ?? 0) + Number(e.amount)
+    return acc
+  }, {})
+  const pieData = Object.entries(expenseCategoryMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+
+  // Last 12 months bar chart data
+  const barData = [...monthlyReport]
+    .slice(0, 12)
+    .reverse()
+    .map((r) => ({
+      month: `${MONTHS[r.month]?.slice(0, 3)} ${r.year}`,
+      Gelir: r.income,
+      Gider: r.expense,
+    }))
   const unpaidPayments = paymentList.filter((p) => p.payment_status !== 'paid')
 
   const totalIncome = incomeList.reduce((s, r) => s + Number(r.amount), 0)
@@ -134,6 +155,35 @@ export default async function RaporlarPage() {
             <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
               {formatCurrency(totalIncome - totalExpenses)}
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Charts ── */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-green-600" /> Gider Kategorileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pieData.length > 0
+              ? <ExpensePieChart data={pieData} />
+              : <p className="text-center text-gray-400 py-8 text-sm">Gider verisi yok</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-500" /> Aylık Gelir / Gider Trendi
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {barData.length > 0
+              ? <MonthlyBarChart data={barData} />
+              : <p className="text-center text-gray-400 py-8 text-sm">Veri yok</p>}
           </CardContent>
         </Card>
       </div>

@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "login": "Giriş Yap",
+    "logout": "Çıkış",
+    "home": "Ana Sayfa"
+  },
+  "lang": {
+    "tr": "Türkçe",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "home": {
+    "badge": "Olive Garden 3 Site Yönetimi",
+    "hero_title": "Saydam & Güvenilir",
+    "hero_title_accent": "Site Yönetimi",
+    "hero_subtitle": "Didim Akbük'teki Olive Garden 3 sitesi sakinlerine yönelik finansal bilgilerin şeffaf biçimde paylaşıldığı modern yönetim platformu.",
+    "hero_cta": "Hesabınızla Giriş Yapın",
+    "hero_scroll": "Duyuruları Görüntüle",
+    "features_title": "Neden Olive Garden 3?",
+    "features_subtitle": "Sakinlerimize en iyi hizmeti sunmak için modern bir yönetim anlayışı benimsiyoruz.",
+    "feat1_title": "Şeffaf Yönetim",
+    "feat1_desc": "Tüm gelir ve gider kayıtlarına sakinlerimiz kolayca erişebilir.",
+    "feat2_title": "Anlık Duyurular",
+    "feat2_desc": "Siteyle ilgili önemli gelişmelerden anında haberdar olun.",
+    "feat3_title": "Sakin Portalı",
+    "feat3_desc": "Kişisel hesabınızla finansal özeti ve duyuruları görüntüleyin.",
+    "photo_placeholder": "Site Fotoğrafları",
+    "photo_coming": "Yakında ekleniyor",
+    "announcements_title": "Son Duyurular",
+    "announcements_empty": "Henüz yayınlanmış duyuru bulunmamaktadır.",
+    "cta_title": "Sakin veya yönetici misiniz?",
+    "cta_subtitle": "Hesabınızla giriş yaparak kişisel panelinize erişin.",
+    "cta_btn": "Giriş Yap",
+    "footer": "Olive Garden 3 Site Yönetimi · Didim Akbük"
+  },
+  "login": {
+    "title": "Giriş Yap",
+    "subtitle": "E-posta ve şifrenizle devam edin.",
+    "email": "E-posta",
+    "password": "Şifre",
+    "submit": "Giriş Yap",
+    "loading": "Giriş yapılıyor...",
+    "back": "← Ana Sayfaya Dön",
+    "error_invalid": "Geçersiz e-posta veya şifre.",
+    "error_generic": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "resident": {
+    "greeting": "Merhaba",
+    "subtitle": "Olive Garden 3 Sakin Paneli",
+    "financial_title": "Finansal Özet",
+    "income": "Toplam Gelir",
+    "expenses": "Toplam Gider",
+    "balance": "Mevcut Bakiye",
+    "announcements_title": "Duyurular",
+    "announcements_empty": "Henüz yayınlanmış duyuru bulunmamaktadır."
+  }
+}

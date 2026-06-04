@@ -2,13 +2,15 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, TreePine, LogOut } from 'lucide-react'
+import { Menu, X, Leaf, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase/actions'
+import { LanguageSwitcher } from './language-switcher'
 
 interface NavbarProps {
   role?: 'admin' | 'resident' | null
   userName?: string | null
+  showLanguageSwitcher?: boolean
 }
 
 const adminLinks = [
@@ -26,7 +28,7 @@ const residentLinks = [
   { href: '/resident', label: 'Ana Sayfa' },
 ]
 
-export function Navbar({ role, userName }: NavbarProps) {
+export function Navbar({ role, userName, showLanguageSwitcher = false }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const links = role === 'admin' ? adminLinks : role === 'resident' ? residentLinks : []
 
@@ -34,8 +36,10 @@ export function Navbar({ role, userName }: NavbarProps) {
     <header className="bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href={role === 'admin' ? '/admin' : role === 'resident' ? '/resident' : '/'} className="flex items-center gap-2 font-semibold text-green-700">
-            <TreePine className="h-5 w-5" />
+          <Link href={role === 'admin' ? '/admin' : role === 'resident' ? '/resident' : '/'} className="flex items-center gap-2 font-semibold text-green-800">
+            <div className="h-7 w-7 rounded-full bg-green-800 flex items-center justify-center">
+              <Leaf className="h-3.5 w-3.5 text-green-100" />
+            </div>
             <span className="hidden sm:inline">Olive Garden 3</span>
           </Link>
 
@@ -49,6 +53,7 @@ export function Navbar({ role, userName }: NavbarProps) {
           </nav>
 
           <div className="flex items-center gap-3">
+            {showLanguageSwitcher && <LanguageSwitcher />}
             {userName && (
               <span className="hidden sm:block text-sm text-gray-500">{userName}</span>
             )}

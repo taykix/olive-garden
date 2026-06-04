@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "login": "Login",
+    "logout": "Logout",
+    "home": "Home"
+  },
+  "lang": {
+    "tr": "Türkçe",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "home": {
+    "badge": "Olive Garden 3 Property Management",
+    "hero_title": "Transparent & Reliable",
+    "hero_title_accent": "Property Management",
+    "hero_subtitle": "A modern management platform for the residents of Olive Garden 3 in Didim Akbük — clear access to financial information and community announcements.",
+    "hero_cta": "Sign In to Your Account",
+    "hero_scroll": "View Announcements",
+    "features_title": "Why Olive Garden 3?",
+    "features_subtitle": "We embrace a modern management approach to provide the best service to our residents.",
+    "feat1_title": "Transparent Management",
+    "feat1_desc": "All income and expense records are easily accessible to our residents.",
+    "feat2_title": "Real-time Announcements",
+    "feat2_desc": "Stay instantly informed about important developments at the complex.",
+    "feat3_title": "Resident Portal",
+    "feat3_desc": "View the financial summary and announcements with your personal account.",
+    "photo_placeholder": "Complex Photos",
+    "photo_coming": "Coming soon",
+    "announcements_title": "Latest Announcements",
+    "announcements_empty": "No announcements published yet.",
+    "cta_title": "Are you a resident or manager?",
+    "cta_subtitle": "Sign in with your account to access your personal dashboard.",
+    "cta_btn": "Sign In",
+    "footer": "Olive Garden 3 Property Management · Didim Akbük"
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Continue with your email and password.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "loading": "Signing in...",
+    "back": "← Back to Home",
+    "error_invalid": "Invalid email or password.",
+    "error_generic": "An error occurred. Please try again."
+  },
+  "resident": {
+    "greeting": "Hello",
+    "subtitle": "Olive Garden 3 Resident Portal",
+    "financial_title": "Financial Summary",
+    "income": "Total Income",
+    "expenses": "Total Expenses",
+    "balance": "Current Balance",
+    "announcements_title": "Announcements",
+    "announcements_empty": "No announcements published yet."
+  }
+}
