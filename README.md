@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Olive Garden 3 Site Yönetimi
 
-## Getting Started
+Didim Akbük Olive Garden 3 sitesi için site yönetim platformu. Gelir/gider takibi, aidat yönetimi ve sakin duyuruları için tasarlanmıştır.
 
-First, run the development server:
+## Teknolojiler
+
+- **Next.js 15** (App Router) + TypeScript
+- **Tailwind CSS** + shadcn/ui
+- **Supabase** (PostgreSQL + Authentication + RLS)
+- **Vercel** uyumlu deployment
+
+---
+
+## Kurulum
+
+### 1. Bağımlılıkları yükleyin
+
+```bash
+npm install
+```
+
+### 2. Supabase projesi oluşturun
+
+1. [supabase.com](https://supabase.com) adresine gidin ve yeni bir proje oluşturun.
+2. **Settings → API** bölümünden şu değerleri kopyalayın:
+   - `Project URL`
+   - `anon / public` key
+
+### 3. Veritabanı şemasını kurun
+
+Supabase Dashboard → **SQL Editor** içinde sırasıyla çalıştırın:
+
+1. `supabase/schema.sql` — Tabloları ve trigger'ları oluşturur
+2. `supabase/rls-policies.sql` — Row Level Security politikalarını kurar
+
+### 4. Ortam değişkenlerini ayarlayın
+
+```bash
+cp .env.local.example .env.local
+```
+
+`.env.local` dosyasını açıp değerleri doldurun:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 5. İlk admin kullanıcısı oluşturun
+
+Supabase Dashboard → **Authentication → Users** bölümünden yeni bir kullanıcı ekleyin, ardından SQL Editor'da rol atayın:
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = 'kullanici-uuid-buraya';
+```
+
+### 6. Uygulamayı başlatın
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcıda [http://localhost:3000](http://localhost:3000) adresini açın.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Sayfalar
 
-## Learn More
+| Sayfa | URL | Erişim |
+|-------|-----|--------|
+| Ana Sayfa | `/` | Herkese açık |
+| Giriş | `/login` | Herkese açık |
+| Admin Paneli | `/admin` | Sadece admin |
+| Gelirler | `/admin/gelirler` | Sadece admin |
+| Giderler | `/admin/giderler` | Sadece admin |
+| Ödemeler | `/admin/odemeler` | Sadece admin |
+| Duyurular | `/admin/duyurular` | Sadece admin |
+| Raporlar | `/admin/raporlar` | Sadece admin |
+| Sakin Paneli | `/resident` | Kayıtlı sakinler |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Kullanıcı Rolleri
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **admin**: Tüm verileri okuyabilir, ekleyebilir, düzenleyebilir ve silebilir.
+- **resident**: Yayımlanan duyuruları ve genel finansal özeti görebilir; veri düzenleyemez.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Vercel'e Deploy Etme
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Projenizi GitHub'a push edin.
+2. [vercel.com](https://vercel.com) üzerinde yeni proje oluşturun ve repo'yu bağlayın.
+3. **Environment Variables** bölümüne `.env.local` içindeki değerleri ekleyin.
+4. Deploy edin.
+
+> **Not:** Supabase projenizin **Authentication → URL Configuration** bölümüne Vercel URL'inizi (`Site URL` ve `Redirect URLs`) eklemeyi unutmayın.
+
+---
+
+## Proje Yapısı
+
+```
+src/
+├── app/
+│   ├── page.tsx              # Herkese açık ana sayfa
+│   ├── login/page.tsx        # Giriş sayfası
+│   ├── admin/                # Admin sayfaları
+│   │   ├── layout.tsx
+│   │   ├── page.tsx          # Dashboard
+│   │   ├── gelirler/page.tsx
+│   │   ├── giderler/page.tsx
+│   │   ├── odemeler/page.tsx
+│   │   ├── duyurular/page.tsx
+│   │   └── raporlar/page.tsx
+│   └── resident/             # Sakin paneli
+│       ├── layout.tsx
+│       └── page.tsx
+├── components/
+│   ├── admin/                # Admin CRUD formları
+│   └── shared/               # Paylaşılan bileşenler
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts         # Tarayıcı istemcisi
+│   │   ├── server.ts         # Sunucu istemcisi
+│   │   └── actions.ts        # Server Actions (CRUD)
+│   └── utils.ts
+├── middleware.ts              # Auth yönlendirmesi
+└── types/index.ts
+supabase/
+├── schema.sql
+└── rls-policies.sql
+```
