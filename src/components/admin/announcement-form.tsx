@@ -11,11 +11,13 @@ import { createAnnouncement, updateAnnouncement } from '@/lib/supabase/actions'
 import { Announcement } from '@/types'
 import { Plus, Pencil } from 'lucide-react'
 
-type Lang = 'tr' | 'en' | 'de'
+type Lang = 'tr' | 'en' | 'de' | 'fr' | 'ru'
 const LANGS: { code: Lang; label: string; flag: string }[] = [
-  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'tr', label: 'Türkçe',   flag: '🇹🇷' },
+  { code: 'en', label: 'English',  flag: '🇬🇧' },
+  { code: 'de', label: 'Deutsch',  flag: '🇩🇪' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'ru', label: 'Русский',  flag: '🇷🇺' },
 ]
 
 interface Fields { title: string; content: string }
@@ -25,9 +27,11 @@ function empty(): Fields { return { title: '', content: '' } }
 
 function fromAnnouncement(a: Announcement): LangData {
   return {
-    tr: { title: a.title, content: a.content },
+    tr: { title: a.title,         content: a.content },
     en: { title: a.title_en ?? '', content: a.content_en ?? '' },
     de: { title: a.title_de ?? '', content: a.content_de ?? '' },
+    fr: { title: a.title_fr ?? '', content: a.content_fr ?? '' },
+    ru: { title: a.title_ru ?? '', content: a.content_ru ?? '' },
   }
 }
 
@@ -40,7 +44,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
   const [open, setOpen]         = useState(false)
   const [tab, setTab]           = useState<Lang>('tr')
   const [data, setData]         = useState<LangData>(() =>
-    announcement ? fromAnnouncement(announcement) : { tr: empty(), en: empty(), de: empty() }
+    announcement ? fromAnnouncement(announcement) : { tr: empty(), en: empty(), de: empty(), fr: empty(), ru: empty() }
   )
   const [published, setPublished] = useState(announcement?.published ?? false)
   const [saving, setSaving]     = useState(false)
@@ -72,6 +76,10 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
       content_en: data.en.content.trim() || undefined,
       title_de:   data.de.title.trim() || undefined,
       content_de: data.de.content.trim() || undefined,
+      title_fr:   data.fr.title.trim() || undefined,
+      content_fr: data.fr.content.trim() || undefined,
+      title_ru:   data.ru.title.trim() || undefined,
+      content_ru: data.ru.content.trim() || undefined,
       published,
     }
     const result = isEdit
@@ -83,7 +91,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
     } else {
       toast.success(isEdit ? 'Duyuru güncellendi.' : 'Duyuru oluşturuldu.')
       setOpen(false)
-      if (!isEdit) setData({ tr: empty(), en: empty(), de: empty() })
+      if (!isEdit) setData({ tr: empty(), en: empty(), de: empty(), fr: empty(), ru: empty() })
     }
   }
 

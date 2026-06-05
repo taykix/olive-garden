@@ -60,6 +60,10 @@ export interface Announcement {
   content_en: string | null
   title_de: string | null
   content_de: string | null
+  title_fr: string | null
+  content_fr: string | null
+  title_ru: string | null
+  content_ru: string | null
   published: boolean
   created_by: string | null
   created_at: string

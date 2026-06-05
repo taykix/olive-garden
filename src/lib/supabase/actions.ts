@@ -287,6 +287,10 @@ export interface AnnouncementPayload {
   content_en?: string
   title_de?: string
   content_de?: string
+  title_fr?: string
+  content_fr?: string
+  title_ru?: string
+  content_ru?: string
   published?: boolean
 }
 

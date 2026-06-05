@@ -11,11 +11,19 @@ import { Announcement } from '@/types'
 function localize(a: Announcement, locale: string): { title: string; content: string } {
   if (locale === 'en' && a.title_en) return { title: a.title_en, content: a.content_en || a.content }
   if (locale === 'de' && a.title_de) return { title: a.title_de, content: a.content_de || a.content }
+  if (locale === 'fr' && a.title_fr) return { title: a.title_fr, content: a.content_fr || a.content }
+  if (locale === 'ru' && a.title_ru) return { title: a.title_ru, content: a.content_ru || a.content }
   return { title: a.title, content: a.content }
 }
 
-const MORE: Record<string, string> = { tr: 'Devamını oku', en: 'Read more', de: 'Weiterlesen' }
-const LESS: Record<string, string> = { tr: 'Daha az göster', en: 'Show less', de: 'Weniger anzeigen' }
+const MORE: Record<string, string> = {
+  tr: 'Devamını oku', en: 'Read more', de: 'Weiterlesen',
+  fr: 'Lire la suite', ru: 'Читать далее',
+}
+const LESS: Record<string, string> = {
+  tr: 'Daha az göster', en: 'Show less', de: 'Weniger anzeigen',
+  fr: 'Afficher moins', ru: 'Скрыть',
+}
 
 export function ExpandableAnnouncement({ a }: { a: Announcement }) {
   const locale = useLocale()

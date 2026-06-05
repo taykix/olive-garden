@@ -53,6 +53,8 @@ export default async function DuyurularPage() {
                         <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-medium">TR</span>
                         {a.title_en && <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs font-medium">EN</span>}
                         {a.title_de && <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-medium">DE</span>}
+                        {a.title_fr && <span className="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-medium">FR</span>}
+                        {a.title_ru && <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-xs font-medium">RU</span>}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 whitespace-pre-line line-clamp-3">{a.content}</p>

@@ -6,7 +6,7 @@
     "annual_works": "Yıllık İşler", "reports": "Raporlar",
     "import": "Veri Aktar", "users": "Kullanıcılar", "resident_home": "Ana Sayfa"
   },
-  "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch" },
+  "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
     "badge": "Olive Garden 3 Site Yönetimi",
     "hero_title": "Saydam & Güvenilir",

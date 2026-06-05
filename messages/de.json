@@ -6,7 +6,7 @@
     "annual_works": "Jahresarbeiten", "reports": "Berichte",
     "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite"
   },
-  "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch" },
+  "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
     "badge": "Olive Garden 3 Hausverwaltung",
     "hero_title": "Transparente & Zuverlässige",
