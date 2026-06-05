@@ -212,7 +212,7 @@ export default async function HomePage({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Konumumuz</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Didim Akbük, Aydın</p>
+              <p className="text-sm text-gray-500 mt-0.5">Olive Garden 3, Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Türkiye</p>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[420px]">
