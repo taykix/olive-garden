@@ -311,8 +311,12 @@ export default async function OdemelerPage() {
                           const key = `${pm.year}-${pm.month}`
                           const amount = row.monthPaid[key] ?? 0
                           return (
-                            <td key={key} className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${amount > 0 ? 'text-green-700' : 'text-gray-200'}`}>
-                              {amount > 0 ? fmt(amount) : '—'}
+                            <td key={key} className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${
+                              amount > 0 ? 'text-green-700'
+                              : amount < 0 ? 'text-red-800'
+                              : 'text-gray-200'
+                            }`}>
+                              {amount !== 0 ? fmt(amount) : '—'}
                             </td>
                           )
                         })}
