@@ -204,3 +204,26 @@ create policy "payments: residents read own"
   using (
     apartment_no = (select apartment_no from profiles where id = auth.uid())
   );
+
+-- ─── budget_items ─────────────────────────────────────────────────────────────
+alter table public.budget_items enable row level security;
+
+create policy "budget_items: authenticated read"
+  on public.budget_items for select
+  to authenticated
+  using (true);
+
+create policy "budget_items: admins insert"
+  on public.budget_items for insert
+  to authenticated
+  with check (public.is_admin());
+
+create policy "budget_items: admins update"
+  on public.budget_items for update
+  to authenticated
+  using (public.is_admin());
+
+create policy "budget_items: admins delete"
+  on public.budget_items for delete
+  to authenticated
+  using (public.is_admin());

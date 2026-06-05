@@ -94,6 +94,23 @@ export interface ImportedRow {
   amount: number
 }
 
+export interface BudgetItem {
+  id: string
+  category: string
+  category_en: string | null
+  sort_order: number
+  plan_2023_2024: number | null
+  actual_2023_2024: number | null
+  plan_2024_2025: number | null
+  actual_2024_2025: number | null
+  plan_2025_2026: number | null
+  expense_categories: string[]
+  description_tr: string | null
+  description_en: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface ApartmentSettings {
   apartment_no: string
   annual_due: number

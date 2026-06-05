@@ -1,7 +1,6 @@
-import { BarChart3, Printer, PieChart, TrendingUp } from 'lucide-react'
+import { BarChart3, PieChart, TrendingUp } from 'lucide-react'
 import { ExpensePieChart, MonthlyBarChart } from './charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -11,9 +10,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, MONTHS, PAYMENT_STATUS_LABELS } from '@/lib/utils'
+import { formatCurrency, MONTHS } from '@/lib/utils'
 import { CSVExportButton } from '@/components/admin/csv-export-button'
-import { Income, Expense, Payment } from '@/types'
+import { Income, Expense, BudgetItem } from '@/types'
+import { BudgetPlan } from './budget-plan'
+import { PrintButton } from './print-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,15 +53,15 @@ function buildMonthlyReport(incomeList: Income[], expenseList: Expense[]): Month
 export default async function RaporlarPage() {
   const supabase = await createClient()
 
-  const [incomeRes, expenseRes, paymentsRes] = await Promise.all([
+  const [incomeRes, expenseRes, budgetRes] = await Promise.all([
     supabase.from('income').select('*').order('date', { ascending: false }),
     supabase.from('expenses').select('*').order('date', { ascending: false }),
-    supabase.from('payments').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('budget_items').select('*').order('sort_order'),
   ])
 
   const incomeList: Income[] = incomeRes.data ?? []
   const expenseList: Expense[] = expenseRes.data ?? []
-  const paymentList: Payment[] = paymentsRes.data ?? []
+  const budgetItems: BudgetItem[] = budgetRes.data ?? []
 
   const monthlyReport = buildMonthlyReport(incomeList, expenseList)
 
@@ -83,8 +84,6 @@ export default async function RaporlarPage() {
       Gelir: r.income,
       Gider: r.expense,
     }))
-  const unpaidPayments = paymentList.filter((p) => p.payment_status !== 'paid')
-
   const totalIncome = incomeList.reduce((s, r) => s + Number(r.amount), 0)
   const totalExpenses = expenseList.reduce((s, r) => s + Number(r.amount), 0)
 
@@ -95,16 +94,6 @@ export default async function RaporlarPage() {
     'Gelir (₺)': r.income.toFixed(2),
     'Gider (₺)': r.expense.toFixed(2),
     'Bakiye (₺)': r.balance.toFixed(2),
-  }))
-
-  const unpaidCSV = unpaidPayments.map((p) => ({
-    'Daire No': p.apartment_no,
-    'Sakin': p.resident_name ?? '',
-    'Ay': MONTHS[p.month],
-    'Yıl': p.year,
-    'Borç (₺)': Number(p.amount_due).toFixed(2),
-    'Ödenen (₺)': Number(p.amount_paid).toFixed(2),
-    'Durum': PAYMENT_STATUS_LABELS[p.payment_status],
   }))
 
   const incomeCSV = incomeList.map((i) => ({
@@ -131,13 +120,11 @@ export default async function RaporlarPage() {
           <h1 className="text-2xl font-bold text-gray-900">Raporlar</h1>
           <p className="text-gray-500 text-sm mt-1">Finansal özet ve detay raporları</p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md text-gray-600 hover:bg-gray-50"
-        >
-          <Printer className="h-4 w-4" /> Yazdır
-        </button>
+        <PrintButton />
       </div>
+
+      {/* Budget plan */}
+      <BudgetPlan items={budgetItems} expenses={expenseList} />
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -214,63 +201,27 @@ export default async function RaporlarPage() {
                     <TableCell colSpan={5} className="text-center text-gray-400 py-8">Veri yok</TableCell>
                   </TableRow>
                 ) : (
-                  monthlyReport.map((row) => (
-                    <TableRow key={`${row.year}-${row.month}`}>
-                      <TableCell>{row.year}</TableCell>
-                      <TableCell>{MONTHS[row.month]}</TableCell>
-                      <TableCell className="text-right text-green-600">{formatCurrency(row.income)}</TableCell>
-                      <TableCell className="text-right text-red-600">{formatCurrency(row.expense)}</TableCell>
-                      <TableCell className={`text-right font-semibold ${row.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                        {formatCurrency(row.balance)}
+                  <>
+                    {monthlyReport.map((row) => (
+                      <TableRow key={`${row.year}-${row.month}`}>
+                        <TableCell>{row.year}</TableCell>
+                        <TableCell>{MONTHS[row.month]}</TableCell>
+                        <TableCell className="text-right text-green-600">{formatCurrency(row.income)}</TableCell>
+                        <TableCell className="text-right text-red-600">{formatCurrency(row.expense)}</TableCell>
+                        <TableCell className={`text-right font-semibold ${row.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                          {formatCurrency(row.balance)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+                      <TableCell colSpan={2} className="text-gray-700">Toplam</TableCell>
+                      <TableCell className="text-right text-green-600">{formatCurrency(totalIncome)}</TableCell>
+                      <TableCell className="text-right text-red-600">{formatCurrency(totalExpenses)}</TableCell>
+                      <TableCell className={`text-right ${totalIncome - totalExpenses >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                        {formatCurrency(totalIncome - totalExpenses)}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Unpaid payments */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Ödenmemiş / Eksik Ödemeler ({unpaidPayments.length})</CardTitle>
-          <CSVExportButton data={unpaidCSV} filename="odenmemis-odemeler" label="CSV İndir" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Daire</TableHead>
-                  <TableHead>Sakin</TableHead>
-                  <TableHead>Dönem</TableHead>
-                  <TableHead className="text-right">Borç</TableHead>
-                  <TableHead className="text-right">Ödenen</TableHead>
-                  <TableHead>Durum</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {unpaidPayments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-gray-400 py-8">Tüm ödemeler tamamlanmış.</TableCell>
-                  </TableRow>
-                ) : (
-                  unpaidPayments.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.apartment_no}</TableCell>
-                      <TableCell className="text-sm text-gray-600">{p.resident_name || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{MONTHS[p.month]} {p.year}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">{formatCurrency(Number(p.amount_due))}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap text-green-600">{formatCurrency(Number(p.amount_paid))}</TableCell>
-                      <TableCell>
-                        <Badge variant={p.payment_status === 'partial' ? 'secondary' : 'destructive'} className="text-xs">
-                          {PAYMENT_STATUS_LABELS[p.payment_status]}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  </>
                 )}
               </TableBody>
             </Table>

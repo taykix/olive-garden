@@ -410,3 +410,91 @@ export async function deleteAnnualWork(id: string) {
   revalidatePath('/admin/yillik-isler')
   return { success: true }
 }
+
+// ─── Budget Items ─────────────────────────────────────────────────────────────
+
+type BudgetItemPayload = {
+  category: string
+  category_en?: string | null
+  sort_order: number
+  plan_2023_2024?: number | null
+  actual_2023_2024?: number | null
+  plan_2024_2025?: number | null
+  actual_2024_2025?: number | null
+  plan_2025_2026?: number | null
+  expense_categories: string[]
+  description_tr?: string | null
+  description_en?: string | null
+}
+
+export async function createBudgetItem(data: BudgetItemPayload) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('budget_items').insert({
+    ...data,
+    updated_at: new Date().toISOString(),
+  })
+  if (error) return { error: error.message }
+  revalidatePath('/admin/raporlar')
+  return { success: true }
+}
+
+export async function updateBudgetItem(id: string, data: BudgetItemPayload) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('budget_items')
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/raporlar')
+  return { success: true }
+}
+
+export async function deleteBudgetItem(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('budget_items').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/raporlar')
+  return { success: true }
+}
+
+export async function bulkUpsertBudgetItems(
+  rows: Array<{
+    id?: string
+    category: string
+    sort_order: number
+    plan_2023_2024?: number | null
+    actual_2023_2024?: number | null
+    plan_2024_2025?: number | null
+    actual_2024_2025?: number | null
+    plan_2025_2026?: number | null
+    expense_categories: string[]
+    category_en?: string | null
+    description_tr?: string | null
+    description_en?: string | null
+  }>
+) {
+  if (!rows.length) return { error: 'Aktarılacak kayıt yok.' }
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+
+  const toUpdate = rows.filter(r => r.id)
+  const toInsert = rows.filter(r => !r.id)
+
+  for (const { id, ...data } of toUpdate) {
+    const { error } = await supabase
+      .from('budget_items')
+      .update({ ...data, updated_at: now })
+      .eq('id', id!)
+    if (error) return { error: `Güncelleme hatası: ${error.message}` }
+  }
+
+  if (toInsert.length) {
+    const { error } = await supabase
+      .from('budget_items')
+      .insert(toInsert.map(r => ({ ...r, updated_at: now })))
+    if (error) return { error: `Ekleme hatası: ${error.message}` }
+  }
+
+  revalidatePath('/admin/raporlar')
+  return { success: true, count: rows.length }
+}
