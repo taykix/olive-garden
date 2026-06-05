@@ -300,6 +300,62 @@ export async function bulkImportData(
   }
 }
 
+// ─── Apartment Settings ───────────────────────────────────────────────────────
+
+export async function upsertApartmentSettings(data: {
+  apartment_no: string
+  annual_due: number
+  previous_balance: number
+  notes?: string
+}) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('apartment_settings')
+    .upsert({ ...data, updated_at: new Date().toISOString() }, { onConflict: 'apartment_no' })
+  if (error) return { error: error.message }
+  revalidatePath('/admin/odemeler')
+  return { success: true }
+}
+
+export async function bulkUpsertApartmentSettings(
+  rows: Array<{ apartment_no: string; annual_due: number; previous_balance: number }>
+) {
+  if (!rows.length) return { success: true }
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('apartment_settings')
+    .upsert(
+      rows.map(r => ({ ...r, updated_at: new Date().toISOString() })),
+      { onConflict: 'apartment_no' }
+    )
+  if (error) return { error: error.message }
+  revalidatePath('/admin/odemeler')
+  return { success: true }
+}
+
+// ─── Bulk Payment Import ─────────────────────────────────────────────────────
+
+export async function bulkImportPayments(
+  rows: Array<{
+    apartment_no: string
+    resident_name?: string
+    month: number
+    year: number
+    amount_due: number
+    amount_paid: number
+    payment_status: string
+    note?: string
+  }>
+) {
+  if (!rows.length) return { error: 'İçe aktarılacak kayıt yok.' }
+  const supabase = await createClient()
+  const { error } = await supabase.from('payments').insert(rows)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/odemeler')
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
+}
+
 // ─── Annual Works ─────────────────────────────────────────────────────────────
 
 export async function createAnnualWork(data: {

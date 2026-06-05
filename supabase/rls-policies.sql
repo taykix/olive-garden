@@ -179,3 +179,28 @@ create policy "annual_works: admins can delete"
   on public.annual_works for delete
   to authenticated
   using (public.is_admin());
+
+-- ─── apartment_settings ───────────────────────────────────────────────────────
+alter table public.apartment_settings enable row level security;
+
+create policy "apartment_settings: admins all"
+  on public.apartment_settings for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- Sakinler kendi dairelerinin ayarlarını okuyabilir (yıllık aidat, geçen dönem)
+create policy "apartment_settings: residents read own"
+  on public.apartment_settings for select
+  to authenticated
+  using (
+    apartment_no = (select apartment_no from profiles where id = auth.uid())
+  );
+
+-- ─── payments: sakinler kendi dairelerini okuyabilir ──────────────────────────
+create policy "payments: residents read own"
+  on public.payments for select
+  to authenticated
+  using (
+    apartment_no = (select apartment_no from profiles where id = auth.uid())
+  );

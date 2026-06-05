@@ -105,3 +105,16 @@ create table if not exists public.annual_works (
 );
 
 create index if not exists annual_works_year_idx on public.annual_works (year desc);
+
+-- ─── apartment_settings ───────────────────────────────────────────────────────
+-- Daire başına yıllık aidat bedeli ve geçen dönem bakiyesi
+-- previous_balance: pozitif = geçen dönemden borç, negatif = alacak (fazla ödeme)
+create table if not exists public.apartment_settings (
+  apartment_no     text primary key,
+  annual_due       numeric(12,2) not null default 40000 check (annual_due >= 0),
+  previous_balance numeric(12,2) not null default 0,
+  notes            text,
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists apt_settings_apt_idx on public.apartment_settings (apartment_no);

@@ -1,15 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { useEffect, useRef, useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,135 +14,214 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { createPayment, updatePayment } from '@/lib/supabase/actions'
+import { createPayment, updatePayment, deletePayment } from '@/lib/supabase/actions'
+import { createClient } from '@/lib/supabase/client'
 import { MONTHS } from '@/lib/utils'
 import { Payment } from '@/types'
-import { Plus, Pencil } from 'lucide-react'
-
-const schema = z.object({
-  apartment_no: z.string().min(1, 'Daire numarası zorunludur'),
-  resident_name: z.string().optional(),
-  month: z.number().min(1).max(12),
-  year: z.number().min(2020).max(2100),
-  amount_due: z.number().positive('Tutar sıfırdan büyük olmalıdır'),
-  amount_paid: z.number().min(0).optional(),
-  payment_status: z.enum(['paid', 'unpaid', 'partial']),
-  payment_date: z.string().optional(),
-  note: z.string().optional(),
-})
-
-type FormData = z.infer<typeof schema>
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 
 interface PaymentFormProps {
   payment?: Payment
+  defaultApartmentNo?: string
 }
 
+const supabase = createClient()
 const currentYear = new Date().getFullYear()
 const years = Array.from({ length: 6 }, (_, i) => currentYear - 2 + i)
+const MONTH_OPTS = Object.entries(MONTHS) as [string, string][]
 
-export function PaymentForm({ payment }: PaymentFormProps) {
-  const [open, setOpen] = useState(false)
+async function lookupApartment(aptNo: string): Promise<{ name: string; annualDue: number } | null> {
+  if (!aptNo.trim()) return null
+
+  const [{ data: payData }, { data: settData }, { data: profData }] = await Promise.all([
+    supabase.from('payments').select('resident_name').eq('apartment_no', aptNo).not('resident_name', 'is', null).limit(1),
+    supabase.from('apartment_settings').select('annual_due').eq('apartment_no', aptNo).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('apartment_no', aptNo).maybeSingle(),
+  ])
+
+  const name =
+    (payData?.[0]?.resident_name as string | null) ??
+    (profData?.full_name as string | null) ??
+    ''
+
+  const annualDue = (settData?.annual_due as number | null) ?? 40000
+
+  return { name, annualDue }
+}
+
+export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
   const isEdit = !!payment
-  const [status, setStatus] = useState<string>(payment?.payment_status ?? 'unpaid')
+  const [open, setOpen]       = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
-  const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: payment
-      ? {
-          apartment_no: payment.apartment_no,
-          resident_name: payment.resident_name ?? '',
-          month: payment.month,
-          year: payment.year,
-          amount_due: payment.amount_due,
-          amount_paid: payment.amount_paid,
-          payment_status: payment.payment_status,
-          payment_date: payment.payment_date ?? '',
-          note: payment.note ?? '',
-        }
-      : {
-          month: new Date().getMonth() + 1,
-          year: currentYear,
-          amount_paid: 0,
-          payment_status: 'unpaid',
-        },
-  })
+  // Form fields
+  const [aptNo, setAptNo]         = useState(payment?.apartment_no ?? defaultApartmentNo ?? '')
+  const [name, setName]           = useState(payment?.resident_name ?? '')
+  const [month, setMonth]         = useState(payment?.month ?? new Date().getMonth() + 1)
+  const [year, setYear]           = useState(payment?.year ?? currentYear)
+  const [amount, setAmount]       = useState(payment?.amount_paid ?? 0)
+  const [note, setNote]           = useState(payment?.note ?? '')
+  const [annualDue, setAnnualDue] = useState(payment?.amount_due ?? 40000)
 
-  async function onSubmit(data: FormData) {
+  const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [looking, setLooking] = useState(false)
+
+  // Auto-fill name + annual_due when apt changes (add mode only)
+  useEffect(() => {
+    if (isEdit || !aptNo.trim()) return
+    if (lookupTimer.current) clearTimeout(lookupTimer.current)
+    lookupTimer.current = setTimeout(async () => {
+      setLooking(true)
+      const result = await lookupApartment(aptNo.trim().toUpperCase())
+      setLooking(false)
+      if (result) {
+        if (result.name) setName(result.name)
+        setAnnualDue(result.annualDue)
+      }
+    }, 500)
+  }, [aptNo, isEdit])
+
+  function resetForm() {
+    setAptNo(defaultApartmentNo ?? '')
+    setName('')
+    setMonth(new Date().getMonth() + 1)
+    setYear(currentYear)
+    setAmount(0)
+    setNote('')
+    setAnnualDue(40000)
+  }
+
+  async function handleSave() {
+    if (!aptNo.trim()) { toast.error('Daire numarası gereklidir.'); return }
+    if (amount <= 0) { toast.error('Ödeme tutarı sıfırdan büyük olmalıdır.'); return }
+
+    setSaving(true)
     const payload = {
-      ...data,
-      payment_date: data.payment_date || undefined,
+      apartment_no:     aptNo.trim().toUpperCase(),
+      resident_name:    name.trim() || undefined,
+      month,
+      year,
+      amount_due:       annualDue,
+      amount_paid:      amount,
+      payment_status:   'partial' as const,
+      note:             note.trim() || undefined,
     }
+
     const result = isEdit
       ? await updatePayment(payment!.id, payload)
       : await createPayment(payload)
 
+    setSaving(false)
     if (result?.error) {
       toast.error(result.error)
     } else {
       toast.success(isEdit ? 'Ödeme güncellendi.' : 'Ödeme eklendi.')
       setOpen(false)
-      if (!isEdit) reset()
+      if (!isEdit) resetForm()
     }
+  }
+
+  async function handleDelete() {
+    if (!isEdit) return
+    setDeleting(true)
+    const result = await deletePayment(payment!.id)
+    setDeleting(false)
+    if (result?.error) {
+      toast.error(result.error)
+    } else {
+      toast.success('Ödeme kaydı silindi.')
+      setOpen(false)
+    }
+  }
+
+  function handleOpen(v: boolean) {
+    if (v && isEdit) {
+      // Re-sync edit form state when reopening
+      setAptNo(payment!.apartment_no)
+      setName(payment!.resident_name ?? '')
+      setMonth(payment!.month)
+      setYear(payment!.year)
+      setAmount(payment!.amount_paid)
+      setNote(payment!.note ?? '')
+      setAnnualDue(payment!.amount_due)
+    }
+    setOpen(v)
   }
 
   return (
     <>
       {isEdit ? (
-        <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <Button variant="ghost" size="sm" onClick={() => handleOpen(true)}>
           <Pencil className="h-4 w-4" />
         </Button>
       ) : (
-        <Button size="sm" className="gap-1" onClick={() => setOpen(true)}>
+        <Button size="sm" className="gap-1" onClick={() => handleOpen(true)}>
           <Plus className="h-4 w-4" /> Ödeme Ekle
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={open} onOpenChange={handleOpen}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{isEdit ? 'Ödemeyi Düzenle' : 'Yeni Ödeme Kaydı Ekle'}</DialogTitle>
+            <DialogTitle>{isEdit ? 'Ödemeyi Düzenle' : 'Yeni Ödeme Kaydı'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
+
+          <div className="space-y-4">
+            {/* Daire No + Sakin Adı */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label>Daire No</Label>
-                <Input placeholder="örn: A-5" {...register('apartment_no')} />
-                {errors.apartment_no && <p className="text-xs text-red-500">{errors.apartment_no.message}</p>}
+                <Input
+                  placeholder="örn: A-5"
+                  value={aptNo}
+                  onChange={e => setAptNo(e.target.value)}
+                  className="uppercase"
+                  readOnly={isEdit}
+                />
               </div>
-              <div className="space-y-1">
-                <Label>Sakin Adı</Label>
-                <Input placeholder="Sakin adı soyadı" {...register('resident_name')} />
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1">
+                  Sakin Adı
+                  {looking && <span className="text-xs text-gray-400 font-normal">...</span>}
+                </Label>
+                <Input
+                  placeholder="Otomatik dolar"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
+            {/* Ay + Yıl */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label>Ay</Label>
                 <Select
-                  defaultValue={String(payment?.month ?? new Date().getMonth() + 1)}
-                  onValueChange={(v) => setValue('month', Number(v ?? 1))}
+                  value={String(month)}
+                  onValueChange={v => setMonth(Number(v))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(MONTHS).map(([k, v]) => (
+                    {MONTH_OPTS.map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label>Yıl</Label>
                 <Select
-                  defaultValue={String(payment?.year ?? currentYear)}
-                  onValueChange={(v) => setValue('year', Number(v ?? currentYear))}
+                  value={String(year)}
+                  onValueChange={v => setYear(Number(v))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {years.map((y) => (
+                    {years.map(y => (
                       <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                     ))}
                   </SelectContent>
@@ -158,59 +229,51 @@ export function PaymentForm({ payment }: PaymentFormProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Borç Tutarı (₺)</Label>
-                <Input type="number" step="0.01" placeholder="0.00" {...register('amount_due', { valueAsNumber: true })} />
-                {errors.amount_due && <p className="text-xs text-red-500">{errors.amount_due.message}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label>Ödenen Tutar (₺)</Label>
-                <Input type="number" step="0.01" placeholder="0.00" {...register('amount_paid', { valueAsNumber: true })} />
-              </div>
+            {/* Ödeme Tutarı */}
+            <div className="space-y-1.5">
+              <Label>Ödeme Tutarı (₺)</Label>
+              <Input
+                type="number"
+                min={0}
+                step={500}
+                value={amount || ''}
+                onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Ödeme Durumu</Label>
-                <Select
-                  defaultValue={payment?.payment_status ?? 'unpaid'}
-                  onValueChange={(v) => {
-                    const val = (v ?? 'unpaid') as 'paid' | 'unpaid' | 'partial'
-                    setValue('payment_status', val)
-                    setStatus(val)
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="paid">Ödendi</SelectItem>
-                    <SelectItem value="unpaid">Ödenmedi</SelectItem>
-                    <SelectItem value="partial">Kısmi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {(status === 'paid' || status === 'partial') && (
-                <div className="space-y-1">
-                  <Label>Ödeme Tarihi</Label>
-                  <Input type="date" {...register('payment_date')} />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1">
+            {/* Not */}
+            <div className="space-y-1.5">
               <Label>Not</Label>
-              <Textarea placeholder="Opsiyonel not..." {...register('note')} rows={2} />
+              <Textarea
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                rows={2}
+                placeholder="Opsiyonel..."
+              />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Kaydediliyor...' : isEdit ? 'Güncelle' : 'Ekle'}
-              </Button>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              {isEdit ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={deleting || saving}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-1"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {deleting ? 'Siliniyor...' : 'Sil'}
+                </Button>
+              ) : <span />}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? 'Kaydediliyor...' : isEdit ? 'Güncelle' : 'Kaydet'}
+                </Button>
+              </div>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </>

@@ -93,3 +93,11 @@ export interface ImportedRow {
   category: string
   amount: number
 }
+
+export interface ApartmentSettings {
+  apartment_no: string
+  annual_due: number
+  previous_balance: number  // + = geçen dönem borcu, - = alacak (fazla ödeme)
+  notes: string | null
+  updated_at: string
+}
