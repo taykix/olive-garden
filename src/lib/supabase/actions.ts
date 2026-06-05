@@ -22,12 +22,63 @@ export async function signIn(formData: FormData) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, status')
     .eq('id', user.id)
     .single()
 
+  // Son giriş tarihini güncelle
+  await supabase.from('profiles').update({ last_sign_in_at: new Date().toISOString() }).eq('id', user.id)
+
+  if (profile?.status === 'rejected') {
+    await supabase.auth.signOut()
+    return { error: 'Üyelik talebiniz reddedilmiştir. Detay için yöneticiyle iletişime geçin.' }
+  }
+
   revalidatePath('/', 'layout')
+  if (profile?.status === 'pending') redirect('/pending')
   redirect(profile?.role === 'admin' ? '/admin' : '/resident')
+}
+
+export async function signUp(formData: FormData): Promise<{ error?: string; needsConfirmation?: boolean }> {
+  const supabase = await createClient()
+  const email      = formData.get('email') as string
+  const password   = formData.get('password') as string
+  const fullName   = formData.get('full_name') as string
+  const apartmentNo = formData.get('apartment_no') as string
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } },
+  })
+
+  if (error) return { error: error.message }
+
+  if (data.user) {
+    await supabase.from('profiles').update({
+      apartment_no: apartmentNo || null,
+      email,
+      status: 'pending',
+    }).eq('id', data.user.id)
+  }
+
+  // Email onayı gerekiyorsa session null olur
+  if (!data.session) return { needsConfirmation: true }
+
+  revalidatePath('/', 'layout')
+  redirect('/pending')
+}
+
+export async function approveUser(userId: string) {
+  const supabase = await createClient()
+  await supabase.from('profiles').update({ status: 'approved' }).eq('id', userId)
+  revalidatePath('/admin/kullanicilar')
+}
+
+export async function rejectUser(userId: string) {
+  const supabase = await createClient()
+  await supabase.from('profiles').update({ status: 'rejected' }).eq('id', userId)
+  revalidatePath('/admin/kullanicilar')
 }
 
 export async function signOut() {

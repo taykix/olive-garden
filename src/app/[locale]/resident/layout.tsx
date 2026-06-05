@@ -27,16 +27,21 @@ export default async function ResidentLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, status')
     .eq('id', user.id)
     .single()
 
   if (profile?.role === 'admin') redirect('/admin')
+  if (profile?.status === 'pending') redirect('/pending')
+  if (profile?.status === 'rejected') {
+    await supabase.auth.signOut()
+    redirect('/login')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar role="resident" userName={profile?.full_name} showLanguageSwitcher />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
     </div>
   )
 }

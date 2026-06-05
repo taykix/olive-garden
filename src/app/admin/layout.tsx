@@ -10,10 +10,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, status')
     .eq('id', user.id)
     .single()
 
+  if (profile?.status === 'pending') redirect('/pending')
   if (profile?.role !== 'admin') redirect('/resident')
 
   return (

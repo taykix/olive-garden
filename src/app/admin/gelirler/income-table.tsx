@@ -34,7 +34,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     : <ChevronDown className="inline h-3.5 w-3.5 ml-1 text-gray-600" />
 }
 
-export function IncomeTable({ data }: { data: Income[] }) {
+export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOnly?: boolean }) {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -83,7 +83,7 @@ export function IncomeTable({ data }: { data: Income[] }) {
             <TableHead>Kategori</TableHead>
             <TableHead>Açıklama</TableHead>
             <Th field="amount" className="text-right">Tutar</Th>
-            <TableHead className="w-20" />
+            {!readOnly && <TableHead className="w-20" />}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -109,12 +109,14 @@ export function IncomeTable({ data }: { data: Income[] }) {
                 <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
                   {formatCurrency(Number(income.amount))}
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 justify-end">
-                    <IncomeForm income={income} />
-                    <DeleteConfirmDialog onConfirm={deleteIncome.bind(null, income.id)} />
-                  </div>
-                </TableCell>
+                {!readOnly && (
+                  <TableCell>
+                    <div className="flex items-center gap-1 justify-end">
+                      <IncomeForm income={income} />
+                      <DeleteConfirmDialog onConfirm={deleteIncome.bind(null, income.id)} />
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}

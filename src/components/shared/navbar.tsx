@@ -22,10 +22,15 @@ const adminLinks = [
   { href: '/admin/yillik-isler', label: 'Yıllık İşler' },
   { href: '/admin/raporlar', label: 'Raporlar' },
   { href: '/admin/import', label: 'Veri Aktar' },
+  { href: '/admin/kullanicilar', label: 'Kullanıcılar' },
 ]
 
 const residentLinks = [
   { href: '/resident', label: 'Ana Sayfa' },
+  { href: '/resident/gelirler', label: 'Gelirler' },
+  { href: '/resident/giderler', label: 'Giderler' },
+  { href: '/resident/odemeler', label: 'Ödemeler' },
+  { href: '/resident/raporlar', label: 'Raporlar' },
 ]
 
 export function Navbar({ role, userName, showLanguageSwitcher = false }: NavbarProps) {

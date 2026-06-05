@@ -1,0 +1,151 @@
+import { createClient } from '@/lib/supabase/server'
+import { formatCurrency, MONTHS } from '@/lib/utils'
+import { Payment, ApartmentSettings } from '@/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export const dynamic = 'force-dynamic'
+
+const PERIOD_MONTHS = [
+  { month: 10, year: 2025 }, { month: 11, year: 2025 }, { month: 12, year: 2025 },
+  { month: 1,  year: 2026 }, { month: 2,  year: 2026 }, { month: 3,  year: 2026 },
+  { month: 4,  year: 2026 }, { month: 5,  year: 2026 }, { month: 6,  year: 2026 },
+  { month: 7,  year: 2026 }, { month: 8,  year: 2026 },
+]
+
+function fmt(n: number) {
+  if (n === 0) return '—'
+  return n.toLocaleString('tr-TR', { maximumFractionDigits: 0 })
+}
+
+interface AptRow {
+  apartment_no: string
+  resident_name: string
+  annual_due: number
+  previous_balance: number
+  monthPaid: Record<string, number>
+  total_paid: number
+  remaining: number
+}
+
+export default async function ResidentOdemelerPage() {
+  const supabase = await createClient()
+
+  const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
+    supabase.from('apartment_settings').select('*').order('apartment_no'),
+    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').order('apartment_no'),
+  ])
+
+  const settings: ApartmentSettings[] = settingsData ?? []
+  const payments: Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>[] = paymentsData ?? []
+
+  const settMap = new Map(settings.map(s => [s.apartment_no, s]))
+  const payMap = new Map<string, { resident_name: string; amount_due: number; monthPaid: Record<string, number>; total_paid: number }>()
+
+  for (const p of payments) {
+    if (!payMap.has(p.apartment_no)) {
+      payMap.set(p.apartment_no, { resident_name: p.resident_name ?? '', amount_due: Number(p.amount_due), monthPaid: {}, total_paid: 0 })
+    }
+    const entry = payMap.get(p.apartment_no)!
+    const key = `${p.year}-${p.month}`
+    entry.monthPaid[key] = (entry.monthPaid[key] ?? 0) + Number(p.amount_paid)
+    entry.total_paid += Number(p.amount_paid)
+  }
+
+  const allApts = new Set([...settMap.keys(), ...payMap.keys()])
+  const table: AptRow[] = [...allApts].sort().map(apt => {
+    const sett = settMap.get(apt)
+    const pay  = payMap.get(apt)
+    const annual_due = sett?.annual_due ?? pay?.amount_due ?? 40000
+    const previous_balance = sett?.previous_balance ?? 0
+    const total_paid = pay?.total_paid ?? 0
+    return {
+      apartment_no: apt,
+      resident_name: sett ? '' : (pay?.resident_name ?? ''),
+      annual_due,
+      previous_balance,
+      monthPaid: pay?.monthPaid ?? {},
+      total_paid,
+      remaining: annual_due + previous_balance - total_paid,
+    }
+  })
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Aidat / Ödeme Takibi</h1>
+        <p className="text-gray-500 text-sm mt-1">{table.length} daire</p>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm text-gray-700">Tüm Daireler — Aylık Ödeme Tablosu</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="text-xs w-full min-w-max">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">Daire</th>
+                  <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Sakin</th>
+                  <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">Geçen Yıl</th>
+                  <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Yıllık Aidat</th>
+                  {PERIOD_MONTHS.map(pm => (
+                    <th key={`${pm.year}-${pm.month}`} className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">
+                      {MONTHS[pm.month].slice(0, 3)}<span className="text-gray-300"> '{String(pm.year).slice(2)}</span>
+                    </th>
+                  ))}
+                  <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">Toplam</th>
+                  <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">Kalan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {table.map((row, i) => {
+                  const isOdd = i % 2 === 1
+                  const remainingColor = row.remaining > 0.01 ? 'text-red-600 font-bold'
+                    : row.remaining < -0.01 ? 'text-blue-600 font-medium'
+                    : 'text-green-600 font-medium'
+                  const prevColor = row.previous_balance > 0 ? 'text-red-500'
+                    : row.previous_balance < 0 ? 'text-blue-500'
+                    : 'text-gray-300'
+                  return (
+                    <tr key={row.apartment_no} className={`border-b border-gray-100 ${isOdd ? 'bg-gray-50/40' : 'bg-white'}`}>
+                      <td className={`sticky left-0 z-10 border-r border-gray-100 px-3 py-1.5 font-mono font-semibold text-green-700 whitespace-nowrap ${isOdd ? 'bg-gray-50/80' : 'bg-white'}`}>
+                        {row.apartment_no}
+                      </td>
+                      <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate">{row.resident_name || '—'}</td>
+                      <td className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${prevColor}`}>
+                        {row.previous_balance === 0 ? '—' : `${row.previous_balance > 0 ? '+' : ''}${fmt(row.previous_balance)}`}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap text-gray-600">
+                        {row.annual_due === 0 ? <span className="text-gray-300">muaf</span> : fmt(row.annual_due)}
+                      </td>
+                      {PERIOD_MONTHS.map(pm => {
+                        const key = `${pm.year}-${pm.month}`
+                        const amount = row.monthPaid[key] ?? 0
+                        return (
+                          <td key={key} className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${
+                            amount > 0 ? 'text-green-700' : amount < 0 ? 'text-red-800' : 'text-gray-200'
+                          }`}>
+                            {amount !== 0 ? fmt(amount) : '—'}
+                          </td>
+                        )
+                      })}
+                      <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap text-green-700 font-medium">
+                        {fmt(row.total_paid)}
+                      </td>
+                      <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${remainingColor}`}>
+                        {row.remaining < -0.01 ? `+${fmt(Math.abs(row.remaining))}`
+                          : row.remaining < 0.01 ? '✓'
+                          : fmt(row.remaining)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

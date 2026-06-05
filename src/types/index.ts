@@ -1,10 +1,14 @@
 export type UserRole = 'admin' | 'resident'
+export type UserStatus = 'pending' | 'approved' | 'rejected'
 
 export interface Profile {
   id: string
   full_name: string | null
   role: UserRole
+  status: UserStatus
   apartment_no: string | null
+  email: string | null
+  last_sign_in_at: string | null
   created_at: string
 }
 

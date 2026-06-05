@@ -34,7 +34,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     : <ChevronDown className="inline h-3.5 w-3.5 ml-1 text-gray-600" />
 }
 
-export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budgetItems?: BudgetItem[] }) {
+export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { data: Expense[]; budgetItems?: BudgetItem[]; readOnly?: boolean }) {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -85,7 +85,7 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
             <Th field="amount" className="text-right">Tutar</Th>
             <TableHead>Belge</TableHead>
             <TableHead>İşletme Planı</TableHead>
-            <TableHead className="w-20 sticky right-0 bg-white" />
+            {!readOnly && <TableHead className="w-20 sticky right-0 bg-white" />}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -142,12 +142,14 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
                     <span className="text-gray-300 text-xs">—</span>
                   )}
                 </TableCell>
-                <TableCell className="sticky right-0 bg-white">
-                  <div className="flex items-center gap-1 justify-end">
-                    <ExpenseForm expense={expense} budgetItems={budgetItems} />
-                    <DeleteConfirmDialog onConfirm={deleteExpense.bind(null, expense.id)} />
-                  </div>
-                </TableCell>
+                {!readOnly && (
+                  <TableCell className="sticky right-0 bg-white">
+                    <div className="flex items-center gap-1 justify-end">
+                      <ExpenseForm expense={expense} budgetItems={budgetItems} />
+                      <DeleteConfirmDialog onConfirm={deleteExpense.bind(null, expense.id)} />
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}

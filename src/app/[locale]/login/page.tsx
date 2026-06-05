@@ -145,12 +145,20 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Alt bağlantı */}
-          <p className="text-center text-sm text-gray-400">
-            <Link href="/" className="hover:text-green-700 transition-colors">
-              {t('back')}
-            </Link>
-          </p>
+          {/* Alt bağlantılar */}
+          <div className="space-y-2 text-center text-sm text-gray-400">
+            <p>
+              Hesabınız yok mu?{' '}
+              <Link href="/register" className="text-green-700 font-medium hover:underline">
+                Üyelik talebi oluşturun
+              </Link>
+            </p>
+            <p>
+              <Link href="/" className="hover:text-green-700 transition-colors">
+                {t('back')}
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Alt köşe: zeytin dalı dekorasyon */}
