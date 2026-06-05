@@ -3,7 +3,9 @@
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const ADMIN_EMAIL = 'f.karakaya05@gmail.com'
+// Resend ücretsiz planda sadece hesaba kayıtlı adrese gönderilebilir.
+// Domain doğrulandıktan sonra f.karakaya05@gmail.com yazılabilir.
+const ADMIN_EMAIL = process.env.CONTACT_TO_EMAIL ?? 'f.karakaya05@gmail.com'
 
 export interface ContactPayload {
   senderEmail: string
@@ -34,6 +36,9 @@ export async function sendContactEmail(payload: ContactPayload): Promise<{ error
     text: `Gönderen: ${senderEmail}${phoneSection}\n\n${message}`,
   })
 
-  if (error) return { error: 'Mail gönderilemedi, lütfen daha sonra tekrar deneyin.' }
+  if (error) {
+    console.error('[contact] Resend error:', error)
+    return { error: 'Mail gönderilemedi, lütfen daha sonra tekrar deneyin.' }
+  }
   return {}
 }
