@@ -94,6 +94,11 @@ export default async function ResidentPage({
       </div>
 
       {/* Aidat section */}
+      {!apartmentNo && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Profilinizde daire numarası kayıtlı değil. Aidat durumunuzu görmek için yöneticiyle iletişime geçin.
+        </div>
+      )}
       {apartmentNo && (
         <section>
           <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
