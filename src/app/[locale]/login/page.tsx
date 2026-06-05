@@ -148,9 +148,9 @@ export default function LoginPage() {
           {/* Alt bağlantılar */}
           <div className="space-y-2 text-center text-sm text-gray-400">
             <p>
-              Hesabınız yok mu?{' '}
+              {t('no_account')}{' '}
               <Link href="/register" className="text-green-700 font-medium hover:underline">
-                Üyelik talebi oluşturun
+                {t('register_link')}
               </Link>
             </p>
             <p>

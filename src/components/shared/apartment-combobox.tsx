@@ -7,9 +7,11 @@ interface ApartmentComboboxProps {
   value: string
   onChange: (val: string) => void
   required?: boolean
+  placeholder?: string
+  invalidMessage?: string
 }
 
-export function ApartmentCombobox({ apartments, value, onChange, required }: ApartmentComboboxProps) {
+export function ApartmentCombobox({ apartments, value, onChange, required, placeholder = 'A-5', invalidMessage = 'Lütfen listeden bir daire seçin.' }: ApartmentComboboxProps) {
   const [open, setOpen]       = useState(false)
   const [query, setQuery]     = useState(value)
   const containerRef          = useRef<HTMLDivElement>(null)
@@ -54,7 +56,7 @@ export function ApartmentCombobox({ apartments, value, onChange, required }: Apa
       <input
         type="text"
         autoComplete="off"
-        placeholder="örn: A-5"
+        placeholder={placeholder}
         required={required}
         value={query}
         onChange={handleInput}
@@ -77,7 +79,7 @@ export function ApartmentCombobox({ apartments, value, onChange, required }: Apa
       )}
 
       {query && !isValid && (
-        <p className="text-xs text-red-500 mt-1">Lütfen listeden bir daire seçin.</p>
+        <p className="text-xs text-red-500 mt-1">{invalidMessage}</p>
       )}
     </div>
   )

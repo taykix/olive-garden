@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Wallet, Megaphone, Home } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, formatDate, MONTHS } from '@/lib/utils'
+import { formatCurrency, formatDate, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -96,25 +96,25 @@ export default async function ResidentPage({
       {/* Aidat section */}
       {!apartmentNo && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Profilinizde daire numarası kayıtlı değil. Aidat durumunuzu görmek için yöneticiyle iletişime geçin.
+          {t('no_apt')}
         </div>
       )}
       {apartmentNo && (
         <section>
           <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
             <Home className="h-5 w-5 text-green-600" />
-            Aidat Durumum — Daire {apartmentNo}
+            {t('apt_dues_title')} {apartmentNo}
           </h2>
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <Card>
               <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium text-gray-500">Yıllık Aidat</CardTitle>
+                <CardTitle className="text-xs font-medium text-gray-500">{t('annual_due')}</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 px-3">
                 {annual_due === 0
-                  ? <p className="text-sm font-semibold text-gray-400">Muaf</p>
+                  ? <p className="text-sm font-semibold text-gray-400">{t('exempt')}</p>
                   : <p className="text-sm font-bold text-gray-800 font-mono">{formatCurrency(annual_due)}</p>
                 }
               </CardContent>
@@ -123,20 +123,20 @@ export default async function ResidentPage({
             {previous_balance !== 0 && (
               <Card>
                 <CardHeader className="pb-1 pt-3 px-3">
-                  <CardTitle className="text-xs font-medium text-gray-500">Geçen Yıl</CardTitle>
+                  <CardTitle className="text-xs font-medium text-gray-500">{t('prev_year')}</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-3 px-3">
                   <p className={`text-sm font-bold font-mono ${previous_balance > 0 ? 'text-red-600' : 'text-blue-600'}`}>
                     {previous_balance > 0 ? '+' : ''}{formatCurrency(previous_balance)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{previous_balance > 0 ? 'borç' : 'alacak'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{previous_balance > 0 ? t('debt') : t('credit')}</p>
                 </CardContent>
               </Card>
             )}
 
             <Card>
               <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium text-gray-500">Ödenen</CardTitle>
+                <CardTitle className="text-xs font-medium text-gray-500">{t('paid_card')}</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 px-3">
                 <p className="text-sm font-bold text-green-700 font-mono">{formatCurrency(total_paid)}</p>
@@ -145,13 +145,13 @@ export default async function ResidentPage({
 
             <Card className={`${remaining > 0.01 ? 'border-red-200' : remaining < -0.01 ? 'border-blue-200' : 'border-green-200'}`}>
               <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium text-gray-500">Kalan</CardTitle>
+                <CardTitle className="text-xs font-medium text-gray-500">{t('remaining_card')}</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 px-3">
                 <p className={`text-sm font-bold font-mono ${remainingColor}`}>
                   {remaining < -0.01
-                    ? `+${fmt(Math.abs(remaining))} alacak`
-                    : remaining < 0.01 ? '✓ Tam'
+                    ? `+${fmt(Math.abs(remaining))} ${t('receivable')}`
+                    : remaining < 0.01 ? t('full_paid')
                     : fmt(remaining)}
                 </p>
               </CardContent>
@@ -164,9 +164,9 @@ export default async function ResidentPage({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 w-36">Ay</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 w-36">Ödenen (₺)</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">Not</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 w-36">{t('month_col')}</th>
+                    <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 w-36">{t('amount_col')}</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">{t('note_col')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -177,7 +177,7 @@ export default async function ResidentPage({
                     return (
                       <tr key={key} className={`border-b border-gray-100 last:border-0 ${isOdd ? 'bg-gray-50/40' : 'bg-white'}`}>
                         <td className="px-4 py-2.5 font-medium text-gray-700 whitespace-nowrap">
-                          {MONTHS[pm.month]} {pm.year}
+                          {getMonthName(pm.month, locale)} {pm.year}
                         </td>
                         <td className={`px-4 py-2.5 text-right font-mono ${entry ? 'text-green-700 font-semibold' : 'text-gray-300'}`}>
                           {entry ? fmt(entry.amount) : '—'}
@@ -191,7 +191,7 @@ export default async function ResidentPage({
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-200 bg-gray-50">
-                    <td className="px-4 py-2.5 text-xs font-semibold text-gray-600">Toplam</td>
+                    <td className="px-4 py-2.5 text-xs font-semibold text-gray-600">{t('total')}</td>
                     <td className="px-4 py-2.5 text-right font-mono font-bold text-green-700">{fmt(total_paid)}</td>
                     <td />
                   </tr>

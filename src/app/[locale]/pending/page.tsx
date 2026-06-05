@@ -4,10 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PendingPage() {
+export default async function PendingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations('pending')
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -32,24 +41,21 @@ export default async function PendingPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Üyeliğiniz İnceleniyor</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-500">
-            Merhaba {profile?.full_name ? <strong>{profile.full_name}</strong> : 'sayın üyemiz'},
+            {profile?.full_name ? <strong>{profile.full_name}</strong> : t('dear')},
           </p>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Üyelik talebiniz alındı. Yönetici incelemesinin ardından hesabınız aktif hale getirilecek
-            ve sisteme erişim sağlayabileceksiniz.
-          </p>
+          <p className="text-gray-500 text-sm leading-relaxed">{t('message')}</p>
         </div>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-          Onay süreci genellikle 1 iş günü içinde tamamlanmaktadır.
+          {t('note')}
         </div>
 
         <form action={signOut}>
           <Button variant="outline" type="submit" className="gap-2">
             <LogOut className="h-4 w-4" />
-            Çıkış Yap
+            {t('logout')}
           </Button>
         </form>
       </div>

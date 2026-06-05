@@ -21,6 +21,11 @@ export function formatDate(dateStr: string): string {
   }).format(new Date(dateStr))
 }
 
+export function getMonthName(month: number, locale: string, short = false): string {
+  const date = new Date(2000, month - 1, 1)
+  return new Intl.DateTimeFormat(locale, { month: short ? 'short' : 'long' }).format(date)
+}
+
 export const MONTHS: Record<number, string> = {
   1: 'Ocak',
   2: 'Şubat',

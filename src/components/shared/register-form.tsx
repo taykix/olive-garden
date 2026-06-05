@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,14 +17,15 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ apartments }: RegisterFormProps) {
-  const [error, setError]       = useState<string | null>(null)
-  const [loading, setLoading]   = useState(false)
+  const t = useTranslations('register')
+  const [error, setError]         = useState<string | null>(null)
+  const [loading, setLoading]     = useState(false)
   const [needsEmail, setNeedsEmail] = useState(false)
-  const [aptNo, setAptNo]       = useState('')
+  const [aptNo, setAptNo]         = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!aptNo) { setError('Lütfen listeden bir daire numarası seçin.'); return }
+    if (!aptNo) { setError(t('apt_no_selection')); return }
     setLoading(true)
     setError(null)
     const fd = new FormData(e.currentTarget)
@@ -31,9 +33,7 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
     const result = await signUp(fd)
     setLoading(false)
     if (result?.error) {
-      setError(result.error === 'User already registered'
-        ? 'Bu e-posta adresi zaten kayıtlı.'
-        : result.error)
+      setError(result.error === 'User already registered' ? t('existing_email') : result.error)
     } else if (result?.needsConfirmation) {
       setNeedsEmail(true)
     }
@@ -46,11 +46,9 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
           <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
             <CheckCircle2 className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">E-postanızı doğrulayın</h2>
-          <p className="text-gray-500 text-sm">
-            Kayıt linki e-posta adresinize gönderildi. Linke tıkladıktan sonra üyelik talebiniz yöneticiye iletilecektir.
-          </p>
-          <Link href="/login" className="text-sm text-green-700 hover:underline block">Giriş sayfasına dön</Link>
+          <h2 className="text-xl font-bold text-gray-900">{t('email_confirm_title')}</h2>
+          <p className="text-gray-500 text-sm">{t('email_confirm_desc')}</p>
+          <Link href="/login" className="text-sm text-green-700 hover:underline block">{t('back_to_login')}</Link>
         </div>
       </div>
     )
@@ -69,8 +67,10 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
           </Link>
           <div className="text-white space-y-3">
             <div className="w-12 h-0.5 bg-white/50 rounded-full" />
-            <h2 className="text-3xl font-bold leading-snug drop-shadow-lg">Saydam & Güvenilir<br />Site Yönetimi</h2>
-            <p className="text-white/70 text-sm">Didim Akbük · Türkiye</p>
+            <h2 className="text-3xl font-bold leading-snug drop-shadow-lg">
+              {t('hero_tagline1')}<br />{t('hero_tagline2')}
+            </h2>
+            <p className="text-white/70 text-sm">{t('hero_location')}</p>
           </div>
         </div>
       </div>
@@ -86,36 +86,38 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Üyelik Talebi</h2>
-            <p className="text-gray-400 text-sm mt-1">Bilgilerinizi girin, yönetici onayından sonra giriş yapabilirsiniz.</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('title')}</h2>
+            <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-gray-700 text-sm font-medium">Ad Soyad</Label>
-              <Input name="full_name" placeholder="Adınız Soyadınız" required
+              <Label className="text-gray-700 text-sm font-medium">{t('name_label')}</Label>
+              <Input name="full_name" placeholder={t('name_placeholder')} required
                 className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-gray-700 text-sm font-medium">Daire No</Label>
+              <Label className="text-gray-700 text-sm font-medium">{t('apt_label')}</Label>
               <ApartmentCombobox
                 apartments={apartments}
                 value={aptNo}
                 onChange={setAptNo}
+                placeholder={t('apt_placeholder')}
+                invalidMessage={t('apt_invalid')}
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-gray-700 text-sm font-medium">E-posta</Label>
-              <Input name="email" type="email" placeholder="ornek@email.com" required autoComplete="email"
+              <Label className="text-gray-700 text-sm font-medium">{t('email_label')}</Label>
+              <Input name="email" type="email" placeholder={t('email_placeholder')} required autoComplete="email"
                 className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-gray-700 text-sm font-medium">Şifre</Label>
-              <Input name="password" type="password" placeholder="En az 6 karakter" required minLength={6} autoComplete="new-password"
+              <Label className="text-gray-700 text-sm font-medium">{t('password_label')}</Label>
+              <Input name="password" type="password" placeholder={t('password_placeholder')} required minLength={6} autoComplete="new-password"
                 className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400" />
             </div>
 
@@ -125,13 +127,13 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
 
             <Button type="submit" disabled={loading || !aptNo}
               className="w-full h-11 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl shadow-sm">
-              {loading ? 'Gönderiliyor...' : 'Üyelik Talebi Gönder'}
+              {loading ? t('submitting') : t('submit')}
             </Button>
           </form>
 
           <p className="text-center text-sm text-gray-400">
-            Zaten üye misiniz?{' '}
-            <Link href="/login" className="text-green-700 font-medium hover:underline">Giriş yapın</Link>
+            {t('already_member')}{' '}
+            <Link href="/login" className="text-green-700 font-medium hover:underline">{t('sign_in_link')}</Link>
           </p>
         </div>
       </div>

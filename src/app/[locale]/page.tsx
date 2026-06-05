@@ -211,13 +211,13 @@ export default async function HomePage({
               <MapPin className="h-5 w-5 text-green-700" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Konumumuz</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Olive Garden 3, Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Türkiye</p>
+              <h2 className="text-2xl font-bold text-gray-900">{t('location_title')}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t('location_address')}</p>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[420px]">
             <iframe
-              title="Olive Garden 3 Konumu"
+              title={t('location_map_title')}
               src="https://www.openstreetmap.org/export/embed.html?bbox=27.43267%2C37.39931%2C27.43667%2C37.40331&layer=mapnik&marker=37.401313107269765%2C27.43467001070739"
               width="100%"
               height="100%"
@@ -226,7 +226,7 @@ export default async function HomePage({
             />
           </div>
           <p className="text-xs text-gray-400 mt-2 text-right">
-            © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:underline">OpenStreetMap</a> katkıcıları
+            © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:underline">OpenStreetMap</a> {t('osm_contrib')}
           </p>
         </div>
       </section>
@@ -239,8 +239,8 @@ export default async function HomePage({
               <Mail className="h-5 w-5 text-green-700" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Yönetimle İletişim</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Sorularınız için bize ulaşın</p>
+              <h2 className="text-2xl font-bold text-gray-900">{t('contact_title')}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t('contact_subtitle')}</p>
             </div>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">

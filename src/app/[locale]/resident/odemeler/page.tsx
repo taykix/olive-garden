@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, MONTHS } from '@/lib/utils'
+import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,15 @@ interface AptRow {
   remaining: number
 }
 
-export default async function ResidentOdemelerPage() {
+export default async function ResidentOdemelerPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations('odemeler')
+
   const supabase = await createClient()
 
   const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
@@ -72,30 +81,30 @@ export default async function ResidentOdemelerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Aidat / Ödeme Takibi</h1>
-        <p className="text-gray-500 text-sm mt-1">{table.length} daire</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+        <p className="text-gray-500 text-sm mt-1">{table.length} {t('apartments_suffix')}</p>
       </div>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-700">Tüm Daireler — Aylık Ödeme Tablosu</CardTitle>
+          <CardTitle className="text-sm text-gray-700">{t('table_title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="text-xs w-full min-w-max">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">Daire</th>
-                  <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Sakin</th>
-                  <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">Geçen Yıl</th>
-                  <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Yıllık Aidat</th>
+                  <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">{t('col_apt')}</th>
+                  <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap">{t('col_resident')}</th>
+                  <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">{t('col_prev')}</th>
+                  <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">{t('col_annual')}</th>
                   {PERIOD_MONTHS.map(pm => (
                     <th key={`${pm.year}-${pm.month}`} className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">
-                      {MONTHS[pm.month].slice(0, 3)}<span className="text-gray-300"> '{String(pm.year).slice(2)}</span>
+                      {getMonthName(pm.month, locale, true)}<span className="text-gray-300"> '{String(pm.year).slice(2)}</span>
                     </th>
                   ))}
-                  <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">Toplam</th>
-                  <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">Kalan</th>
+                  <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">{t('col_total')}</th>
+                  <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">{t('col_remaining')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,7 +126,7 @@ export default async function ResidentOdemelerPage() {
                         {row.previous_balance === 0 ? '—' : `${row.previous_balance > 0 ? '+' : ''}${fmt(row.previous_balance)}`}
                       </td>
                       <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap text-gray-600">
-                        {row.annual_due === 0 ? <span className="text-gray-300">muaf</span> : fmt(row.annual_due)}
+                        {row.annual_due === 0 ? <span className="text-gray-300">{t('exempt')}</span> : fmt(row.annual_due)}
                       </td>
                       {PERIOD_MONTHS.map(pm => {
                         const key = `${pm.year}-${pm.month}`
