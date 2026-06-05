@@ -66,6 +66,7 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
 
   const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [looking, setLooking] = useState(false)
+  const [negativeConfirm, setNegativeConfirm] = useState(false)
 
   // Auto-fill name + annual_due when apt changes (add mode only)
   useEffect(() => {
@@ -90,13 +91,16 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
     setAmount(0)
     setNote('')
     setAnnualDue(40000)
+    setNegativeConfirm(false)
   }
 
-  async function handleSave() {
+  async function handleSave(forceNegative = false) {
     if (!aptNo.trim()) { toast.error('Daire numarası gereklidir.'); return }
-    if (amount <= 0) { toast.error('Ödeme tutarı sıfırdan büyük olmalıdır.'); return }
+    if (amount === 0) { toast.error('Ödeme tutarı sıfır olamaz.'); return }
+    if (amount < 0 && !forceNegative) { setNegativeConfirm(true); return }
 
     setSaving(true)
+    setNegativeConfirm(false)
     const payload = {
       apartment_no:     aptNo.trim().toUpperCase(),
       resident_name:    name.trim() || undefined,
@@ -234,13 +238,28 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
               <Label>Ödeme Tutarı (₺)</Label>
               <Input
                 type="number"
-                min={0}
                 step={500}
                 value={amount || ''}
-                onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                onChange={e => { setAmount(parseFloat(e.target.value) || 0); setNegativeConfirm(false) }}
                 placeholder="0"
               />
             </div>
+
+            {/* Eksi değer uyarısı */}
+            {negativeConfirm && (
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 space-y-2">
+                <p className="font-medium">⚠️ Eksi değer ekliyorsunuz, emin misiniz?</p>
+                <p className="text-amber-700">Bu kayıt geri ödeme / fazla ödeme iadesi olarak işlenecektir.</p>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setNegativeConfirm(false)}>
+                    Hayır, iptal
+                  </Button>
+                  <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white" onClick={() => handleSave(true)}>
+                    Evet, ekle
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Not */}
             <div className="space-y-1.5">
@@ -268,7 +287,7 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
               ) : <span />}
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setOpen(false)}>İptal</Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={() => handleSave()} disabled={saving}>
                   {saving ? 'Kaydediliyor...' : isEdit ? 'Güncelle' : 'Kaydet'}
                 </Button>
               </div>
