@@ -65,7 +65,7 @@ create table if not exists public.payments (
   month          integer not null check (month between 1 and 12),
   year           integer not null check (year >= 2000),
   amount_due     numeric(12, 2) not null check (amount_due > 0),
-  amount_paid    numeric(12, 2) not null default 0 check (amount_paid >= 0),
+  amount_paid    numeric(12, 2) not null default 0,
   payment_status text not null default 'unpaid' check (payment_status in ('paid', 'unpaid', 'partial')),
   payment_date   date,
   note           text,

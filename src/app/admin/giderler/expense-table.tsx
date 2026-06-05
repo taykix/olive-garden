@@ -85,7 +85,7 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
             <Th field="amount" className="text-right">Tutar</Th>
             <TableHead>Belge</TableHead>
             <TableHead>İşletme Planı</TableHead>
-            <TableHead className="w-20" />
+            <TableHead className="w-20 sticky right-0 bg-white" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -108,9 +108,16 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
                     ? <Badge variant="secondary" className="text-xs">{expense.category}</Badge>
                     : <span className="text-gray-300">—</span>}
                 </TableCell>
-                <TableCell className="text-sm text-gray-500">
+                <TableCell className="text-sm text-gray-500 w-24">
                   {cleanDesc
-                    ? <span className="block max-w-[160px] truncate cursor-default" title={cleanDesc}>{cleanDesc}</span>
+                    ? <span
+                        className="block truncate cursor-default"
+                        title={cleanDesc}
+                      >
+                        {cleanDesc.includes(' ')
+                          ? `${cleanDesc.split(' ')[0]}…`
+                          : cleanDesc.slice(0, 10) + (cleanDesc.length > 10 ? '…' : '')}
+                      </span>
                     : <span className="text-gray-300">—</span>}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-red-600 whitespace-nowrap">
@@ -135,7 +142,7 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
                     <span className="text-gray-300 text-xs">—</span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="sticky right-0 bg-white">
                   <div className="flex items-center gap-1 justify-end">
                     <ExpenseForm expense={expense} budgetItems={budgetItems} />
                     <DeleteConfirmDialog onConfirm={deleteExpense.bind(null, expense.id)} />
