@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -35,6 +36,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
 }
 
 export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { data: Expense[]; budgetItems?: BudgetItem[]; readOnly?: boolean }) {
+  const t = useTranslations('table')
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -77,14 +79,14 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
       <Table>
         <TableHeader>
           <TableRow>
-            <Th field="siraNo" className="w-20">S.No</Th>
-            <Th field="date">Tarih</Th>
-            <Th field="title">Başlık</Th>
-            <TableHead>Kategori</TableHead>
-            <TableHead>Açıklama</TableHead>
-            <Th field="amount" className="text-right">Tutar</Th>
-            <TableHead>Belge</TableHead>
-            <TableHead>İşletme Planı</TableHead>
+            <Th field="siraNo" className="w-20">{t('col_sno')}</Th>
+            <Th field="date">{t('col_date')}</Th>
+            <Th field="title">{t('col_title')}</Th>
+            <TableHead>{t('col_category')}</TableHead>
+            <TableHead>{t('col_description')}</TableHead>
+            <Th field="amount" className="text-right">{t('col_amount')}</Th>
+            <TableHead>{t('col_document')}</TableHead>
+            <TableHead>{t('col_budget_item')}</TableHead>
             {!readOnly && <TableHead className="w-20 sticky right-0 bg-white" />}
           </TableRow>
         </TableHeader>
@@ -126,7 +128,7 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
                 <TableCell>
                   {expense.document_url ? (
                     <a href={expense.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline inline-flex items-center gap-1 text-xs">
-                      <ExternalLink className="h-3 w-3" /> Görüntüle
+                      <ExternalLink className="h-3 w-3" /> {t('view')}
                     </a>
                   ) : (
                     <span className="text-gray-300">—</span>

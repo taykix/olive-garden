@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { BudgetItem, Expense } from '@/types'
 import { formatCurrency } from '@/lib/utils'
 import { createBudgetItem, updateBudgetItem, deleteBudgetItem, bulkUpsertBudgetItems } from '@/lib/supabase/actions'
@@ -288,6 +289,7 @@ interface Props {
 }
 
 export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
+  const t = useTranslations('budget')
   const [addOpen, setAddOpen]       = useState(false)
   const [editItem, setEditItem]     = useState<BudgetItem | null>(null)
   const [viewItem, setViewItem]     = useState<BudgetItem | null>(null)
@@ -366,8 +368,8 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-sm text-gray-700">Yıllık İşletme Planı</CardTitle>
-              <p className="text-xs text-gray-400 mt-0.5">2023–2026 dönemi · {items.length} harcama kalemi · 2025-2026 gerçekleşen gider sisteminden otomatik hesaplanır</p>
+              <CardTitle className="text-sm text-gray-700">{t('card_title')}</CardTitle>
+              <p className="text-xs text-gray-400 mt-0.5">2023–2026 · {items.length} {t('card_items')} · {t('card_auto')}</p>
             </div>
             {!readOnly && (
               <div className="flex items-center gap-2 print:hidden">
@@ -402,7 +404,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Period group row */}
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200 min-w-[240px]">
-                    HARCAMA KONUSU
+                    {t('col_item')}
                   </th>
                   <th colSpan={2} className="text-center px-2 py-2 text-xs font-medium text-gray-400 border-r border-gray-100">2023-2024</th>
                   <th colSpan={2} className="text-center px-2 py-2 text-xs font-medium text-gray-400 border-r border-gray-100">2024-2025</th>
@@ -412,12 +414,12 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Column labels */}
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="sticky left-0 bg-gray-50 z-10 border-r border-gray-200" />
-                  <th className={th}>Planlanan</th>
-                  <th className={`${th} border-r border-gray-100`}>Gerçekleşen</th>
-                  <th className={th}>Planlanan</th>
-                  <th className={`${th} border-r border-gray-100`}>Gerçekleşen</th>
-                  <th className={`${th} text-green-600`}>Planlanan</th>
-                  <th className={`${th} text-green-700 font-semibold bg-green-50/30`}>Gerçekleşen ✦</th>
+                  <th className={th}>{t('col_planned')}</th>
+                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}</th>
+                  <th className={th}>{t('col_planned')}</th>
+                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}</th>
+                  <th className={`${th} text-green-600`}>{t('col_planned')}</th>
+                  <th className={`${th} text-green-700 font-semibold bg-green-50/30`}>{t('col_actual_mark')}</th>
                   <th className="print:hidden px-2 w-16" />
                 </tr>
               </thead>
@@ -477,7 +479,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Totals */}
                 <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
                   <td className="sticky left-0 bg-gray-100 z-10 px-3 py-2.5 border-r border-gray-200 text-xs text-gray-700">
-                    TOPLAM
+                    {t('total')}
                   </td>
                   <td className={td}>{fmtCurrency(totals.p23)}</td>
                   <td className={`${td} border-r border-gray-200`}>{fmtCurrency(totals.a23)}</td>
@@ -490,7 +492,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Per-apartment */}
                 <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic">
                   <td className="sticky left-0 bg-gray-50 z-10 px-3 py-1.5 border-r border-gray-200 text-xs not-italic font-medium">
-                    Daire Başına <span className="text-gray-400 font-normal">(÷ {APT_COUNT} daire)</span>
+                    {t('per_apt')} <span className="text-gray-400 font-normal">(÷ {APT_COUNT} {t('apts')})</span>
                   </td>
                   <td className={td}>{totals.p23 ? fmtCurrency(Math.round(totals.p23 / APT_COUNT)) : '—'}</td>
                   <td className={`${td} border-r border-gray-200`}>{totals.a23 ? fmtCurrency(Math.round(totals.a23 / APT_COUNT)) : '—'}</td>
@@ -537,7 +539,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
       <Dialog open={!!viewItem} onOpenChange={v => { if (!v) setViewItem(null) }}>
         <DialogContent className="max-w-2xl sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-sm leading-tight">{viewItem?.category}<br /><span className="text-xs font-normal text-gray-400">2025-2026 Gerçekleşen Giderler</span></DialogTitle>
+            <DialogTitle className="text-sm leading-tight">{viewItem?.category}<br /><span className="text-xs font-normal text-gray-400">{t('expenses_dialog_sub')}</span></DialogTitle>
           </DialogHeader>
           {viewItem && <ExpensesDialog item={viewItem} expenses={expenses} />}
         </DialogContent>

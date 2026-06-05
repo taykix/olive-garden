@@ -1,5 +1,11 @@
 {
-  "nav": { "login": "Giriş Yap", "logout": "Çıkış", "home": "Ana Sayfa" },
+  "nav": {
+    "login": "Giriş Yap", "logout": "Çıkış", "home": "Ana Sayfa",
+    "panel": "Panel", "income": "Gelirler", "expenses": "Giderler",
+    "payments": "Ödemeler", "announcements": "Duyurular",
+    "annual_works": "Yıllık İşler", "reports": "Raporlar",
+    "import": "Veri Aktar", "users": "Kullanıcılar", "resident_home": "Ana Sayfa"
+  },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch" },
   "home": {
     "badge": "Olive Garden 3 Site Yönetimi",
@@ -29,6 +35,26 @@
     "contact_title": "Yönetimle İletişim",
     "contact_subtitle": "Sorularınız için bize ulaşın"
   },
+  "table": {
+    "col_sno": "S.No", "col_date": "Tarih", "col_title": "Başlık",
+    "col_category": "Kategori", "col_description": "Açıklama", "col_amount": "Tutar",
+    "col_document": "Belge", "col_budget_item": "İşletme Planı", "view": "Görüntüle"
+  },
+  "budget": {
+    "card_title": "Yıllık İşletme Planı",
+    "card_items": "harcama kalemi",
+    "card_auto": "2025-2026 gerçekleşen gider sisteminden otomatik hesaplanır",
+    "col_item": "HARCAMA KONUSU",
+    "col_planned": "Planlanan",
+    "col_actual": "Gerçekleşen",
+    "col_actual_mark": "Gerçekleşen ✦",
+    "total": "TOPLAM",
+    "per_apt": "Daire Başına",
+    "apts": "daire",
+    "expenses_dialog_sub": "2025-2026 Gerçekleşen Giderler",
+    "expenses_dialog_count": "gider kaydı",
+    "expenses_empty": "Bu kategorilerde 2025-2026 dönemi gideri bulunamadı."
+  },
   "login": {
     "title": "Giriş Yap",
     "subtitle": "E-posta ve şifrenizle devam edin.",
@@ -40,7 +66,9 @@
     "error_invalid": "Geçersiz e-posta veya şifre.",
     "error_generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
     "no_account": "Hesabınız yok mu?",
-    "register_link": "Üyelik talebi oluşturun"
+    "register_link": "Üyelik talebi oluşturun",
+    "hero_tagline1": "Saydam & Güvenilir",
+    "hero_tagline2": "Site Yönetimi"
   },
   "register": {
     "title": "Üyelik Talebi",

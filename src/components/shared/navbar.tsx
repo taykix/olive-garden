@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, Leaf, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { signOut } from '@/lib/supabase/actions'
+import { useTranslations } from 'next-intl'
+import { Menu, X, Leaf } from 'lucide-react'
 import { LanguageSwitcher } from './language-switcher'
 import { ProfileDropdown } from './profile-dropdown'
 
@@ -16,28 +15,30 @@ interface NavbarProps {
   showLanguageSwitcher?: boolean
 }
 
-const adminLinks = [
-  { href: '/admin', label: 'Panel' },
-  { href: '/admin/gelirler', label: 'Gelirler' },
-  { href: '/admin/giderler', label: 'Giderler' },
-  { href: '/admin/odemeler', label: 'Ödemeler' },
-  { href: '/admin/duyurular', label: 'Duyurular' },
-  { href: '/admin/yillik-isler', label: 'Yıllık İşler' },
-  { href: '/admin/raporlar', label: 'Raporlar' },
-  { href: '/admin/import', label: 'Veri Aktar' },
-  { href: '/admin/kullanicilar', label: 'Kullanıcılar' },
-]
-
-const residentLinks = [
-  { href: '/resident', label: 'Ana Sayfa' },
-  { href: '/resident/gelirler', label: 'Gelirler' },
-  { href: '/resident/giderler', label: 'Giderler' },
-  { href: '/resident/odemeler', label: 'Ödemeler' },
-  { href: '/resident/raporlar', label: 'Raporlar' },
-]
-
 export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguageSwitcher = false }: NavbarProps) {
+  const t = useTranslations('nav')
   const [open, setOpen] = useState(false)
+
+  const adminLinks = [
+    { href: '/admin',              label: t('panel') },
+    { href: '/admin/gelirler',     label: t('income') },
+    { href: '/admin/giderler',     label: t('expenses') },
+    { href: '/admin/odemeler',     label: t('payments') },
+    { href: '/admin/duyurular',    label: t('announcements') },
+    { href: '/admin/yillik-isler', label: t('annual_works') },
+    { href: '/admin/raporlar',     label: t('reports') },
+    { href: '/admin/import',       label: t('import') },
+    { href: '/admin/kullanicilar', label: t('users') },
+  ]
+
+  const residentLinks = [
+    { href: '/resident',           label: t('resident_home') },
+    { href: '/resident/gelirler',  label: t('income') },
+    { href: '/resident/giderler',  label: t('expenses') },
+    { href: '/resident/odemeler',  label: t('payments') },
+    { href: '/resident/raporlar',  label: t('reports') },
+  ]
+
   const links = role === 'admin' ? adminLinks : role === 'resident' ? residentLinks : []
 
   return (
@@ -62,22 +63,14 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
 
           <div className="flex items-center gap-3">
             {showLanguageSwitcher && <LanguageSwitcher />}
-            {role && userName !== undefined ? (
+            {role && (
               <ProfileDropdown
                 userName={userName ?? null}
                 userEmail={userEmail ?? null}
                 apartmentNo={userApartmentNo ?? null}
                 role={role}
               />
-            ) : role ? (
-              <form action={signOut}>
-                <Button variant="ghost" size="sm" type="submit" className="gap-1 text-gray-600">
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Çıkış</span>
-                </Button>
-              </form>
-            ) : null}
-            {/* Mobile menu button */}
+            )}
             {links.length > 0 && (
               <button
                 className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"

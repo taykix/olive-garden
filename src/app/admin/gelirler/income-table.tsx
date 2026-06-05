@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -35,6 +36,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
 }
 
 export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOnly?: boolean }) {
+  const t = useTranslations('table')
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -77,12 +79,12 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
       <Table>
         <TableHeader>
           <TableRow>
-            <Th field="siraNo" className="w-20">S.No</Th>
-            <Th field="date">Tarih</Th>
-            <Th field="title">Başlık</Th>
-            <TableHead>Kategori</TableHead>
-            <TableHead>Açıklama</TableHead>
-            <Th field="amount" className="text-right">Tutar</Th>
+            <Th field="siraNo" className="w-20">{t('col_sno')}</Th>
+            <Th field="date">{t('col_date')}</Th>
+            <Th field="title">{t('col_title')}</Th>
+            <TableHead>{t('col_category')}</TableHead>
+            <TableHead>{t('col_description')}</TableHead>
+            <Th field="amount" className="text-right">{t('col_amount')}</Th>
             {!readOnly && <TableHead className="w-20" />}
           </TableRow>
         </TableHeader>

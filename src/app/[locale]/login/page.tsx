@@ -64,7 +64,7 @@ export default function LoginPage() {
           <div className="text-white space-y-3">
             <div className="w-12 h-0.5 bg-white/50 rounded-full" />
             <h2 className="text-3xl font-bold leading-snug drop-shadow-lg">
-              Saydam & Güvenilir<br />Site Yönetimi
+              {t('hero_tagline1')}<br />{t('hero_tagline2')}
             </h2>
             <p className="text-white/70 text-sm">Didim Akbük · Türkiye</p>
           </div>

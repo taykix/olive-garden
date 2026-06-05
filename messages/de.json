@@ -1,5 +1,11 @@
 {
-  "nav": { "login": "Anmelden", "logout": "Abmelden", "home": "Startseite" },
+  "nav": {
+    "login": "Anmelden", "logout": "Abmelden", "home": "Startseite",
+    "panel": "Übersicht", "income": "Einnahmen", "expenses": "Ausgaben",
+    "payments": "Zahlungen", "announcements": "Ankündigungen",
+    "annual_works": "Jahresarbeiten", "reports": "Berichte",
+    "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite"
+  },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch" },
   "home": {
     "badge": "Olive Garden 3 Hausverwaltung",
@@ -29,6 +35,26 @@
     "contact_title": "Kontakt zur Verwaltung",
     "contact_subtitle": "Kontaktieren Sie uns bei Fragen"
   },
+  "table": {
+    "col_sno": "Nr.", "col_date": "Datum", "col_title": "Titel",
+    "col_category": "Kategorie", "col_description": "Beschreibung", "col_amount": "Betrag",
+    "col_document": "Dokument", "col_budget_item": "Budgetposten", "view": "Ansehen"
+  },
+  "budget": {
+    "card_title": "Jährlicher Betriebsplan",
+    "card_items": "Kostenpositionen",
+    "card_auto": "Ist-Werte 2025-2026 werden automatisch aus den Ausgabendatensätzen berechnet",
+    "col_item": "KOSTENPOSITION",
+    "col_planned": "Geplant",
+    "col_actual": "Ist-Wert",
+    "col_actual_mark": "Ist-Wert ✦",
+    "total": "GESAMT",
+    "per_apt": "Pro Wohnung",
+    "apts": "Whg.",
+    "expenses_dialog_sub": "Ist-Ausgaben 2025-2026",
+    "expenses_dialog_count": "Ausgabendatensätze",
+    "expenses_empty": "Keine Ausgaben für 2025-2026 in diesen Kategorien gefunden."
+  },
   "login": {
     "title": "Anmelden",
     "subtitle": "Weiter mit Ihrer E-Mail und Ihrem Passwort.",
@@ -40,7 +66,9 @@
     "error_invalid": "Ungültige E-Mail oder Passwort.",
     "error_generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "no_account": "Noch kein Konto?",
-    "register_link": "Mitgliedschaft beantragen"
+    "register_link": "Mitgliedschaft beantragen",
+    "hero_tagline1": "Transparente & Zuverlässige",
+    "hero_tagline2": "Hausverwaltung"
   },
   "register": {
     "title": "Mitgliedschaftsantrag",

@@ -1,5 +1,11 @@
 {
-  "nav": { "login": "Login", "logout": "Logout", "home": "Home" },
+  "nav": {
+    "login": "Login", "logout": "Logout", "home": "Home",
+    "panel": "Dashboard", "income": "Income", "expenses": "Expenses",
+    "payments": "Payments", "announcements": "Announcements",
+    "annual_works": "Annual Works", "reports": "Reports",
+    "import": "Import Data", "users": "Users", "resident_home": "Home"
+  },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch" },
   "home": {
     "badge": "Olive Garden 3 Property Management",
@@ -29,6 +35,26 @@
     "contact_title": "Contact Management",
     "contact_subtitle": "Reach us with your questions"
   },
+  "table": {
+    "col_sno": "No.", "col_date": "Date", "col_title": "Title",
+    "col_category": "Category", "col_description": "Description", "col_amount": "Amount",
+    "col_document": "Document", "col_budget_item": "Budget Item", "view": "View"
+  },
+  "budget": {
+    "card_title": "Annual Operating Plan",
+    "card_items": "line items",
+    "card_auto": "2025-2026 actuals are calculated automatically from expense records",
+    "col_item": "EXPENSE ITEM",
+    "col_planned": "Planned",
+    "col_actual": "Actual",
+    "col_actual_mark": "Actual ✦",
+    "total": "TOTAL",
+    "per_apt": "Per Apartment",
+    "apts": "apts",
+    "expenses_dialog_sub": "2025-2026 Actual Expenses",
+    "expenses_dialog_count": "expense records",
+    "expenses_empty": "No 2025-2026 period expenses found in these categories."
+  },
   "login": {
     "title": "Login",
     "subtitle": "Continue with your email and password.",
@@ -40,7 +66,9 @@
     "error_invalid": "Invalid email or password.",
     "error_generic": "An error occurred. Please try again.",
     "no_account": "Don't have an account?",
-    "register_link": "Request membership"
+    "register_link": "Request membership",
+    "hero_tagline1": "Transparent & Reliable",
+    "hero_tagline2": "Property Management"
   },
   "register": {
     "title": "Membership Request",
