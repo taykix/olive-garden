@@ -1,9 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { Megaphone, LogIn, ShieldCheck, Bell, Users, ChevronDown } from 'lucide-react'
+import { Megaphone, LogIn, ShieldCheck, Bell, Users, ChevronDown, MapPin, Mail } from 'lucide-react'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
+import { ContactForm } from '@/components/shared/contact-form'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -199,6 +200,52 @@ export default async function HomePage({
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── Konum ───────────────────────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-10 w-10 rounded-xl bg-green-700/10 flex items-center justify-center">
+              <MapPin className="h-5 w-5 text-green-700" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Konumumuz</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Didim Akbük, Aydın</p>
+            </div>
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[420px]">
+            <iframe
+              title="Olive Garden 3 Konumu"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=27.42867%2C37.39531%2C37.40731%2C27.44067&layer=mapnik&marker=37.401313107269765%2C27.43467001070739"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-2 text-right">
+            © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:underline">OpenStreetMap</a> katkıcıları
+          </p>
+        </div>
+      </section>
+
+      {/* ── İletişim ─────────────────────────────────────────── */}
+      <section className="py-20 bg-[#f0f5eb]">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-10 w-10 rounded-xl bg-green-700/10 flex items-center justify-center">
+              <Mail className="h-5 w-5 text-green-700" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Yönetimle İletişim</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Sorularınız için bize ulaşın</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+            <ContactForm />
+          </div>
         </div>
       </section>
 
