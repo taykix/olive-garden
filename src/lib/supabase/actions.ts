@@ -95,6 +95,22 @@ export async function deleteUser(userId: string): Promise<{ error?: string; succ
   return { success: true }
 }
 
+export async function changePassword(
+  _prev: { error?: string; success?: boolean },
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createClient()
+  const newPassword = formData.get('new_password') as string
+  const confirm    = formData.get('confirm_password') as string
+
+  if (!newPassword || newPassword.length < 6) return { error: 'Şifre en az 6 karakter olmalıdır.' }
+  if (newPassword !== confirm) return { error: 'Şifreler eşleşmiyor.' }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()

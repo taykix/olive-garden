@@ -6,10 +6,13 @@ import { Menu, X, Leaf, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase/actions'
 import { LanguageSwitcher } from './language-switcher'
+import { ProfileDropdown } from './profile-dropdown'
 
 interface NavbarProps {
   role?: 'admin' | 'resident' | null
   userName?: string | null
+  userEmail?: string | null
+  userApartmentNo?: string | null
   showLanguageSwitcher?: boolean
 }
 
@@ -33,7 +36,7 @@ const residentLinks = [
   { href: '/resident/raporlar', label: 'Raporlar' },
 ]
 
-export function Navbar({ role, userName, showLanguageSwitcher = false }: NavbarProps) {
+export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguageSwitcher = false }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const links = role === 'admin' ? adminLinks : role === 'resident' ? residentLinks : []
 
@@ -59,17 +62,21 @@ export function Navbar({ role, userName, showLanguageSwitcher = false }: NavbarP
 
           <div className="flex items-center gap-3">
             {showLanguageSwitcher && <LanguageSwitcher />}
-            {userName && (
-              <span className="hidden sm:block text-sm text-gray-500">{userName}</span>
-            )}
-            {role && (
+            {role && userName !== undefined ? (
+              <ProfileDropdown
+                userName={userName ?? null}
+                userEmail={userEmail ?? null}
+                apartmentNo={userApartmentNo ?? null}
+                role={role}
+              />
+            ) : role ? (
               <form action={signOut}>
                 <Button variant="ghost" size="sm" type="submit" className="gap-1 text-gray-600">
                   <LogOut className="h-4 w-4" />
                   <span className="hidden sm:inline">Çıkış</span>
                 </Button>
               </form>
-            )}
+            ) : null}
             {/* Mobile menu button */}
             {links.length > 0 && (
               <button
