@@ -27,6 +27,7 @@ export interface Expense {
   category: string | null
   amount: number
   document_url: string | null
+  budget_item_id: string | null
   created_by: string | null
   created_at: string
 }

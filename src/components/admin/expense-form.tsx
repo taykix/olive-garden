@@ -22,9 +22,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { createExpense, updateExpense } from '@/lib/supabase/actions'
+import { createExpense, updateExpense, createBudgetItem } from '@/lib/supabase/actions'
 import { EXPENSE_CATEGORIES } from '@/lib/utils'
-import { Expense } from '@/types'
+import { Expense, BudgetItem } from '@/types'
 import { Plus, Pencil } from 'lucide-react'
 
 const schema = z.object({
@@ -40,10 +40,15 @@ type FormData = z.infer<typeof schema>
 
 interface ExpenseFormProps {
   expense?: Expense
+  budgetItems?: BudgetItem[]
 }
 
-export function ExpenseForm({ expense }: ExpenseFormProps) {
-  const [open, setOpen] = useState(false)
+const NEW_SENTINEL = '__new__'
+
+export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
+  const [open, setOpen]                     = useState(false)
+  const [budgetItemId, setBudgetItemId]     = useState<string>(expense?.budget_item_id ?? ''  )
+  const [newItemName, setNewItemName]       = useState('')
   const isEdit = !!expense
 
   const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -60,10 +65,34 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
       : { date: new Date().toISOString().split('T')[0] },
   })
 
+  function handleOpen(v: boolean) {
+    setOpen(v)
+    if (v) {
+      setBudgetItemId(expense?.budget_item_id ?? '')
+      setNewItemName('')
+    }
+  }
+
   async function onSubmit(data: FormData) {
+    let finalBudgetItemId: string | null = budgetItemId || null
+
+    if (budgetItemId === NEW_SENTINEL) {
+      const name = newItemName.trim()
+      if (!name) { toast.error('Harcama konusu adı gereklidir.'); return }
+      const nextSort = budgetItems.length > 0 ? Math.max(...budgetItems.map(i => i.sort_order)) + 1 : 1
+      const res = await createBudgetItem({
+        category: name.toUpperCase(),
+        sort_order: nextSort,
+        expense_categories: [],
+      })
+      if (res.error || !res.id) { toast.error(res.error ?? 'Harcama konusu oluşturulamadı.'); return }
+      finalBudgetItemId = res.id
+    }
+
     const payload = {
       ...data,
       document_url: data.document_url || undefined,
+      budget_item_id: finalBudgetItemId,
     }
     const result = isEdit
       ? await updateExpense(expense!.id, payload)
@@ -74,23 +103,25 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
     } else {
       toast.success(isEdit ? 'Gider güncellendi.' : 'Gider eklendi.')
       setOpen(false)
-      if (!isEdit) reset()
+      if (!isEdit) { reset(); setBudgetItemId(''); setNewItemName('') }
     }
   }
+
+  const selectedItem = budgetItems.find(b => b.id === budgetItemId)
 
   return (
     <>
       {isEdit ? (
-        <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <Button variant="ghost" size="sm" onClick={() => handleOpen(true)}>
           <Pencil className="h-4 w-4" />
         </Button>
       ) : (
-        <Button size="sm" className="gap-1" onClick={() => setOpen(true)}>
+        <Button size="sm" className="gap-1" onClick={() => handleOpen(true)}>
           <Plus className="h-4 w-4" /> Gider Ekle
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{isEdit ? 'Gideri Düzenle' : 'Yeni Gider Ekle'}</DialogTitle>
@@ -114,6 +145,48 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
               <Input id="title" placeholder="Gider başlığı" {...register('title')} />
               {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
             </div>
+
+            {/* Yıllık İşletme Planı bağlantısı */}
+            <div className="space-y-1">
+              <Label>Harcama Konusu (İşletme Planı)</Label>
+              <Select
+                value={budgetItemId || 'none'}
+                onValueChange={v => { setBudgetItemId(!v || v === 'none' ? '' : v); setNewItemName('') }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Harcama konusu seçin (opsiyonel)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Bağlantı yok —</SelectItem>
+                  {budgetItems.map(b => (
+                    <SelectItem key={b.id} value={b.id}>
+                      <span className="text-gray-400 text-xs mr-1">{b.sort_order}.</span>
+                      {b.category}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={NEW_SENTINEL} className="text-blue-600 font-medium">
+                    + Yeni harcama konusu oluştur
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {selectedItem && (
+                <p className="text-xs text-green-700 font-medium mt-1">✓ {selectedItem.category}</p>
+              )}
+            </div>
+
+            {budgetItemId === NEW_SENTINEL && (
+              <div className="space-y-1">
+                <Label htmlFor="newItemName">Yeni Harcama Konusu Adı</Label>
+                <Input
+                  id="newItemName"
+                  value={newItemName}
+                  onChange={e => setNewItemName(e.target.value)}
+                  placeholder="Örn: ÇEVRE DÜZENLEMESI"
+                  className="uppercase"
+                />
+                <p className="text-xs text-gray-400">İşletme planına yeni bir satır olarak eklenecek.</p>
+              </div>
+            )}
 
             <div className="space-y-1">
               <Label>Kategori</Label>
@@ -144,7 +217,7 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+              <Button type="button" variant="outline" onClick={() => handleOpen(false)}>İptal</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Kaydediliyor...' : isEdit ? 'Güncelle' : 'Ekle'}
               </Button>

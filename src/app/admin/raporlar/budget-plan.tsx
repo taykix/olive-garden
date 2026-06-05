@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef } from 'react'
 import { BudgetItem, Expense } from '@/types'
-import { EXPENSE_CATEGORIES, formatCurrency } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { createBudgetItem, updateBudgetItem, deleteBudgetItem, bulkUpsertBudgetItems } from '@/lib/supabase/actions'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -38,9 +38,9 @@ function parseAmount(s: string): number | null {
   return isNaN(n) ? null : n
 }
 
-function computeActual(cats: string[], expenses: Expense[]): { amount: number; list: Expense[] } {
+function computeActual(itemId: string, expenses: Expense[]): { amount: number; list: Expense[] } {
   const list = expenses.filter(
-    e => e.date >= PERIOD_START && e.date <= PERIOD_END && cats.includes(e.category ?? '')
+    e => e.date >= PERIOD_START && e.date <= PERIOD_END && e.budget_item_id === itemId
   )
   const amount = list.reduce((s, e) => s + Number(e.amount), 0)
   return { amount, list }
@@ -125,13 +125,8 @@ function BudgetItemForm({
   const [p24, setP24] = useState(item?.plan_2024_2025 != null ? String(item.plan_2024_2025) : '')
   const [a24, setA24] = useState(item?.actual_2024_2025 != null ? String(item.actual_2024_2025) : '')
   const [p25, setP25] = useState(item?.plan_2025_2026 != null ? String(item.plan_2025_2026) : '')
-  const [selectedCats, setSelectedCats] = useState<string[]>(item?.expense_categories ?? [])
   const [descTr, setDescTr] = useState(item?.description_tr ?? '')
   const [descEn, setDescEn] = useState(item?.description_en ?? '')
-
-  function toggleCat(cat: string) {
-    setSelectedCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
-  }
 
   async function handleSave() {
     if (!category.trim()) { toast.error('Harcama konusu gereklidir.'); return }
@@ -145,7 +140,7 @@ function BudgetItemForm({
       plan_2024_2025:    parseAmount(p24),
       actual_2024_2025:  parseAmount(a24),
       plan_2025_2026:    parseAmount(p25),
-      expense_categories: selectedCats,
+      expense_categories: item?.expense_categories ?? [],
       description_tr:    descTr.trim() || null,
       description_en:    descEn.trim() || null,
     }
@@ -211,28 +206,6 @@ function BudgetItemForm({
         <p className="text-xs text-gray-400">Gerçekleşen tutar aşağıdaki gider kategorilerinden otomatik hesaplanır.</p>
       </div>
 
-      {/* Expense categories */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold text-gray-500">Bağlı Gider Kategorileri</Label>
-        <p className="text-xs text-gray-400">2025-2026 gerçekleşen tutarı bu kategorilerin toplamından oluşur.</p>
-        <div className="grid grid-cols-2 gap-0.5 border rounded-md p-2.5 max-h-44 overflow-y-auto bg-gray-50/40">
-          {EXPENSE_CATEGORIES.map(cat => (
-            <label key={cat} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-white px-1.5 py-1 rounded">
-              <input
-                type="checkbox"
-                checked={selectedCats.includes(cat)}
-                onChange={() => toggleCat(cat)}
-                className="h-3.5 w-3.5 accent-green-600"
-              />
-              <span className={selectedCats.includes(cat) ? 'font-medium text-green-700' : 'text-gray-600'}>{cat}</span>
-            </label>
-          ))}
-        </div>
-        {selectedCats.length > 0 && (
-          <p className="text-xs text-green-700 font-medium">{selectedCats.join(' · ')}</p>
-        )}
-      </div>
-
       {/* Description */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
@@ -258,14 +231,14 @@ function BudgetItemForm({
 // ─── ExpensesDialog ───────────────────────────────────────────────────────────
 
 function ExpensesDialog({ item, expenses }: { item: BudgetItem; expenses: Expense[] }) {
-  const { amount, list } = computeActual(item.expense_categories, expenses)
+  const { amount, list } = computeActual(item.id, expenses)
   const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date))
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-500 text-xs">
-          Kategoriler: {item.expense_categories.length > 0 ? item.expense_categories.join(', ') : '—'}
+          {list.length} gider kaydı · {item.category}
         </span>
         <span className="font-bold text-red-600">{formatCurrency(amount)}</span>
       </div>
@@ -362,7 +335,7 @@ export function BudgetPlan({ items, expenses }: Props) {
   const actuals = useMemo(() => {
     const map = new Map<string, { amount: number; list: Expense[] }>()
     for (const item of items) {
-      map.set(item.id, computeActual(item.expense_categories, expenses))
+      map.set(item.id, computeActual(item.id, expenses))
     }
     return map
   }, [items, expenses])

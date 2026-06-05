@@ -9,7 +9,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { ExpenseForm } from '@/components/admin/expense-form'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { deleteExpense } from '@/lib/supabase/actions'
-import { Expense } from '@/types'
+import { Expense, BudgetItem } from '@/types'
 import { ChevronUp, ChevronDown, ChevronsUpDown, ExternalLink } from 'lucide-react'
 
 type SortField = 'siraNo' | 'date' | 'title' | 'amount'
@@ -34,7 +34,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     : <ChevronDown className="inline h-3.5 w-3.5 ml-1 text-gray-600" />
 }
 
-export function ExpenseTable({ data }: { data: Expense[] }) {
+export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budgetItems?: BudgetItem[] }) {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -84,12 +84,16 @@ export function ExpenseTable({ data }: { data: Expense[] }) {
             <TableHead>Açıklama</TableHead>
             <Th field="amount" className="text-right">Tutar</Th>
             <TableHead>Belge</TableHead>
+            <TableHead>İşletme Planı</TableHead>
             <TableHead className="w-20" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {sorted.map((expense) => {
             const { siraNo, cleanDesc } = extractSiraNo(expense.description)
+            const linkedItem = expense.budget_item_id
+              ? budgetItems.find(b => b.id === expense.budget_item_id)
+              : null
             return (
               <TableRow key={expense.id}>
                 <TableCell className="text-sm text-gray-500 font-mono">
@@ -119,9 +123,19 @@ export function ExpenseTable({ data }: { data: Expense[] }) {
                     <span className="text-gray-300">—</span>
                   )}
                 </TableCell>
+                <TableCell className="max-w-[180px]">
+                  {linkedItem ? (
+                    <span className="text-xs text-blue-700 font-medium leading-tight block truncate" title={linkedItem.category}>
+                      <span className="text-gray-400 mr-1">{linkedItem.sort_order}.</span>
+                      {linkedItem.category}
+                    </span>
+                  ) : (
+                    <span className="text-gray-300 text-xs">—</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 justify-end">
-                    <ExpenseForm expense={expense} />
+                    <ExpenseForm expense={expense} budgetItems={budgetItems} />
                     <DeleteConfirmDialog onConfirm={deleteExpense.bind(null, expense.id)} />
                   </div>
                 </TableCell>

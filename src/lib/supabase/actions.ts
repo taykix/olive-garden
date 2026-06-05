@@ -98,6 +98,7 @@ export async function createExpense(data: {
   category?: string
   amount: number
   document_url?: string
+  budget_item_id?: string | null
 }) {
   const supabase = await createClient()
   const {
@@ -124,6 +125,7 @@ export async function updateExpense(
     category?: string
     amount: number
     document_url?: string
+    budget_item_id?: string | null
   }
 ) {
   const supabase = await createClient()
@@ -429,13 +431,14 @@ type BudgetItemPayload = {
 
 export async function createBudgetItem(data: BudgetItemPayload) {
   const supabase = await createClient()
-  const { error } = await supabase.from('budget_items').insert({
-    ...data,
-    updated_at: new Date().toISOString(),
-  })
+  const { data: inserted, error } = await supabase
+    .from('budget_items')
+    .insert({ ...data, updated_at: new Date().toISOString() })
+    .select('id')
+    .single()
   if (error) return { error: error.message }
   revalidatePath('/admin/raporlar')
-  return { success: true }
+  return { success: true, id: inserted.id as string }
 }
 
 export async function updateBudgetItem(id: string, data: BudgetItemPayload) {

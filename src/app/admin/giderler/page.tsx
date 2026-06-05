@@ -4,19 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/utils'
 import { ExpenseForm } from '@/components/admin/expense-form'
 import { EmptyState } from '@/components/shared/empty-state'
-import { Expense } from '@/types'
+import { Expense, BudgetItem } from '@/types'
 import { ExpenseTable } from './expense-table'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GiderlerPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('expenses')
-    .select('*')
-    .order('date', { ascending: false })
+  const [{ data, error }, { data: budgetData }] = await Promise.all([
+    supabase.from('expenses').select('*').order('date', { ascending: false }),
+    supabase.from('budget_items').select('*').order('sort_order'),
+  ])
 
-  const expenseList: Expense[] = data ?? []
+  const expenseList: Expense[]   = data ?? []
+  const budgetItems: BudgetItem[] = budgetData ?? []
   const total = expenseList.reduce((s, r) => s + Number(r.amount), 0)
 
   return (
@@ -26,7 +27,7 @@ export default async function GiderlerPage() {
           <h1 className="text-2xl font-bold text-gray-900">Giderler</h1>
           <p className="text-gray-500 text-sm mt-1">Toplam: {formatCurrency(total)}</p>
         </div>
-        <ExpenseForm />
+        <ExpenseForm budgetItems={budgetItems} />
       </div>
 
       {error && (
@@ -44,7 +45,7 @@ export default async function GiderlerPage() {
           {expenseList.length === 0 ? (
             <EmptyState icon={TrendingDown} title="Henüz gider kaydı yok" description="Yeni bir gider eklemek için 'Gider Ekle' butonunu kullanın." />
           ) : (
-            <ExpenseTable data={expenseList} />
+            <ExpenseTable data={expenseList} budgetItems={budgetItems} />
           )}
         </CardContent>
       </Card>
