@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { sendContactEmail } from '@/lib/actions/contact'
-import { Mail, Phone, Send, CheckCircle2, Info } from 'lucide-react'
+import { Mail, Phone, Send, CheckCircle2 } from 'lucide-react'
 
 export function ContactForm() {
   const [senderEmail, setSenderEmail] = useState('')
@@ -49,10 +49,9 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* İpucu */}
-      <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
-        <Info className="h-4 w-4 shrink-0 mt-0.5" />
-        <span>Tüm mesajlara en kısa sürede dönüş yapılmaktadır.</span>
-      </div>
+      <p className="text-sm text-gray-400 italic">
+        Mesajınıza en kısa sürede dönüş yapılacaktır.
+      </p>
 
       <div className="grid sm:grid-cols-2 gap-4">
         {/* E-posta */}

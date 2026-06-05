@@ -218,7 +218,7 @@ export default async function HomePage({
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 h-[420px]">
             <iframe
               title="Olive Garden 3 Konumu"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=27.42867%2C37.39531%2C37.40731%2C27.44067&layer=mapnik&marker=37.401313107269765%2C27.43467001070739"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=27.43267%2C37.39931%2C27.43667%2C37.40331&layer=mapnik&marker=37.401313107269765%2C27.43467001070739"
               width="100%"
               height="100%"
               style={{ border: 0 }}
