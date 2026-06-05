@@ -93,7 +93,11 @@
     "sign_in_link": "Giriş yapın",
     "email_confirm_title": "E-postanızı doğrulayın",
     "email_confirm_desc": "Kayıt linki e-posta adresinize gönderildi. Linke tıkladıktan sonra üyelik talebiniz yöneticiye iletilecektir.",
-    "back_to_login": "Giriş sayfasına dön"
+    "back_to_login": "Giriş sayfasına dön",
+    "terms_prefix": "Kullanım koşullarını ve",
+    "terms_link": "KVKK Aydınlatma Metnini",
+    "terms_suffix": "okudum, kabul ediyorum.",
+    "terms_required": "Devam edebilmek için kullanım koşullarını kabul etmelisiniz."
   },
   "pending": {
     "title": "Üyeliğiniz İnceleniyor",

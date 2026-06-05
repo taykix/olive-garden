@@ -22,10 +22,12 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
   const [loading, setLoading]     = useState(false)
   const [needsEmail, setNeedsEmail] = useState(false)
   const [aptNo, setAptNo]         = useState('')
+  const [agreed, setAgreed]       = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!aptNo) { setError(t('apt_no_selection')); return }
+    if (!agreed) { setError(t('terms_required')); return }
     setLoading(true)
     setError(null)
     const fd = new FormData(e.currentTarget)
@@ -121,11 +123,29 @@ export function RegisterForm({ apartments }: RegisterFormProps) {
                 className="h-11 border-gray-200 bg-white focus-visible:ring-green-500 focus-visible:border-green-400" />
             </div>
 
+            {/* Kullanım koşulları onayı */}
+            <label className="flex items-start gap-2.5 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={e => setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 shrink-0"
+              />
+              <span className="text-sm text-gray-600 leading-snug">
+                {t('terms_prefix')}{' '}
+                <a href="/sozlesme" target="_blank" rel="noopener noreferrer"
+                  className="text-green-700 font-medium hover:underline">
+                  {t('terms_link')}
+                </a>{' '}
+                {t('terms_suffix')}
+              </span>
+            </label>
+
             {error && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{error}</p>
             )}
 
-            <Button type="submit" disabled={loading || !aptNo}
+            <Button type="submit" disabled={loading || !aptNo || !agreed}
               className="w-full h-11 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl shadow-sm">
               {loading ? t('submitting') : t('submit')}
             </Button>

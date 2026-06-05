@@ -93,7 +93,11 @@
     "sign_in_link": "Sign in",
     "email_confirm_title": "Verify your email",
     "email_confirm_desc": "A confirmation link has been sent to your email address. After clicking the link, your membership request will be forwarded to the administrator.",
-    "back_to_login": "Back to login"
+    "back_to_login": "Back to login",
+    "terms_prefix": "I have read and accept the",
+    "terms_link": "Terms of Use & Privacy Policy",
+    "terms_suffix": "",
+    "terms_required": "You must accept the terms of use to continue."
   },
   "pending": {
     "title": "Your Membership Is Under Review",

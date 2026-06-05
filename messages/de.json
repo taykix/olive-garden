@@ -93,7 +93,11 @@
     "sign_in_link": "Anmelden",
     "email_confirm_title": "E-Mail bestätigen",
     "email_confirm_desc": "Ein Bestätigungslink wurde an Ihre E-Mail-Adresse gesendet. Nach dem Klicken auf den Link wird Ihr Mitgliedschaftsantrag an den Administrator weitergeleitet.",
-    "back_to_login": "Zurück zur Anmeldung"
+    "back_to_login": "Zurück zur Anmeldung",
+    "terms_prefix": "Ich habe die",
+    "terms_link": "Nutzungsbedingungen & Datenschutzerklärung",
+    "terms_suffix": "gelesen und akzeptiere sie.",
+    "terms_required": "Sie müssen die Nutzungsbedingungen akzeptieren, um fortzufahren."
   },
   "pending": {
     "title": "Ihre Mitgliedschaft wird geprüft",
