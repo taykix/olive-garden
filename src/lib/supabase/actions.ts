@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from './server'
+import { createAdminClient } from './admin'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -49,18 +50,15 @@ export async function signUp(formData: FormData): Promise<{ error?: string; need
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: {
+        full_name: fullName,
+        apartment_no: apartmentNo || null,
+      },
+    },
   })
 
   if (error) return { error: error.message }
-
-  if (data.user) {
-    await supabase.from('profiles').update({
-      apartment_no: apartmentNo || null,
-      email,
-      status: 'pending',
-    }).eq('id', data.user.id)
-  }
 
   // Email onayı gerekiyorsa session null olur
   if (!data.session) return { needsConfirmation: true }
@@ -79,6 +77,22 @@ export async function rejectUser(userId: string) {
   const supabase = await createClient()
   await supabase.from('profiles').update({ status: 'rejected' }).eq('id', userId)
   revalidatePath('/admin/kullanicilar')
+}
+
+export async function deleteUser(userId: string): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Yetkisiz.' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Yetkisiz.' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/kullanicilar')
+  return { success: true }
 }
 
 export async function signOut() {

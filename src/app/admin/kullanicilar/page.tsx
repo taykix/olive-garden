@@ -1,10 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { approveUser, rejectUser } from '@/lib/supabase/actions'
 import { formatDate } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Users, Clock, CheckCircle2, XCircle, Home } from 'lucide-react'
+import { UserActionButtons } from '@/components/admin/user-action-buttons'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,10 +15,10 @@ export default async function KullanicilarPage() {
     .select('id, full_name, email, role, status, apartment_no, last_sign_in_at, created_at')
     .order('created_at', { ascending: false })
 
-  const all       = profiles ?? []
-  const pending   = all.filter(p => p.status === 'pending')
-  const approved  = all.filter(p => p.status === 'approved')
-  const rejected  = all.filter(p => p.status === 'rejected')
+  const all      = profiles ?? []
+  const pending  = all.filter(p => p.status === 'pending')
+  const approved = all.filter(p => p.status === 'approved')
+  const rejected = all.filter(p => p.status === 'rejected')
 
   return (
     <div className="space-y-8">
@@ -46,25 +45,20 @@ export default async function KullanicilarPage() {
               {pending.map(p => (
                 <div key={p.id} className="flex items-center justify-between px-4 py-3 gap-4">
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">{p.full_name || '—'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{p.email || '—'}</p>
+                    <p className="font-medium text-gray-900 text-sm">{p.full_name || <span className="text-gray-400 italic">İsim yok</span>}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{p.email || <span className="text-gray-400 italic">Email yok</span>}</p>
                     <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                      <Home className="h-3 w-3" /> Daire: {p.apartment_no || '—'}
+                      <Home className="h-3 w-3" />
+                      Daire: <span className="font-mono font-semibold text-green-700">{p.apartment_no || '—'}</span>
                       <span className="ml-2">· Kayıt: {formatDate(p.created_at)}</span>
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <form action={approveUser.bind(null, p.id)}>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1 h-8">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Onayla
-                      </Button>
-                    </form>
-                    <form action={rejectUser.bind(null, p.id)}>
-                      <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 gap-1 h-8">
-                        <XCircle className="h-3.5 w-3.5" /> Reddet
-                      </Button>
-                    </form>
-                  </div>
+                  <UserActionButtons
+                    userId={p.id}
+                    userName={p.full_name ?? ''}
+                    status={p.status}
+                    role={p.role}
+                  />
                 </div>
               ))}
             </div>
@@ -111,13 +105,12 @@ export default async function KullanicilarPage() {
                         {p.last_sign_in_at ? formatDate(p.last_sign_in_at) : '—'}
                       </td>
                       <td className="px-4 py-2.5">
-                        {p.role !== 'admin' && (
-                          <form action={rejectUser.bind(null, p.id)}>
-                            <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 h-7 text-xs gap-1">
-                              <XCircle className="h-3 w-3" /> Engelle
-                            </Button>
-                          </form>
-                        )}
+                        <UserActionButtons
+                          userId={p.id}
+                          userName={p.full_name ?? ''}
+                          status={p.status}
+                          role={p.role}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -143,13 +136,16 @@ export default async function KullanicilarPage() {
                 <div key={p.id} className="flex items-center justify-between px-4 py-3 gap-4">
                   <div>
                     <p className="font-medium text-gray-700 text-sm">{p.full_name || '—'}</p>
-                    <p className="text-xs text-gray-400">{p.email || '—'} · Daire: {p.apartment_no || '—'}</p>
+                    <p className="text-xs text-gray-400">
+                      {p.email || '—'} · Daire: <span className="font-mono">{p.apartment_no || '—'}</span>
+                    </p>
                   </div>
-                  <form action={approveUser.bind(null, p.id)}>
-                    <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 gap-1 h-8">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Yeniden Onayla
-                    </Button>
-                  </form>
+                  <UserActionButtons
+                    userId={p.id}
+                    userName={p.full_name ?? ''}
+                    status={p.status}
+                    role={p.role}
+                  />
                 </div>
               ))}
             </div>
