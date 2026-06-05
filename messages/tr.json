@@ -10,13 +10,13 @@
     "de": "Deutsch"
   },
   "home": {
-    "badge": "Olive Garden 2 Site Yönetimi",
+    "badge": "Olive Garden 3 Site Yönetimi",
     "hero_title": "Saydam & Güvenilir",
     "hero_title_accent": "Site Yönetimi",
-    "hero_subtitle": "Didim Akbük'teki Olive Garden 2 sitesi sakinlerine yönelik finansal bilgilerin şeffaf biçimde paylaşıldığı modern yönetim platformu.",
+    "hero_subtitle": "Didim Akbük'teki Olive Garden 3 sitesi sakinlerine yönelik finansal bilgilerin şeffaf biçimde paylaşıldığı modern yönetim platformu.",
     "hero_cta": "Hesabınızla Giriş Yapın",
     "hero_scroll": "Duyuruları Görüntüle",
-    "features_title": "Neden Olive Garden 2?",
+    "features_title": "Neden Olive Garden 3?",
     "features_subtitle": "Sakinlerimize en iyi hizmeti sunmak için modern bir yönetim anlayışı benimsiyoruz.",
     "feat1_title": "Şeffaf Yönetim",
     "feat1_desc": "Tüm gelir ve gider kayıtlarına sakinlerimiz kolayca erişebilir.",
@@ -31,7 +31,7 @@
     "cta_title": "Site sakini veya yönetici misiniz?",
     "cta_subtitle": "Hesabınızla giriş yaparak kişisel panelinize erişin.",
     "cta_btn": "Giriş Yap",
-    "footer": "Olive Garden 2 Site Yönetimi · Didim Akbük"
+    "footer": "Olive Garden 3 Site Yönetimi · Didim Akbük"
   },
   "login": {
     "title": "Giriş Yap",
@@ -46,7 +46,7 @@
   },
   "resident": {
     "greeting": "Merhaba",
-    "subtitle": "Olive Garden 2 Sakin Paneli",
+    "subtitle": "Olive Garden 3 Sakin Paneli",
     "financial_title": "Finansal Özet",
     "income": "Toplam Gelir",
     "expenses": "Toplam Gider",

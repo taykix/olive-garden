@@ -10,13 +10,13 @@
     "de": "Deutsch"
   },
   "home": {
-    "badge": "Olive Garden 2 Hausverwaltung",
+    "badge": "Olive Garden 3 Hausverwaltung",
     "hero_title": "Transparente & Zuverlässige",
     "hero_title_accent": "Hausverwaltung",
-    "hero_subtitle": "Eine moderne Verwaltungsplattform für die Bewohner von Olive Garden 2 in Didim Akbük — klarer Zugang zu Finanzinformationen und Gemeinschaftsankündigungen.",
+    "hero_subtitle": "Eine moderne Verwaltungsplattform für die Bewohner von Olive Garden 3 in Didim Akbük — klarer Zugang zu Finanzinformationen und Gemeinschaftsankündigungen.",
     "hero_cta": "Mit Ihrem Konto anmelden",
     "hero_scroll": "Ankündigungen ansehen",
-    "features_title": "Warum Olive Garden 2?",
+    "features_title": "Warum Olive Garden 3?",
     "features_subtitle": "Wir verfolgen einen modernen Verwaltungsansatz, um unseren Bewohnern den besten Service zu bieten.",
     "feat1_title": "Transparente Verwaltung",
     "feat1_desc": "Alle Einnahmen und Ausgaben sind für unsere Bewohner leicht zugänglich.",
@@ -31,7 +31,7 @@
     "cta_title": "Sind Sie Bewohner oder Verwalter?",
     "cta_subtitle": "Melden Sie sich mit Ihrem Konto an, um auf Ihr persönliches Dashboard zuzugreifen.",
     "cta_btn": "Anmelden",
-    "footer": "Olive Garden 2 Hausverwaltung · Didim Akbük"
+    "footer": "Olive Garden 3 Hausverwaltung · Didim Akbük"
   },
   "login": {
     "title": "Anmelden",
@@ -46,7 +46,7 @@
   },
   "resident": {
     "greeting": "Hallo",
-    "subtitle": "Olive Garden 2 Bewohnerportal",
+    "subtitle": "Olive Garden 3 Bewohnerportal",
     "financial_title": "Finanzübersicht",
     "income": "Gesamteinnahmen",
     "expenses": "Gesamtausgaben",
