@@ -40,7 +40,7 @@ export function Navbar({ role, userName, showLanguageSwitcher = false }: NavbarP
             <div className="h-7 w-7 rounded-full bg-green-800 flex items-center justify-center">
               <Leaf className="h-3.5 w-3.5 text-green-100" />
             </div>
-            <span className="hidden sm:inline">Olive Garden 2</span>
+            <span className="hidden sm:inline">Olive Garden 3</span>
           </Link>
 
           {/* Desktop nav */}
