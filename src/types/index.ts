@@ -56,6 +56,10 @@ export interface Announcement {
   id: string
   title: string
   content: string
+  title_en: string | null
+  content_en: string | null
+  title_de: string | null
+  content_de: string | null
   published: boolean
   created_by: string | null
   created_at: string

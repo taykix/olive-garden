@@ -1,10 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { TrendingUp, TrendingDown, Wallet, Megaphone, Home } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, formatDate, getMonthName } from '@/lib/utils'
+import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
+import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
 
 export const dynamic = 'force-dynamic'
 
@@ -252,19 +252,7 @@ export default async function ResidentPage({
         ) : (
           <div className="space-y-3">
             {announcements.map((a) => (
-              <Card key={a.id}>
-                <CardContent className="py-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{a.title}</h3>
-                      <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{a.content}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {formatDate(a.created_at)}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              <ExpandableAnnouncement key={a.id} a={a} />
             ))}
           </div>
         )}

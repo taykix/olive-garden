@@ -49,6 +49,11 @@ export default async function DuyurularPage() {
                       <Badge variant={a.published ? 'default' : 'secondary'} className="text-xs">
                         {a.published ? 'Yayında' : 'Taslak'}
                       </Badge>
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-medium">TR</span>
+                        {a.title_en && <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs font-medium">EN</span>}
+                        {a.title_de && <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-medium">DE</span>}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600 whitespace-pre-line line-clamp-3">{a.content}</p>
                     <p className="text-xs text-gray-400 mt-2">{formatDate(a.created_at)}</p>

@@ -280,11 +280,17 @@ export async function deletePayment(id: string) {
 
 // ─── Announcements ───────────────────────────────────────────────────────────
 
-export async function createAnnouncement(data: {
+export interface AnnouncementPayload {
   title: string
   content: string
+  title_en?: string
+  content_en?: string
+  title_de?: string
+  content_de?: string
   published?: boolean
-}) {
+}
+
+export async function createAnnouncement(data: AnnouncementPayload) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -304,7 +310,7 @@ export async function createAnnouncement(data: {
 
 export async function updateAnnouncement(
   id: string,
-  data: { title: string; content: string; published?: boolean }
+  data: AnnouncementPayload
 ) {
   const supabase = await createClient()
   const { error } = await supabase
