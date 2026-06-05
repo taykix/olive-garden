@@ -108,8 +108,10 @@ export function ExpenseTable({ data, budgetItems = [] }: { data: Expense[]; budg
                     ? <Badge variant="secondary" className="text-xs">{expense.category}</Badge>
                     : <span className="text-gray-300">—</span>}
                 </TableCell>
-                <TableCell className="text-sm text-gray-500 max-w-xs truncate">
-                  {cleanDesc || <span className="text-gray-300">—</span>}
+                <TableCell className="text-sm text-gray-500">
+                  {cleanDesc
+                    ? <span className="block max-w-[160px] truncate cursor-default" title={cleanDesc}>{cleanDesc}</span>
+                    : <span className="text-gray-300">—</span>}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-red-600 whitespace-nowrap">
                   {formatCurrency(Number(expense.amount))}
