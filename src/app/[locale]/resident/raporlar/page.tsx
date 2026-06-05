@@ -65,7 +65,7 @@ export default async function ResidentRaporlarPage() {
         <p className="text-gray-500 text-sm mt-1">Finansal özet ve detay raporları</p>
       </div>
 
-      <BudgetPlan items={budgetItems} expenses={expenseList} />
+      <BudgetPlan items={budgetItems} expenses={expenseList} readOnly />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>

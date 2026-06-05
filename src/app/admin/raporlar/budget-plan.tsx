@@ -284,9 +284,10 @@ function ExpensesDialog({ item, expenses }: { item: BudgetItem; expenses: Expens
 interface Props {
   items: BudgetItem[]
   expenses: Expense[]
+  readOnly?: boolean
 }
 
-export function BudgetPlan({ items, expenses }: Props) {
+export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
   const [addOpen, setAddOpen]       = useState(false)
   const [editItem, setEditItem]     = useState<BudgetItem | null>(null)
   const [viewItem, setViewItem]     = useState<BudgetItem | null>(null)
@@ -368,28 +369,30 @@ export function BudgetPlan({ items, expenses }: Props) {
               <CardTitle className="text-sm text-gray-700">Yıllık İşletme Planı</CardTitle>
               <p className="text-xs text-gray-400 mt-0.5">2023–2026 dönemi · {items.length} harcama kalemi · 2025-2026 gerçekleşen gider sisteminden otomatik hesaplanır</p>
             </div>
-            <div className="flex items-center gap-2 print:hidden">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-                disabled={importing}
-                className="gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                {importing ? 'Aktarılıyor...' : 'CSV Aktar'}
-              </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,text/csv,.txt"
-                className="hidden"
-                onChange={handleCSVFile}
-              />
-              <Button size="sm" variant="outline" onClick={() => setAddOpen(true)} className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Kalem Ekle
-              </Button>
-            </div>
+            {!readOnly && (
+              <div className="flex items-center gap-2 print:hidden">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={importing}
+                  className="gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {importing ? 'Aktarılıyor...' : 'CSV Aktar'}
+                </Button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,text/csv,.txt"
+                  className="hidden"
+                  onChange={handleCSVFile}
+                />
+                <Button size="sm" variant="outline" onClick={() => setAddOpen(true)} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Kalem Ekle
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -451,14 +454,18 @@ export function BudgetPlan({ items, expenses }: Props) {
                               <Eye className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          <button
-                            onClick={() => setEditItem(item)}
-                            title="Düzenle"
-                            className="p-1 text-gray-300 hover:text-gray-600 transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <DeleteConfirmDialog onConfirm={() => deleteBudgetItem(item.id)} />
+                          {!readOnly && (
+                            <>
+                              <button
+                                onClick={() => setEditItem(item)}
+                                title="Düzenle"
+                                className="p-1 text-gray-300 hover:text-gray-600 transition-colors"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <DeleteConfirmDialog onConfirm={() => deleteBudgetItem(item.id)} />
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
