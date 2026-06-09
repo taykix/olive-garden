@@ -26,7 +26,7 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { createExpense, updateExpense, createBudgetItem } from '@/lib/supabase/actions'
 import { createClient } from '@/lib/supabase/client'
-import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_KEY } from '@/lib/utils'
+import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_KEY, MONTHS } from '@/lib/utils'
 import { Expense, BudgetItem } from '@/types'
 import { Plus, Pencil } from 'lucide-react'
 
@@ -40,6 +40,20 @@ function extractSiraNo(desc: string | null): { siraNo: string; cleanDesc: string
     return { siraNo: m[1], cleanDesc }
   }
   return { siraNo: '', cleanDesc: desc }
+}
+
+function parseDateParts(dateStr?: string | null): { day: number; month: number; year: number } {
+  const now = new Date()
+  if (!dateStr) return { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() }
+  const parts = dateStr.split('-')
+  if (parts.length === 3) {
+    return {
+      year:  parseInt(parts[0], 10) || now.getFullYear(),
+      month: parseInt(parts[1], 10) || now.getMonth() + 1,
+      day:   parseInt(parts[2], 10) || now.getDate(),
+    }
+  }
+  return { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() }
 }
 
 const schema = z.object({
@@ -60,15 +74,23 @@ interface ExpenseFormProps {
 
 const NEW_SENTINEL = '__new__'
 const supabase = createClient()
+const currentYear = new Date().getFullYear()
+const years = Array.from({ length: 6 }, (_, i) => currentYear - 2 + i)
+const MONTH_OPTS = Object.entries(MONTHS) as [string, string][]
 
 export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
   const tCat = useTranslations('expense_cat')
   const locale = useLocale()
-  const [open, setOpen]               = useState(false)
+  const [open, setOpen]                 = useState(false)
   const [budgetItemId, setBudgetItemId] = useState<string>(expense?.budget_item_id ?? '')
-  const [newItemName, setNewItemName] = useState('')
-  const [siraNo, setSiraNo]           = useState('')
+  const [newItemName, setNewItemName]   = useState('')
+  const [siraNo, setSiraNo]             = useState('')
   const isEdit = !!expense
+
+  const initDate = parseDateParts(expense?.date)
+  const [expDay, setExpDay]     = useState(initDate.day)
+  const [expMonth, setExpMonth] = useState(initDate.month)
+  const [expYear, setExpYear]   = useState(initDate.year)
 
   const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -83,6 +105,12 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
         }
       : { date: new Date().toISOString().split('T')[0] },
   })
+
+  // Sync Gün/Ay/Yıl → date form field
+  useEffect(() => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    setValue('date', `${expYear}-${pad(expMonth)}-${pad(expDay)}`)
+  }, [expDay, expMonth, expYear, setValue])
 
   // Auto-fill next S.No in add mode
   useEffect(() => {
@@ -107,10 +135,18 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
       setBudgetItemId(expense?.budget_item_id ?? '')
       setNewItemName('')
       if (isEdit) {
+        const parts = parseDateParts(expense?.date)
+        setExpDay(parts.day)
+        setExpMonth(parts.month)
+        setExpYear(parts.year)
         const { siraNo: sNo, cleanDesc } = extractSiraNo(expense?.description ?? null)
         setSiraNo(sNo)
         setValue('description', cleanDesc)
       } else {
+        const now = new Date()
+        setExpDay(now.getDate())
+        setExpMonth(now.getMonth() + 1)
+        setExpYear(now.getFullYear())
         setSiraNo('')
       }
     }
@@ -150,7 +186,16 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
     } else {
       toast.success(isEdit ? 'Gider güncellendi.' : 'Gider eklendi.')
       setOpen(false)
-      if (!isEdit) { reset(); setBudgetItemId(''); setNewItemName(''); setSiraNo('') }
+      if (!isEdit) {
+        reset()
+        setBudgetItemId('')
+        setNewItemName('')
+        setSiraNo('')
+        const now = new Date()
+        setExpDay(now.getDate())
+        setExpMonth(now.getMonth() + 1)
+        setExpYear(now.getFullYear())
+      }
     }
   }
 
@@ -180,18 +225,48 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
             <DialogTitle>{isEdit ? 'Gideri Düzenle' : 'Yeni Gider Ekle'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Gün + Ay + Yıl */}
+            <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="date">Tarih</Label>
-                <Input id="date" type="date" {...register('date')} />
-                {errors.date && <p className="text-xs text-red-500">{errors.date.message}</p>}
+                <Label>Gün</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={expDay || ''}
+                  onChange={e => setExpDay(parseInt(e.target.value, 10) || 1)}
+                  placeholder="Gün"
+                />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="amount">Tutar (₺)</Label>
-                <Input id="amount" type="number" step="0.01" placeholder="0.00" {...register('amount', { valueAsNumber: true })} />
-                {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
+                <Label>Ay</Label>
+                <Select value={String(expMonth)} onValueChange={v => setExpMonth(Number(v))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTH_OPTS.map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Yıl</Label>
+                <Select value={String(expYear)} onValueChange={v => setExpYear(Number(v))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map(y => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+            {errors.date && <p className="text-xs text-red-500">{errors.date.message}</p>}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -200,14 +275,20 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
                 {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="siraNo">Defter Sıra No</Label>
-                <Input
-                  id="siraNo"
-                  placeholder="örn: 42"
-                  value={siraNo}
-                  onChange={e => setSiraNo(e.target.value)}
-                />
+                <Label htmlFor="amount">Tutar (₺)</Label>
+                <Input id="amount" type="number" step="0.01" placeholder="0.00" {...register('amount', { valueAsNumber: true })} />
+                {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="siraNo">Defter Sıra No</Label>
+              <Input
+                id="siraNo"
+                placeholder="örn: 42"
+                value={siraNo}
+                onChange={e => setSiraNo(e.target.value)}
+              />
             </div>
 
             {/* Yıllık İşletme Planı bağlantısı */}
