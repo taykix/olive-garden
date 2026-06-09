@@ -4,7 +4,8 @@
     "panel": "Tableau de bord", "income": "Revenus", "expenses": "Dépenses",
     "payments": "Paiements", "announcements": "Annonces",
     "annual_works": "Travaux annuels", "reports": "Rapports",
-    "import": "Importer", "users": "Utilisateurs", "resident_home": "Accueil"
+    "import": "Importer", "users": "Utilisateurs", "resident_home": "Accueil",
+    "documents": "Documents"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -213,6 +214,12 @@
     "expenses_dialog_sub": "Dépenses réalisées 2025-2026",
     "expenses_dialog_count": "enregistrements de dépenses",
     "expenses_empty": "Aucune dépense 2025-2026 trouvée dans ces catégories."
+  },
+  "belgeler": {
+    "title": "Documents",
+    "count_suffix": "documents",
+    "empty": "Aucun document téléchargé pour l'instant.",
+    "download": "Télécharger"
   },
   "income_cat": {
     "all": "Toutes les catégories",

@@ -646,6 +646,80 @@ export async function deleteBudgetItem(id: string) {
   return { success: true }
 }
 
+// ─── Documents ───────────────────────────────────────────────────────────────
+
+export interface DocumentPayload {
+  title_tr: string
+  title_en?: string | null
+  title_de?: string | null
+  title_fr?: string | null
+  title_ru?: string | null
+  description_tr?: string | null
+  description_en?: string | null
+  description_de?: string | null
+  description_fr?: string | null
+  description_ru?: string | null
+  file_url: string
+  file_name: string
+  storage_path: string
+  file_size?: number | null
+  file_type?: string | null
+}
+
+export async function createDocument(data: DocumentPayload) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { error } = await supabase.from('documents').insert({
+    ...data,
+    uploaded_at: new Date().toISOString(),
+    created_by: user?.id,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/belgeler')
+  revalidatePath('/resident/belgeler')
+  return { success: true }
+}
+
+export async function updateDocument(
+  id: string,
+  data: DocumentPayload,
+  oldStoragePath?: string
+) {
+  const supabase = await createClient()
+
+  if (oldStoragePath) {
+    await supabase.storage.from('documents').remove([oldStoragePath])
+  }
+
+  const { error } = await supabase.from('documents').update(data).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/belgeler')
+  revalidatePath('/resident/belgeler')
+  return { success: true }
+}
+
+export async function deleteDocument(id: string) {
+  const supabase = await createClient()
+
+  const { data: doc } = await supabase
+    .from('documents')
+    .select('storage_path')
+    .eq('id', id)
+    .single()
+
+  if (doc?.storage_path) {
+    await supabase.storage.from('documents').remove([doc.storage_path])
+  }
+
+  const { error } = await supabase.from('documents').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/belgeler')
+  revalidatePath('/resident/belgeler')
+  return { success: true }
+}
+
 export async function bulkUpsertBudgetItems(
   rows: Array<{
     id?: string

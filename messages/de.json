@@ -4,7 +4,8 @@
     "panel": "Übersicht", "income": "Einnahmen", "expenses": "Ausgaben",
     "payments": "Zahlungen", "announcements": "Ankündigungen",
     "annual_works": "Jahresarbeiten", "reports": "Berichte",
-    "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite"
+    "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite",
+    "documents": "Dokumente"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -213,6 +214,12 @@
     "no_data": "Keine Daten",
     "no_expense_data": "Keine Ausgabendaten",
     "other_category": "Sonstige"
+  },
+  "belgeler": {
+    "title": "Dokumente",
+    "count_suffix": "Dokumente",
+    "empty": "Noch keine Dokumente hochgeladen.",
+    "download": "Herunterladen"
   },
   "income_cat": {
     "all": "Alle Kategorien",

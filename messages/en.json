@@ -4,7 +4,8 @@
     "panel": "Dashboard", "income": "Income", "expenses": "Expenses",
     "payments": "Payments", "announcements": "Announcements",
     "annual_works": "Annual Works", "reports": "Reports",
-    "import": "Import Data", "users": "Users", "resident_home": "Home"
+    "import": "Import Data", "users": "Users", "resident_home": "Home",
+    "documents": "Documents"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -218,6 +219,12 @@
     "all": "All Categories",
     "aidat": "Dues", "deferred": "Carried Forward", "kasa": "Cash Payment",
     "rental": "Rental Income", "donation": "Donation", "other": "Other"
+  },
+  "belgeler": {
+    "title": "Documents",
+    "count_suffix": "documents",
+    "empty": "No documents uploaded yet.",
+    "download": "Download"
   },
   "expense_cat": {
     "all": "All Categories",

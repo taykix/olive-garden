@@ -26,6 +26,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
     { href: '/admin/odemeler',     label: t('payments') },
     { href: '/admin/duyurular',    label: t('announcements') },
     { href: '/admin/yillik-isler', label: t('annual_works') },
+    { href: '/admin/belgeler',     label: t('documents') },
     { href: '/admin/raporlar',     label: t('reports') },
     { href: '/admin/import',       label: t('import') },
     { href: '/admin/kullanicilar', label: t('users') },
@@ -36,6 +37,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
     { href: '/resident/gelirler',  label: t('income') },
     { href: '/resident/giderler',  label: t('expenses') },
     { href: '/resident/odemeler',  label: t('payments') },
+    { href: '/resident/belgeler',  label: t('documents') },
     { href: '/resident/raporlar',  label: t('reports') },
   ]
 

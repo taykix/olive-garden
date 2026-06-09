@@ -4,7 +4,8 @@
     "panel": "Панель управления", "income": "Доходы", "expenses": "Расходы",
     "payments": "Платежи", "announcements": "Объявления",
     "annual_works": "Годовые работы", "reports": "Отчёты",
-    "import": "Импорт данных", "users": "Пользователи", "resident_home": "Главная"
+    "import": "Импорт данных", "users": "Пользователи", "resident_home": "Главная",
+    "documents": "Документы"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -213,6 +214,12 @@
     "expenses_dialog_sub": "Фактические расходы 2025-2026",
     "expenses_dialog_count": "записей о расходах",
     "expenses_empty": "Расходы за период 2025-2026 в данных категориях не найдены."
+  },
+  "belgeler": {
+    "title": "Документы",
+    "count_suffix": "документов",
+    "empty": "Документы ещё не загружены.",
+    "download": "Скачать"
   },
   "income_cat": {
     "all": "Все категории",

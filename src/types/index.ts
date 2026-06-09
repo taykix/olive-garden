@@ -127,6 +127,28 @@ export interface BudgetItem {
   updated_at: string
 }
 
+export interface SiteDocument {
+  id: string
+  title_tr: string
+  title_en: string | null
+  title_de: string | null
+  title_fr: string | null
+  title_ru: string | null
+  description_tr: string | null
+  description_en: string | null
+  description_de: string | null
+  description_fr: string | null
+  description_ru: string | null
+  file_url: string
+  file_name: string
+  storage_path: string
+  file_size: number | null
+  file_type: string | null
+  uploaded_at: string
+  created_by: string | null
+  created_at: string
+}
+
 export interface ApartmentSettings {
   apartment_no: string
   annual_due: number

@@ -141,6 +141,27 @@ export function parseTurkishNumber(str: string): number | null {
   return isNaN(n) ? null : n
 }
 
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function getFileTypeInfo(fileType: string | null, fileName: string): { label: string; colorClass: string } {
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
+  const type = fileType ?? ''
+  if (type.includes('pdf') || ext === 'pdf')
+    return { label: 'PDF', colorClass: 'bg-red-100 text-red-700' }
+  if (type.includes('spreadsheet') || type.includes('excel') || ['xlsx', 'xls'].includes(ext))
+    return { label: 'XLSX', colorClass: 'bg-green-100 text-green-700' }
+  if (type.includes('wordprocessing') || type.includes('msword') || ['doc', 'docx'].includes(ext))
+    return { label: 'DOC', colorClass: 'bg-blue-100 text-blue-700' }
+  if (type.includes('presentation') || type.includes('powerpoint') || ['ppt', 'pptx'].includes(ext))
+    return { label: 'PPT', colorClass: 'bg-orange-100 text-orange-700' }
+  if (ext === 'csv') return { label: 'CSV', colorClass: 'bg-teal-100 text-teal-700' }
+  return { label: ext.toUpperCase() || 'FILE', colorClass: 'bg-gray-100 text-gray-600' }
+}
+
 // Parse Turkish date format: 29.09.2025 -> "2025-09-29"
 export function parseTurkishDate(str: string): string | null {
   if (!str || !str.trim()) return null
