@@ -166,6 +166,7 @@ export async function deleteIncome(id: string) {
   const { error } = await supabase.from('income').delete().eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/admin/gelirler')
+  revalidatePath('/admin/odemeler')
   revalidatePath('/admin')
   return { success: true }
 }
@@ -238,11 +239,53 @@ export async function createPayment(data: {
   payment_status: string
   payment_date?: string
   note?: string
+  serial_no?: string
 }) {
   const supabase = await createClient()
-  const { error } = await supabase.from('payments').insert(data)
-  if (error) return { error: error.message }
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { serial_no, ...paymentData } = data
+
+  // income tablosuna Aidat kaydı ekle
+  const TR_MONTHS = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
+  const incomeDate = data.payment_date
+    ?? `${data.year}-${String(data.month).padStart(2, '0')}-01`
+  const monthName = TR_MONTHS[data.month] ?? ''
+  const namePart = data.resident_name ? ` · ${data.resident_name}` : ''
+  const incomeTitle = data.resident_name
+    ? `${data.resident_name} - Aidat Ödemesi`
+    : `Daire ${data.apartment_no} - Aidat Ödemesi`
+  const siraPrefix = serial_no ? `Defter Sıra No: ${serial_no} · ` : ''
+  const incomeDescription = `${siraPrefix}Daire ${data.apartment_no}${namePart} · ${monthName} ${data.year} Aidat Ödemesi`
+
+  const { data: incomeRow, error: incomeError } = await supabase
+    .from('income')
+    .insert({
+      date: incomeDate,
+      title: incomeTitle,
+      description: incomeDescription ?? null,
+      category: 'Aidat',
+      amount: data.amount_paid ?? 0,
+      apartment_no: data.apartment_no,
+      created_by: user?.id ?? null,
+    })
+    .select('id')
+    .single()
+
+  const income_id = incomeError ? null : (incomeRow?.id as string)
+
+  const { error } = await supabase.from('payments').insert({
+    ...paymentData,
+    serial_no: serial_no ?? null,
+    income_id,
+  })
+  if (error) {
+    if (income_id) await supabase.from('income').delete().eq('id', income_id)
+    return { error: error.message }
+  }
+
   revalidatePath('/admin/odemeler')
+  revalidatePath('/admin/gelirler')
   revalidatePath('/admin')
   return { success: true }
 }
@@ -259,21 +302,73 @@ export async function updatePayment(
     payment_status: string
     payment_date?: string
     note?: string
+    serial_no?: string
   }
 ) {
   const supabase = await createClient()
-  const { error } = await supabase.from('payments').update(data).eq('id', id)
+
+  // Mevcut income_id'yi al
+  const { data: existing } = await supabase
+    .from('payments')
+    .select('income_id')
+    .eq('id', id)
+    .maybeSingle()
+
+  const income_id = existing?.income_id as string | null
+
+  if (income_id) {
+    const TR_MONTHS = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
+    const incomeDate = data.payment_date
+      ?? `${data.year}-${String(data.month).padStart(2, '0')}-01`
+    const monthName = TR_MONTHS[data.month] ?? ''
+    const namePart = data.resident_name ? ` · ${data.resident_name}` : ''
+    const incomeTitle = data.resident_name
+      ? `${data.resident_name} - Aidat Ödemesi`
+      : `Daire ${data.apartment_no} - Aidat Ödemesi`
+    const siraPrefix = data.serial_no ? `Defter Sıra No: ${data.serial_no} · ` : ''
+    const incomeDescription = `${siraPrefix}Daire ${data.apartment_no}${namePart} · ${monthName} ${data.year} Aidat Ödemesi`
+    await supabase.from('income').update({
+      date: incomeDate,
+      title: incomeTitle,
+      description: incomeDescription,
+      amount: data.amount_paid ?? 0,
+    }).eq('id', income_id)
+  }
+
+  const { error } = await supabase.from('payments').update({
+    ...data,
+    serial_no: data.serial_no ?? null,
+  }).eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/admin/odemeler')
+  revalidatePath('/admin/gelirler')
   revalidatePath('/admin')
   return { success: true }
 }
 
 export async function deletePayment(id: string) {
   const supabase = await createClient()
-  const { error } = await supabase.from('payments').delete().eq('id', id)
-  if (error) return { error: error.message }
+
+  // income_id varsa önce income'ı sil (ON DELETE CASCADE payment'ı da siler)
+  const { data: existing } = await supabase
+    .from('payments')
+    .select('income_id')
+    .eq('id', id)
+    .maybeSingle()
+
+  const income_id = existing?.income_id as string | null
+
+  if (income_id) {
+    const { error } = await supabase.from('income').delete().eq('id', income_id)
+    if (error) return { error: error.message }
+    // CASCADE ile payment da silinmiş oldu
+  } else {
+    const { error } = await supabase.from('payments').delete().eq('id', id)
+    if (error) return { error: error.message }
+  }
+
   revalidatePath('/admin/odemeler')
+  revalidatePath('/admin/gelirler')
   revalidatePath('/admin')
   return { success: true }
 }

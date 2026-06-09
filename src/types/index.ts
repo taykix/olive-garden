@@ -19,6 +19,7 @@ export interface Income {
   description: string | null
   category: string | null
   amount: number
+  apartment_no: string | null
   created_by: string | null
   created_at: string
 }
@@ -49,6 +50,8 @@ export interface Payment {
   payment_status: PaymentStatus
   payment_date: string | null
   note: string | null
+  income_id: string | null
+  serial_no: string | null
   created_at: string
 }
 

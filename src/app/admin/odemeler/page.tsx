@@ -95,9 +95,17 @@ export default async function OdemelerPage() {
   const table    = buildTable(settingsData ?? [], paymentsData ?? [])
   const unpaid   = table.filter(a => a.remaining > 0.01)
   const paid     = table.filter(a => a.remaining <= 0.01)
-  const totalPaid     = table.reduce((s, a) => s + a.total_paid, 0)
-  const totalRem      = table.reduce((s, a) => s + Math.max(0, a.remaining), 0)
-  const totalOverpaid = table.reduce((s, a) => s + Math.max(0, -a.remaining), 0)
+  const totalPaid      = table.reduce((s, a) => s + a.total_paid, 0)
+  const totalRem       = table.reduce((s, a) => s + Math.max(0, a.remaining), 0)
+  const totalOverpaid  = table.reduce((s, a) => s + Math.max(0, -a.remaining), 0)
+  const totalAnnualDue = table.reduce((s, a) => s + a.annual_due, 0)
+  const totalKalan     = table.reduce((s, a) => s + a.remaining, 0)
+  const monthTotals    = Object.fromEntries(
+    PERIOD_MONTHS.map(pm => {
+      const key = `${pm.year}-${pm.month}`
+      return [key, table.reduce((s, row) => s + (row.monthPaid[key] ?? 0), 0)]
+    })
+  )
 
   return (
     <div className="space-y-6">
@@ -333,6 +341,41 @@ export default async function OdemelerPage() {
                     )
                   })}
                 </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-gray-300 bg-gray-100 font-semibold">
+                    <td className="sticky left-0 bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
+                      TOPLAM
+                    </td>
+                    <td className="px-2 py-2" />
+                    <td className="px-2 py-2" />
+                    <td className="px-2 py-2 text-right font-mono text-xs text-gray-700 whitespace-nowrap">
+                      {fmt(totalAnnualDue)}
+                    </td>
+                    {PERIOD_MONTHS.map(pm => {
+                      const key = `${pm.year}-${pm.month}`
+                      const total = monthTotals[key] ?? 0
+                      return (
+                        <td key={key} className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
+                          total > 0 ? 'text-green-700' : 'text-gray-300'
+                        }`}>
+                          {total !== 0 ? fmt(total) : '—'}
+                        </td>
+                      )
+                    })}
+                    <td className="px-2 py-2 text-right font-mono text-xs text-green-700 whitespace-nowrap">
+                      {fmt(totalPaid)}
+                    </td>
+                    <td className={`px-3 py-2 text-right font-mono text-xs font-bold whitespace-nowrap ${
+                      totalKalan > 0.01 ? 'text-red-600'
+                      : totalKalan < -0.01 ? 'text-blue-600'
+                      : 'text-green-600'
+                    }`}>
+                      {totalKalan < -0.01
+                        ? `+${fmt(Math.abs(totalKalan))}`
+                        : fmt(totalKalan)}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </CardContent>

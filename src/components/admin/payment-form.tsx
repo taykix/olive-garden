@@ -49,6 +49,12 @@ async function lookupApartment(aptNo: string): Promise<{ name: string; annualDue
   return { name, annualDue }
 }
 
+function parseDayFromDate(dateStr: string | null | undefined): number {
+  if (!dateStr) return new Date().getDate()
+  const parts = dateStr.split('-')
+  return parts.length === 3 ? (parseInt(parts[2], 10) || new Date().getDate()) : new Date().getDate()
+}
+
 export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
   const isEdit = !!payment
   const [open, setOpen]       = useState(false)
@@ -59,14 +65,40 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
   const [aptNo, setAptNo]         = useState(payment?.apartment_no ?? defaultApartmentNo ?? '')
   const [name, setName]           = useState(payment?.resident_name ?? '')
   const [month, setMonth]         = useState(payment?.month ?? new Date().getMonth() + 1)
+  const [day, setDay]             = useState(parseDayFromDate(payment?.payment_date))
   const [year, setYear]           = useState(payment?.year ?? currentYear)
   const [amount, setAmount]       = useState(payment?.amount_paid ?? 0)
   const [note, setNote]           = useState(payment?.note ?? '')
+  const [siraNo, setSiraNo]       = useState(payment?.serial_no ?? '')
   const [annualDue, setAnnualDue] = useState(payment?.amount_due ?? 40000)
 
   const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [looking, setLooking] = useState(false)
   const [negativeConfirm, setNegativeConfirm] = useState(false)
+
+  // Auto-fill next serial number when dialog opens in add mode
+  useEffect(() => {
+    if (!open || isEdit || siraNo.trim()) return
+    const SIRA_RE = /^Defter S[ıi]ra No:\s*(\d+)/i
+    Promise.all([
+      supabase.from('payments').select('serial_no').not('serial_no', 'is', null),
+      supabase.from('income').select('description').ilike('description', 'Defter%No:%'),
+    ]).then(([pRes, iRes]) => {
+      const nums: number[] = []
+      pRes.data?.forEach(p => {
+        const n = parseInt((p.serial_no as string) || '', 10)
+        if (!isNaN(n) && n > 0) nums.push(n)
+      })
+      iRes.data?.forEach(i => {
+        const m = ((i.description as string) || '').match(SIRA_RE)
+        if (m) {
+          const n = parseInt(m[1], 10)
+          if (!isNaN(n) && n > 0) nums.push(n)
+        }
+      })
+      setSiraNo(nums.length > 0 ? String(Math.max(...nums) + 1) : '1')
+    })
+  }, [open, isEdit]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-fill name + annual_due when apt changes (add mode only)
   useEffect(() => {
@@ -87,9 +119,11 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
     setAptNo(defaultApartmentNo ?? '')
     setName('')
     setMonth(new Date().getMonth() + 1)
+    setDay(new Date().getDate())
     setYear(currentYear)
     setAmount(0)
     setNote('')
+    setSiraNo('')
     setAnnualDue(40000)
     setNegativeConfirm(false)
   }
@@ -98,6 +132,9 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
     if (!aptNo.trim()) { toast.error('Daire numarası gereklidir.'); return }
     if (amount === 0) { toast.error('Ödeme tutarı sıfır olamaz.'); return }
     if (amount < 0 && !forceNegative) { setNegativeConfirm(true); return }
+
+    const clampedDay = Math.min(Math.max(day || 1, 1), 31)
+    const payment_date = `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 
     setSaving(true)
     setNegativeConfirm(false)
@@ -109,7 +146,9 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
       amount_due:       annualDue,
       amount_paid:      amount,
       payment_status:   'partial' as const,
+      payment_date,
       note:             note.trim() || undefined,
+      serial_no:        siraNo.trim() || undefined,
     }
 
     const result = isEdit
@@ -141,13 +180,14 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
 
   function handleOpen(v: boolean) {
     if (v && isEdit) {
-      // Re-sync edit form state when reopening
       setAptNo(payment!.apartment_no)
       setName(payment!.resident_name ?? '')
       setMonth(payment!.month)
+      setDay(parseDayFromDate(payment!.payment_date))
       setYear(payment!.year)
       setAmount(payment!.amount_paid)
       setNote(payment!.note ?? '')
+      setSiraNo(payment!.serial_no ?? '')
       setAnnualDue(payment!.amount_due)
     }
     setOpen(v)
@@ -197,8 +237,29 @@ export function PaymentForm({ payment, defaultApartmentNo }: PaymentFormProps) {
               </div>
             </div>
 
-            {/* Ay + Yıl */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Defter S.No */}
+            <div className="space-y-1.5">
+              <Label>Defter Sıra No</Label>
+              <Input
+                placeholder="örn: 42"
+                value={siraNo}
+                onChange={e => setSiraNo(e.target.value)}
+              />
+            </div>
+
+            {/* Gün + Ay + Yıl */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5">
+                <Label>Gün</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={day || ''}
+                  onChange={e => setDay(parseInt(e.target.value, 10) || 1)}
+                  placeholder="Gün"
+                />
+              </div>
               <div className="space-y-1.5">
                 <Label>Ay</Label>
                 <Select
