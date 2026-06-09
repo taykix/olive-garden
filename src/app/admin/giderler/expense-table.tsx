@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -10,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, EXPENSE_CATEGORY_KEY } from '@/lib/utils'
 import { ExpenseForm } from '@/components/admin/expense-form'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { deleteExpense } from '@/lib/supabase/actions'
@@ -45,10 +46,20 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
 
 export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { data: Expense[]; budgetItems?: BudgetItem[]; readOnly?: boolean }) {
   const t = useTranslations('table')
+  const tCat = useTranslations('expense_cat')
+  const locale = useLocale()
   const [sortField, setSortField] = useState<SortField>('siraNo')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('__all__')
+
+  const catLabel = (c: string) => {
+    const key = EXPENSE_CATEGORY_KEY[c]
+    return key ? tCat(key) : c
+  }
+
+  const budgetLabel = (item: BudgetItem) =>
+    locale === 'en' && item.category_en ? item.category_en : item.category
 
   const categories = useMemo(() => {
     const cats = new Set(data.map(e => e.category).filter(Boolean) as string[])
@@ -117,12 +128,14 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
         </div>
         <Select value={filterCategory} onValueChange={v => setFilterCategory(v ?? '__all__')}>
           <SelectTrigger className="w-44 h-8 text-sm">
-            <SelectValue placeholder="Tüm Kategoriler" />
+            <SelectValue>
+              {filterCategory === '__all__' ? tCat('all') : catLabel(filterCategory)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Tüm Kategoriler</SelectItem>
+            <SelectItem value="__all__">{tCat('all')}</SelectItem>
             {categories.map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -163,7 +176,7 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
                   <TableCell className="font-medium">{expense.title}</TableCell>
                   <TableCell>
                     {expense.category
-                      ? <Badge variant="secondary" className="text-xs">{expense.category}</Badge>
+                      ? <Badge variant="secondary" className="text-xs">{catLabel(expense.category)}</Badge>
                       : <span className="text-gray-300">—</span>}
                   </TableCell>
                   <TableCell className="text-sm text-gray-500 w-24">
@@ -192,9 +205,9 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
                   </TableCell>
                   <TableCell className="max-w-[180px]">
                     {linkedItem ? (
-                      <span className="text-xs text-blue-700 font-medium leading-tight block truncate" title={linkedItem.category}>
+                      <span className="text-xs text-blue-700 font-medium leading-tight block truncate" title={budgetLabel(linkedItem)}>
                         <span className="text-gray-400 mr-1">{linkedItem.sort_order}.</span>
-                        {linkedItem.category}
+                        {budgetLabel(linkedItem)}
                       </span>
                     ) : (
                       <span className="text-gray-300 text-xs">—</span>

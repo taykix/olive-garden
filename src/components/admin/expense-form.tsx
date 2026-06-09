@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -22,10 +22,25 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { createExpense, updateExpense, createBudgetItem } from '@/lib/supabase/actions'
-import { EXPENSE_CATEGORIES } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_KEY } from '@/lib/utils'
 import { Expense, BudgetItem } from '@/types'
 import { Plus, Pencil } from 'lucide-react'
+
+const SIRA_RE = /Defter S[ıi]ra No:\s*(\S+)/i
+
+function extractSiraNo(desc: string | null): { siraNo: string; cleanDesc: string } {
+  if (!desc) return { siraNo: '', cleanDesc: '' }
+  const m = desc.match(SIRA_RE)
+  if (m) {
+    const cleanDesc = desc.replace(m[0], '').replace(/^\s*[·\-]+\s*|\s*[·\-]+\s*$/g, '').trim()
+    return { siraNo: m[1], cleanDesc }
+  }
+  return { siraNo: '', cleanDesc: desc }
+}
 
 const schema = z.object({
   date: z.string().min(1, 'Tarih zorunludur'),
@@ -44,11 +59,15 @@ interface ExpenseFormProps {
 }
 
 const NEW_SENTINEL = '__new__'
+const supabase = createClient()
 
 export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
-  const [open, setOpen]                     = useState(false)
-  const [budgetItemId, setBudgetItemId]     = useState<string>(expense?.budget_item_id ?? ''  )
-  const [newItemName, setNewItemName]       = useState('')
+  const tCat = useTranslations('expense_cat')
+  const locale = useLocale()
+  const [open, setOpen]               = useState(false)
+  const [budgetItemId, setBudgetItemId] = useState<string>(expense?.budget_item_id ?? '')
+  const [newItemName, setNewItemName] = useState('')
+  const [siraNo, setSiraNo]           = useState('')
   const isEdit = !!expense
 
   const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -57,7 +76,7 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
       ? {
           date: expense.date,
           title: expense.title,
-          description: expense.description ?? '',
+          description: extractSiraNo(expense.description).cleanDesc,
           category: expense.category ?? '',
           amount: expense.amount,
           document_url: expense.document_url ?? '',
@@ -65,11 +84,35 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
       : { date: new Date().toISOString().split('T')[0] },
   })
 
+  // Auto-fill next S.No in add mode
+  useEffect(() => {
+    if (!open || isEdit || siraNo.trim()) return
+    supabase.from('expenses').select('description').ilike('description', 'Defter%No:%')
+      .then(({ data: rows }) => {
+        const nums: number[] = []
+        rows?.forEach(r => {
+          const m = ((r.description as string) || '').match(SIRA_RE)
+          if (m) {
+            const n = parseInt(m[1], 10)
+            if (!isNaN(n) && n > 0) nums.push(n)
+          }
+        })
+        setSiraNo(nums.length > 0 ? String(Math.max(...nums) + 1) : '1')
+      })
+  }, [open, isEdit]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleOpen(v: boolean) {
     setOpen(v)
     if (v) {
       setBudgetItemId(expense?.budget_item_id ?? '')
       setNewItemName('')
+      if (isEdit) {
+        const { siraNo: sNo, cleanDesc } = extractSiraNo(expense?.description ?? null)
+        setSiraNo(sNo)
+        setValue('description', cleanDesc)
+      } else {
+        setSiraNo('')
+      }
     }
   }
 
@@ -89,8 +132,12 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
       finalBudgetItemId = res.id
     }
 
+    const siraPrefix = siraNo.trim() ? `Defter Sıra No: ${siraNo.trim()} · ` : ''
+    const fullDescription = siraPrefix + (data.description ?? '')
+
     const payload = {
       ...data,
+      description: fullDescription || undefined,
       document_url: data.document_url || undefined,
       budget_item_id: finalBudgetItemId,
     }
@@ -103,11 +150,17 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
     } else {
       toast.success(isEdit ? 'Gider güncellendi.' : 'Gider eklendi.')
       setOpen(false)
-      if (!isEdit) { reset(); setBudgetItemId(''); setNewItemName('') }
+      if (!isEdit) { reset(); setBudgetItemId(''); setNewItemName(''); setSiraNo('') }
     }
   }
 
   const selectedItem = budgetItems.find(b => b.id === budgetItemId)
+  const budgetLabel = (item: BudgetItem) =>
+    locale === 'en' && item.category_en ? item.category_en : item.category
+  const catLabel = (c: string) => {
+    const key = EXPENSE_CATEGORY_KEY[c]
+    return key ? tCat(key) : c
+  }
 
   return (
     <>
@@ -140,10 +193,21 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="title">Başlık</Label>
-              <Input id="title" placeholder="Gider başlığı" {...register('title')} />
-              {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="title">Başlık</Label>
+                <Input id="title" placeholder="Gider başlığı" {...register('title')} />
+                {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="siraNo">Defter Sıra No</Label>
+                <Input
+                  id="siraNo"
+                  placeholder="örn: 42"
+                  value={siraNo}
+                  onChange={e => setSiraNo(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Yıllık İşletme Planı bağlantısı */}
@@ -161,7 +225,7 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
                   {budgetItems.map(b => (
                     <SelectItem key={b.id} value={b.id}>
                       <span className="text-gray-400 text-xs mr-1">{b.sort_order}.</span>
-                      {b.category}
+                      {budgetLabel(b)}
                     </SelectItem>
                   ))}
                   <SelectItem value={NEW_SENTINEL} className="text-blue-600 font-medium">
@@ -170,7 +234,7 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
                 </SelectContent>
               </Select>
               {selectedItem && (
-                <p className="text-xs text-green-700 font-medium mt-1">✓ {selectedItem.category}</p>
+                <p className="text-xs text-green-700 font-medium mt-1">✓ {budgetLabel(selectedItem)}</p>
               )}
             </div>
 
@@ -199,7 +263,7 @@ export function ExpenseForm({ expense, budgetItems = [] }: ExpenseFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {EXPENSE_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

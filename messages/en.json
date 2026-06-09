@@ -213,5 +213,18 @@
     "no_data": "No data",
     "no_expense_data": "No expense data",
     "other_category": "Other"
+  },
+  "income_cat": {
+    "all": "All Categories",
+    "aidat": "Dues", "deferred": "Carried Forward", "kasa": "Cash Payment",
+    "rental": "Rental Income", "donation": "Donation", "other": "Other"
+  },
+  "expense_cat": {
+    "all": "All Categories",
+    "salary": "Staff Salary", "sgk": "Social Security (SGK)", "electric": "Electricity",
+    "pool": "Pool Maintenance", "sewage": "Sewage", "tax": "Tax",
+    "bank": "Bank Charges", "garden": "Garden / Agriculture", "paint": "Painting / Renovation",
+    "security": "Security", "metal": "Iron / Metal Works", "hardware": "Hardware / Materials",
+    "maintenance": "General Maintenance", "other": "Other"
   }
 }

@@ -213,5 +213,18 @@
     "expenses_dialog_sub": "Dépenses réalisées 2025-2026",
     "expenses_dialog_count": "enregistrements de dépenses",
     "expenses_empty": "Aucune dépense 2025-2026 trouvée dans ces catégories."
+  },
+  "income_cat": {
+    "all": "Toutes les catégories",
+    "aidat": "Charges", "deferred": "Report", "kasa": "Paiement caisse",
+    "rental": "Revenus locatifs", "donation": "Don", "other": "Autre"
+  },
+  "expense_cat": {
+    "all": "Toutes les catégories",
+    "salary": "Salaire du personnel", "sgk": "Sécurité sociale (SGK)", "electric": "Électricité",
+    "pool": "Entretien piscine", "sewage": "Égouts", "tax": "Taxes",
+    "bank": "Frais bancaires", "garden": "Jardin / Agriculture", "paint": "Peinture / Rénovation",
+    "security": "Sécurité", "metal": "Travaux fer / métal", "hardware": "Matériel / Fournitures",
+    "maintenance": "Maintenance générale", "other": "Autre"
   }
 }

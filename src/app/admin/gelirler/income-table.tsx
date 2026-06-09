@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, INCOME_CATEGORY_KEY } from '@/lib/utils'
 import { IncomeForm } from '@/components/admin/income-form'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { deleteIncome } from '@/lib/supabase/actions'
@@ -45,10 +45,16 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
 
 export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOnly?: boolean }) {
   const t = useTranslations('table')
+  const tCat = useTranslations('income_cat')
   const [sortField, setSortField] = useState<SortField>('siraNo')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('__all__')
+
+  const catLabel = (c: string) => {
+    const key = INCOME_CATEGORY_KEY[c]
+    return key ? tCat(key) : c
+  }
 
   const categories = useMemo(() => {
     const cats = new Set(data.map(i => i.category).filter(Boolean) as string[])
@@ -117,12 +123,14 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
         </div>
         <Select value={filterCategory} onValueChange={v => setFilterCategory(v ?? '__all__')}>
           <SelectTrigger className="w-44 h-8 text-sm">
-            <SelectValue placeholder="Tüm Kategoriler" />
+            <SelectValue>
+              {filterCategory === '__all__' ? tCat('all') : catLabel(filterCategory)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Tüm Kategoriler</SelectItem>
+            <SelectItem value="__all__">{tCat('all')}</SelectItem>
             {categories.map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -158,7 +166,7 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
                   <TableCell className="font-medium">{income.title}</TableCell>
                   <TableCell>
                     {income.category
-                      ? <Badge variant="secondary" className="text-xs">{income.category}</Badge>
+                      ? <Badge variant="secondary" className="text-xs">{catLabel(income.category)}</Badge>
                       : <span className="text-gray-300">—</span>}
                   </TableCell>
                   <TableCell className="text-sm text-gray-500 max-w-xs truncate">

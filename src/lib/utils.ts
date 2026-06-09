@@ -73,6 +73,32 @@ export const EXPENSE_CATEGORIES = [
   'Diğer',
 ]
 
+export const INCOME_CATEGORY_KEY: Record<string, string> = {
+  'Aidat': 'aidat',
+  'Geçen Yıldan Devir': 'deferred',
+  'Kasa Ödemesi': 'kasa',
+  'Kira Geliri': 'rental',
+  'Bağış': 'donation',
+  'Diğer': 'other',
+}
+
+export const EXPENSE_CATEGORY_KEY: Record<string, string> = {
+  'Personel Maaşı': 'salary',
+  'SGK': 'sgk',
+  'Elektrik': 'electric',
+  'Havuz Bakımı': 'pool',
+  'Kanalizasyon': 'sewage',
+  'Vergi': 'tax',
+  'Banka Masrafları': 'bank',
+  'Bahçe / Tarım': 'garden',
+  'Boya / Tadilat': 'paint',
+  'Güvenlik': 'security',
+  'Demir / Metal İşleri': 'metal',
+  'Donanım / Malzeme': 'hardware',
+  'Genel Bakım': 'maintenance',
+  'Diğer': 'other',
+}
+
 export const ANNUAL_WORK_STATUSES: Record<string, string> = {
   planned: 'Planlandı',
   in_progress: 'Devam Ediyor',

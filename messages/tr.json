@@ -213,5 +213,18 @@
     "no_data": "Veri yok",
     "no_expense_data": "Gider verisi yok",
     "other_category": "Diğer"
+  },
+  "income_cat": {
+    "all": "Tüm Kategoriler",
+    "aidat": "Aidat", "deferred": "Geçen Yıldan Devir", "kasa": "Kasa Ödemesi",
+    "rental": "Kira Geliri", "donation": "Bağış", "other": "Diğer"
+  },
+  "expense_cat": {
+    "all": "Tüm Kategoriler",
+    "salary": "Personel Maaşı", "sgk": "SGK", "electric": "Elektrik",
+    "pool": "Havuz Bakımı", "sewage": "Kanalizasyon", "tax": "Vergi",
+    "bank": "Banka Masrafları", "garden": "Bahçe / Tarım", "paint": "Boya / Tadilat",
+    "security": "Güvenlik", "metal": "Demir / Metal İşleri", "hardware": "Donanım / Malzeme",
+    "maintenance": "Genel Bakım", "other": "Diğer"
   }
 }

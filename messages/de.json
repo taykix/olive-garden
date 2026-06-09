@@ -213,5 +213,18 @@
     "no_data": "Keine Daten",
     "no_expense_data": "Keine Ausgabendaten",
     "other_category": "Sonstige"
+  },
+  "income_cat": {
+    "all": "Alle Kategorien",
+    "aidat": "Hausgeld", "deferred": "Übertrag", "kasa": "Kassenzahlung",
+    "rental": "Mieteinnahmen", "donation": "Spende", "other": "Sonstiges"
+  },
+  "expense_cat": {
+    "all": "Alle Kategorien",
+    "salary": "Personalgehalt", "sgk": "Sozialversicherung (SGK)", "electric": "Strom",
+    "pool": "Poolpflege", "sewage": "Kanalisation", "tax": "Steuer",
+    "bank": "Bankgebühren", "garden": "Garten / Landwirtschaft", "paint": "Maler / Renovierung",
+    "security": "Sicherheit", "metal": "Eisen / Metallarbeiten", "hardware": "Hardware / Materialien",
+    "maintenance": "Allgemeine Wartung", "other": "Sonstiges"
   }
 }
