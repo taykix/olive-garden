@@ -97,13 +97,15 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
     })
   }, [sorted, search, filterCategory])
 
-  function Th({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) {
+  function Th({ field, children, className, labelClassName }: { field: SortField; children: React.ReactNode; className?: string; labelClassName?: string }) {
+    const label = typeof children === 'string' ? children : undefined
     return (
       <TableHead
         className={`cursor-pointer select-none hover:bg-gray-100 transition-colors ${className ?? ''}`}
         onClick={() => handleSort(field)}
+        title={label}
       >
-        {children}
+        <span className={`truncate inline-block align-middle ${labelClassName ?? 'max-w-[90px]'}`}>{children}</span>
         <SortIndicator active={sortField === field} dir={sortDir} />
       </TableHead>
     )
@@ -143,12 +145,16 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
         <Table>
           <TableHeader>
             <TableRow>
-              <Th field="siraNo" className="w-20">{t('col_sno')}</Th>
-              <Th field="date">{t('col_date')}</Th>
-              <Th field="title">{t('col_title')}</Th>
-              <TableHead>{t('col_category')}</TableHead>
-              <TableHead>{t('col_description')}</TableHead>
-              <Th field="amount" className="text-right">{t('col_amount')}</Th>
+              <Th field="siraNo" className="w-20" labelClassName="max-w-[64px]">{t('col_sno')}</Th>
+              <Th field="date" labelClassName="max-w-[80px]">{t('col_date')}</Th>
+              <Th field="title" className="max-w-[160px]" labelClassName="max-w-[140px]">{t('col_title')}</Th>
+              <TableHead className="max-w-[120px]" title={t('col_category')}>
+                <span className="truncate inline-block max-w-[100px] align-middle">{t('col_category')}</span>
+              </TableHead>
+              <TableHead className="max-w-[200px]" title={t('col_description')}>
+                <span className="truncate inline-block max-w-[180px] align-middle">{t('col_description')}</span>
+              </TableHead>
+              <Th field="amount" className="text-right w-28" labelClassName="max-w-[100px]">{t('col_amount')}</Th>
               {!readOnly && <TableHead className="w-20" />}
             </TableRow>
           </TableHeader>
@@ -163,20 +169,22 @@ export function IncomeTable({ data, readOnly = false }: { data: Income[]; readOn
                   <TableCell className="text-sm text-gray-600 whitespace-nowrap">
                     {formatDate(income.date)}
                   </TableCell>
-                  <TableCell className="font-medium">{income.title}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium max-w-[160px]" title={income.title}>
+                    <span className="block truncate">{income.title}</span>
+                  </TableCell>
+                  <TableCell className="max-w-[120px]">
                     {income.category
-                      ? <Badge variant="secondary" className="text-xs">{catLabel(income.category)}</Badge>
+                      ? <Badge variant="secondary" className="text-xs truncate max-w-full block" title={catLabel(income.category)}>{catLabel(income.category)}</Badge>
                       : <span className="text-gray-300">—</span>}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500 max-w-xs truncate">
-                    {cleanDesc || <span className="text-gray-300">—</span>}
+                  <TableCell className="text-sm text-gray-500 max-w-[200px]" title={cleanDesc || undefined}>
+                    <span className="block truncate">{cleanDesc || <span className="text-gray-300">—</span>}</span>
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
+                  <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap w-28 shrink-0">
                     {formatCurrency(Number(income.amount))}
                   </TableCell>
                   {!readOnly && (
-                    <TableCell>
+                    <TableCell className="w-20 shrink-0">
                       <div className="flex items-center gap-1 justify-end">
                         <IncomeForm income={income} />
                         <DeleteConfirmDialog onConfirm={deleteIncome.bind(null, income.id)} />
