@@ -18,7 +18,7 @@ import { Eye, Pencil, Plus, Upload } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PERIOD_START = '2025-10-01'
+const PERIOD_START = '2025-09-27'
 const PERIOD_END   = '2026-08-31'
 const APT_COUNT    = 42
 
