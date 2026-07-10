@@ -44,7 +44,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
   const links = role === 'admin' ? adminLinks : role === 'resident' ? residentLinks : []
 
   return (
-    <header className="bg-white border-b shadow-sm">
+    <header className="bg-white border-b shadow-sm print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href={role === 'admin' ? '/admin' : role === 'resident' ? '/resident' : '/'} className="flex items-center gap-2 font-semibold text-green-800">

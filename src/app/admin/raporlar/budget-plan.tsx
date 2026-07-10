@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
+import { CSVExportButton } from '@/components/admin/csv-export-button'
 import { Eye, Pencil, Plus, Upload } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -359,8 +360,31 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
 
   const nextSortOrder = items.length > 0 ? Math.max(...items.map(i => i.sort_order)) + 1 : 1
 
-  const th = 'px-2 py-2 text-xs font-medium text-gray-500 text-right whitespace-nowrap'
-  const td = 'px-2 py-1.5 text-xs font-mono text-right whitespace-nowrap'
+  const budgetCSV = useMemo(() => [
+    ...items.map(item => ({
+      'Sıra': item.sort_order,
+      'Harcama Konusu': item.category,
+      '2023-2024 Planlanan': item.plan_2023_2024,
+      '2023-2024 Gerçekleşen': item.actual_2023_2024,
+      '2024-2025 Planlanan': item.plan_2024_2025,
+      '2024-2025 Gerçekleşen': item.actual_2024_2025,
+      '2025-2026 Planlanan': item.plan_2025_2026,
+      '2025-2026 Gerçekleşen': actuals.get(item.id)?.amount ?? null,
+    })),
+    {
+      'Sıra': null,
+      'Harcama Konusu': 'TOPLAM',
+      '2023-2024 Planlanan': totals.p23,
+      '2023-2024 Gerçekleşen': totals.a23,
+      '2024-2025 Planlanan': totals.p24,
+      '2024-2025 Gerçekleşen': totals.a24,
+      '2025-2026 Planlanan': totals.p25,
+      '2025-2026 Gerçekleşen': totals.a25,
+    },
+  ], [items, actuals, totals])
+
+  const th = 'px-2 py-2 print:py-1 text-xs font-medium text-gray-500 text-right whitespace-nowrap'
+  const td = 'px-2 py-1.5 print:py-0.5 text-xs font-mono text-right whitespace-nowrap'
 
   return (
     <>
@@ -371,49 +395,52 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
               <CardTitle className="text-sm text-gray-700">{t('card_title')}</CardTitle>
               <p className="text-xs text-gray-400 mt-0.5">2023–2026 · {items.length} {t('card_items')} · {t('card_auto')}</p>
             </div>
-            {!readOnly && (
-              <div className="flex items-center gap-2 print:hidden">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={importing}
-                  className="gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  {importing ? 'Aktarılıyor...' : 'CSV Aktar'}
-                </Button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".csv,text/csv,.txt"
-                  className="hidden"
-                  onChange={handleCSVFile}
-                />
-                <Button size="sm" variant="outline" onClick={() => setAddOpen(true)} className="gap-1.5">
-                  <Plus className="h-3.5 w-3.5" /> Kalem Ekle
-                </Button>
-              </div>
-            )}
+            <div className="flex items-center gap-2 print:hidden">
+              <CSVExportButton data={budgetCSV} filename="yillik-isletme-plani" label="CSV İndir" />
+              {!readOnly && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={importing}
+                    className="gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    {importing ? 'Aktarılıyor...' : 'CSV Aktar'}
+                  </Button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".csv,text/csv,.txt"
+                    className="hidden"
+                    onChange={handleCSVFile}
+                  />
+                  <Button size="sm" variant="outline" onClick={() => setAddOpen(true)} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> Kalem Ekle
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="text-xs w-full min-w-[900px]">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="text-xs w-full min-w-[900px] print:min-w-0 print:w-full print:text-[10px]">
               <thead>
                 {/* Period group row */}
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200 min-w-[240px]">
+                <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
+                  <th className="sticky left-0 print:static bg-gray-50 z-10 text-left px-3 py-2 print:py-1 text-xs font-semibold text-gray-600 border-r border-gray-200 min-w-[240px] print:min-w-0">
                     {t('col_item')}
                   </th>
-                  <th colSpan={2} className="text-center px-2 py-2 text-xs font-medium text-gray-400 border-r border-gray-100">2023-2024</th>
-                  <th colSpan={2} className="text-center px-2 py-2 text-xs font-medium text-gray-400 border-r border-gray-100">2024-2025</th>
-                  <th colSpan={2} className="text-center px-2 py-2 text-xs font-semibold text-green-600">2025-2026</th>
+                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2023-2024</th>
+                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2024-2025</th>
+                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-semibold text-green-600">2025-2026</th>
                   <th className="print:hidden w-16" />
                 </tr>
                 {/* Column labels */}
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="sticky left-0 bg-gray-50 z-10 border-r border-gray-200" />
+                <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
+                  <th className="sticky left-0 print:static bg-gray-50 z-10 border-r border-gray-200" />
                   <th className={th}>{t('col_planned')}</th>
                   <th className={`${th} border-r border-gray-100`}>{t('col_actual')}</th>
                   <th className={th}>{t('col_planned')}</th>
@@ -430,11 +457,11 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                   const bg        = i % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'
                   const hasActual = (actual?.amount ?? 0) > 0
                   return (
-                    <tr key={item.id} className={`border-b border-gray-100 last:border-0 ${bg} hover:bg-blue-50/20 transition-colors`}>
-                      <td className={`sticky left-0 z-10 px-3 py-2 border-r border-gray-100 ${bg} max-w-[280px]`}>
+                    <tr key={item.id} className={`border-b border-gray-100 last:border-0 ${bg} hover:bg-blue-50/20 transition-colors print:break-inside-avoid`}>
+                      <td className={`sticky left-0 print:static z-10 px-3 py-2 print:py-0.5 border-r border-gray-100 ${bg} max-w-[280px] print:max-w-none`}>
                         <div className="font-medium text-gray-800 leading-tight">{item.category}</div>
                         {item.category_en && (
-                          <div className="text-gray-400 text-xs leading-tight mt-0.5">{item.category_en}</div>
+                          <div className="text-gray-400 text-xs leading-tight mt-0.5 print:hidden">{item.category_en}</div>
                         )}
                       </td>
                       <td className={td}>{fmt(item.plan_2023_2024)}</td>
@@ -475,10 +502,10 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 })}
               </tbody>
 
-              <tfoot>
+              <tfoot className="print:[display:table-row-group]">
                 {/* Totals */}
-                <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
-                  <td className="sticky left-0 bg-gray-100 z-10 px-3 py-2.5 border-r border-gray-200 text-xs text-gray-700">
+                <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold print:break-inside-avoid">
+                  <td className="sticky left-0 print:static bg-gray-100 z-10 px-3 py-2.5 print:py-1 border-r border-gray-200 text-xs text-gray-700">
                     {t('total')}
                   </td>
                   <td className={td}>{fmtCurrency(totals.p23)}</td>
@@ -490,8 +517,8 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                   <td className="print:hidden" />
                 </tr>
                 {/* Per-apartment */}
-                <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic">
-                  <td className="sticky left-0 bg-gray-50 z-10 px-3 py-1.5 border-r border-gray-200 text-xs not-italic font-medium">
+                <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic print:break-inside-avoid">
+                  <td className="sticky left-0 print:static bg-gray-50 z-10 px-3 py-1.5 print:py-1 border-r border-gray-200 text-xs not-italic font-medium">
                     {t('per_apt')} <span className="text-gray-400 font-normal">(÷ {APT_COUNT} {t('apts')})</span>
                   </td>
                   <td className={td}>{totals.p23 ? fmtCurrency(Math.round(totals.p23 / APT_COUNT)) : '—'}</td>

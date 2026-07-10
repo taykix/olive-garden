@@ -21,14 +21,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <NextIntlClientProvider locale="tr" messages={trMessages}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 print:bg-white">
         <Navbar
           role="admin"
           userName={profile?.full_name}
           userEmail={profile?.email ?? user.email ?? null}
           userApartmentNo={profile?.apartment_no}
         />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:max-w-none print:p-0">
           {children}
         </main>
       </div>

@@ -127,7 +127,7 @@ export default async function RaporlarPage() {
       <BudgetPlan items={budgetItems} expenses={expenseList} />
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Toplam Gelir</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</p></CardContent>
@@ -147,7 +147,7 @@ export default async function RaporlarPage() {
       </div>
 
       {/* ── Charts ── */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6 print:hidden">
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -176,7 +176,7 @@ export default async function RaporlarPage() {
       </div>
 
       {/* Monthly breakdown */}
-      <Card>
+      <Card className="print:hidden">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-blue-500" /> Aylık Gelir / Gider Özeti
