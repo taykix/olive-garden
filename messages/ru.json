@@ -2,7 +2,7 @@
   "nav": {
     "login": "Войти", "logout": "Выйти", "home": "Главная",
     "panel": "Панель управления", "income": "Доходы", "expenses": "Расходы",
-    "payments": "Платежи", "announcements": "Объявления",
+    "payments": "Взносы", "announcements": "Объявления",
     "annual_works": "Годовые работы", "reports": "Отчёты",
     "import": "Импорт данных", "users": "Пользователи", "resident_home": "Главная",
     "documents": "Документы"

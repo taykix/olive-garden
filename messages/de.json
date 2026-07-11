@@ -2,7 +2,7 @@
   "nav": {
     "login": "Anmelden", "logout": "Abmelden", "home": "Startseite",
     "panel": "Übersicht", "income": "Einnahmen", "expenses": "Ausgaben",
-    "payments": "Zahlungen", "announcements": "Ankündigungen",
+    "payments": "Beiträge", "announcements": "Ankündigungen",
     "annual_works": "Jahresarbeiten", "reports": "Berichte",
     "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite",
     "documents": "Dokumente"

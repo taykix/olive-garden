@@ -2,7 +2,7 @@
   "nav": {
     "login": "Se connecter", "logout": "Déconnexion", "home": "Accueil",
     "panel": "Tableau de bord", "income": "Revenus", "expenses": "Dépenses",
-    "payments": "Paiements", "announcements": "Annonces",
+    "payments": "Charges", "announcements": "Annonces",
     "annual_works": "Travaux annuels", "reports": "Rapports",
     "import": "Importer", "users": "Utilisateurs", "resident_home": "Accueil",
     "documents": "Documents"
