@@ -16,7 +16,7 @@ import { ExpenseForm } from '@/components/admin/expense-form'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { deleteExpense } from '@/lib/supabase/actions'
 import { Expense, BudgetItem } from '@/types'
-import { ChevronUp, ChevronDown, ChevronsUpDown, ExternalLink, Search } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from 'lucide-react'
 
 type SortField = 'siraNo' | 'date' | 'title' | 'amount'
 type SortDir = 'asc' | 'desc'
@@ -150,18 +150,16 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
             <TableRow>
               <Th field="siraNo" className="w-20">{t('col_sno')}</Th>
               <Th field="date">{t('col_date')}</Th>
-              <Th field="title">{t('col_title')}</Th>
+              <Th field="title" className="max-w-[200px]">{t('col_title')}</Th>
               <TableHead>{t('col_category')}</TableHead>
-              <TableHead>{t('col_description')}</TableHead>
               <Th field="amount" className="text-right">{t('col_amount')}</Th>
-              <TableHead>{t('col_document')}</TableHead>
               <TableHead>{t('col_budget_item')}</TableHead>
               {!readOnly && <TableHead className="w-20 sticky right-0 bg-white" />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((expense) => {
-              const { siraNo, cleanDesc } = extractSiraNo(expense.description)
+              const { siraNo } = extractSiraNo(expense.description)
               const linkedItem = expense.budget_item_id
                 ? budgetItems.find(b => b.id === expense.budget_item_id)
                 : null
@@ -173,35 +171,16 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
                   <TableCell className="text-sm text-gray-600 whitespace-nowrap">
                     {formatDate(expense.date)}
                   </TableCell>
-                  <TableCell className="font-medium">{expense.title}</TableCell>
+                  <TableCell className="font-medium max-w-[200px]">
+                    <span className="block truncate" title={expense.title}>{expense.title}</span>
+                  </TableCell>
                   <TableCell>
                     {expense.category
                       ? <Badge variant="secondary" className="text-xs">{catLabel(expense.category)}</Badge>
                       : <span className="text-gray-300">—</span>}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500 w-24">
-                    {cleanDesc
-                      ? <span
-                          className="block truncate cursor-default"
-                          title={cleanDesc}
-                        >
-                          {cleanDesc.includes(' ')
-                            ? `${cleanDesc.split(' ')[0]}…`
-                            : cleanDesc.slice(0, 10) + (cleanDesc.length > 10 ? '…' : '')}
-                        </span>
-                      : <span className="text-gray-300">—</span>}
-                  </TableCell>
                   <TableCell className="text-right font-semibold text-red-600 whitespace-nowrap">
                     {formatCurrency(Number(expense.amount))}
-                  </TableCell>
-                  <TableCell>
-                    {expense.document_url ? (
-                      <a href={expense.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline inline-flex items-center gap-1 text-xs">
-                        <ExternalLink className="h-3 w-3" /> {t('view')}
-                      </a>
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
                   </TableCell>
                   <TableCell className="max-w-[180px]">
                     {linkedItem ? (
