@@ -99,6 +99,7 @@ export default async function OdemelerPage() {
   const totalRem       = table.reduce((s, a) => s + Math.max(0, a.remaining), 0)
   const totalOverpaid  = table.reduce((s, a) => s + Math.max(0, -a.remaining), 0)
   const totalAnnualDue = table.reduce((s, a) => s + a.annual_due, 0)
+  const totalPrev      = table.reduce((s, a) => s + a.previous_balance, 0)
   const totalKalan     = table.reduce((s, a) => s + a.remaining, 0)
   const monthTotals    = Object.fromEntries(
     PERIOD_MONTHS.map(pm => {
@@ -347,7 +348,13 @@ export default async function OdemelerPage() {
                       TOPLAM
                     </td>
                     <td className="px-2 py-2" />
-                    <td className="px-2 py-2" />
+                    <td className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
+                      totalPrev > 0 ? 'text-red-600'
+                      : totalPrev < 0 ? 'text-blue-600'
+                      : 'text-gray-300'
+                    }`}>
+                      {totalPrev === 0 ? '—' : `${totalPrev > 0 ? '+' : ''}${fmt(totalPrev)}`}
+                    </td>
                     <td className="px-2 py-2 text-right font-mono text-xs text-gray-700 whitespace-nowrap">
                       {fmt(totalAnnualDue)}
                     </td>
