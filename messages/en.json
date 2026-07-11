@@ -29,6 +29,7 @@
     "cta_subtitle": "Sign in with your account to access your personal dashboard.",
     "cta_btn": "Sign In",
     "footer": "Olive Garden 3 Property Management · Didim Akbük",
+    "credit": "Design & development",
     "location_title": "Our Location",
     "location_address": "Olive Garden 3, Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Turkey",
     "location_map_title": "Olive Garden 3 Location",
@@ -230,7 +231,7 @@
     "all": "All Categories",
     "salary": "Staff Salary", "sgk": "Social Security (SGK)", "electric": "Electricity",
     "pool": "Pool Maintenance", "sewage": "Sewage", "tax": "Tax",
-    "bank": "Bank Charges", "garden": "Garden / Agriculture", "paint": "Painting / Renovation",
+    "bank": "Bank Charges", "garden": "Garden / Agriculture", "paint": "Repair / Renovation",
     "security": "Security", "metal": "Iron / Metal Works", "hardware": "Hardware / Materials",
     "maintenance": "General Maintenance", "other": "Other"
   }

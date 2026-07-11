@@ -65,7 +65,7 @@ export const EXPENSE_CATEGORIES = [
   'Vergi',
   'Banka Masrafları',
   'Bahçe / Tarım',
-  'Boya / Tadilat',
+  'Tamirat / Tadilat',
   'Güvenlik',
   'Demir / Metal İşleri',
   'Donanım / Malzeme',
@@ -91,7 +91,8 @@ export const EXPENSE_CATEGORY_KEY: Record<string, string> = {
   'Vergi': 'tax',
   'Banka Masrafları': 'bank',
   'Bahçe / Tarım': 'garden',
-  'Boya / Tadilat': 'paint',
+  'Tamirat / Tadilat': 'paint',
+  'Boya / Tadilat': 'paint', // legacy — eski kayıtlar için geriye dönük eşleme
   'Güvenlik': 'security',
   'Demir / Metal İşleri': 'metal',
   'Donanım / Malzeme': 'hardware',
@@ -117,7 +118,7 @@ export function categorizeExpense(desc: string): string {
   if (/DAMGA VERG/.test(u)) return 'Vergi'
   if (/BANKA|HESAP İŞLETİM|HESAP ISLETIM|BANKA İŞLEM/.test(u)) return 'Banka Masrafları'
   if (/GÜBRE|GUBRE|TARIM|ZEYTİN|ZEYTIN|ÇİM|CIM\b|SULAMA|İLAÇ\b|ILAÇ\b|BUDAMA|BAHÇE|BAHCE/.test(u)) return 'Bahçe / Tarım'
-  if (/BOYA|TİNER|TINER/.test(u)) return 'Boya / Tadilat'
+  if (/BOYA|TİNER|TINER|TAM[İI]RAT|TADİLAT|TADILAT/.test(u)) return 'Tamirat / Tadilat'
   if (/GÜVENLİK|GUVENLIK|KAMERA|PROTECH/.test(u)) return 'Güvenlik'
   if (/DEMİR|DEMIR|FERFORJE|KORKULUK/.test(u)) return 'Demir / Metal İşleri'
   if (/NOTER/.test(u)) return 'Noter'

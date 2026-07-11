@@ -29,6 +29,7 @@
     "cta_subtitle": "Hesabınızla giriş yaparak kişisel panelinize erişin.",
     "cta_btn": "Giriş Yap",
     "footer": "Olive Garden 3 Site Yönetimi · Didim Akbük",
+    "credit": "Tasarım & geliştirme",
     "location_title": "Konumumuz",
     "location_address": "Olive Garden 3, Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Türkiye",
     "location_map_title": "Olive Garden 3 Konumu",
@@ -230,7 +231,7 @@
     "all": "Tüm Kategoriler",
     "salary": "Personel Maaşı", "sgk": "SGK", "electric": "Elektrik",
     "pool": "Havuz Bakımı", "sewage": "Kanalizasyon", "tax": "Vergi",
-    "bank": "Banka Masrafları", "garden": "Bahçe / Tarım", "paint": "Boya / Tadilat",
+    "bank": "Banka Masrafları", "garden": "Bahçe / Tarım", "paint": "Tamirat / Tadilat",
     "security": "Güvenlik", "metal": "Demir / Metal İşleri", "hardware": "Donanım / Malzeme",
     "maintenance": "Genel Bakım", "other": "Diğer"
   }

@@ -29,6 +29,7 @@
     "cta_subtitle": "Connectez-vous pour accéder à votre tableau de bord personnel.",
     "cta_btn": "Se connecter",
     "footer": "Gestion de la résidence Olive Garden 3 · Didim Akbük",
+    "credit": "Conception & développement",
     "location_title": "Notre emplacement",
     "location_address": "Olive Garden 3, Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Turquie",
     "location_map_title": "Emplacement Olive Garden 3",
@@ -230,7 +231,7 @@
     "all": "Toutes les catégories",
     "salary": "Salaire du personnel", "sgk": "Sécurité sociale (SGK)", "electric": "Électricité",
     "pool": "Entretien piscine", "sewage": "Égouts", "tax": "Taxes",
-    "bank": "Frais bancaires", "garden": "Jardin / Agriculture", "paint": "Peinture / Rénovation",
+    "bank": "Frais bancaires", "garden": "Jardin / Agriculture", "paint": "Réparation / Rénovation",
     "security": "Sécurité", "metal": "Travaux fer / métal", "hardware": "Matériel / Fournitures",
     "maintenance": "Maintenance générale", "other": "Autre"
   }

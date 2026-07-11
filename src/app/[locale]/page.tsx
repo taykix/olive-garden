@@ -5,6 +5,7 @@ import { Megaphone, LogIn, ShieldCheck, Bell, Users, ChevronDown, MapPin, Mail }
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
 import { ContactForm } from '@/components/shared/contact-form'
+import { PhotoCarousel } from '@/components/shared/photo-carousel'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -116,22 +117,15 @@ export default async function HomePage({
       {/* ── Site fotoğrafı + Zeytin dalı ────────────────────── */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-16 items-center">
-          {/* Sol: Fotoğraf */}
-          <div className="relative">
-            <div className="relative h-[480px] rounded-3xl overflow-hidden shadow-2xl">
-              <Image
-                src="/images/hero.jpg"
-                alt="Olive Garden 3 bahçesi"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              <div className="absolute bottom-4 left-4">
-                <span className="text-white text-sm bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full">
-                  Olive Garden 3 · Didim Akbük
-                </span>
-              </div>
-            </div>
+          {/* Sol: Fotoğraf galerisi */}
+          <div className="relative w-full max-w-[460px] mx-auto">
+            <PhotoCarousel
+              caption="Olive Garden 3 · Didim Akbük"
+              slides={[
+                { src: '/images/yilis_havuz.jpeg', alt: 'Olive Garden 3 havuzu' },
+                { src: '/images/hero.jpg', alt: 'Olive Garden 3 bahçesi' },
+              ]}
+            />
             {/* Zeytin dalı dekorasyon */}
             <div className="absolute -bottom-10 -right-10 opacity-20 pointer-events-none">
               <Image src="/images/olive-branch.png" alt="" width={220} height={220} />
@@ -280,9 +274,14 @@ export default async function HomePage({
 
       {/* ── Footer ──────────────────────────────────────────── */}
       <footer className="bg-[#0f1f0a] py-8">
-        <div className="flex items-center justify-center gap-3 text-green-500/50 text-sm">
-          <Image src="/images/olive-branch.png" alt="" width={20} height={20} className="opacity-30" />
-          © {new Date().getFullYear()} {t('footer')}
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <div className="flex items-center justify-center gap-3 text-green-500/50 text-sm">
+            <Image src="/images/olive-branch.png" alt="" width={20} height={20} className="opacity-30" />
+            © {new Date().getFullYear()} {t('footer')}
+          </div>
+          <p className="text-green-500/40 text-xs">
+            {t('credit')}: <span className="text-green-400/70 font-medium">Taylan Karakaya</span>
+          </p>
         </div>
       </footer>
     </div>
