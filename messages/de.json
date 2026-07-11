@@ -5,7 +5,7 @@
     "payments": "Beiträge", "announcements": "Ankündigungen",
     "annual_works": "Jahresarbeiten", "reports": "Berichte",
     "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite",
-    "documents": "Dokumente"
+    "documents": "Dokumente", "planning": "Planung"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -234,5 +234,27 @@
     "bank": "Bankgebühren", "garden": "Garten / Landwirtschaft", "paint": "Reparatur / Renovierung",
     "security": "Sicherheit", "metal": "Eisen / Metallarbeiten", "hardware": "Hardware / Materialien",
     "maintenance": "Allgemeine Wartung", "other": "Sonstiges"
+  },
+  "plan": {
+    "title": "Jährlicher Beitragsplan",
+    "subtitle": "Berechnen Sie den Jahresbeitrag pro Wohnung, indem Sie die auf der Hauptversammlung abzustimmenden optionalen Posten auswählen.",
+    "annual_per_apt": "Jahresbeitrag pro Wohnung",
+    "grand_total": "Gesamtsumme",
+    "fixed_total": "Feste Posten",
+    "optional_total": "Ausgewählte Optionale",
+    "col_item": "Ausgabeposten",
+    "col_type": "Art",
+    "col_amount": "Geplant (₺)",
+    "type_fixed": "Fest",
+    "type_optional": "Optional",
+    "optional_hint": "Wird auf der Hauptversammlung abgestimmt. Zum Einbeziehen ankreuzen.",
+    "col_base": "Vorjahr",
+    "col_calc": "Berechnung",
+    "method_manual": "Manuell",
+    "method_inflation": "VPI",
+    "calc_hint": "Der geplante Betrag wird durch Aufschlag der VPI-(Inflations-)Rate auf die Vorjahresausgaben oder manuell festgelegt.",
+    "apts": "Wohnungen",
+    "period": "Zeitraum",
+    "empty": "Noch kein Jahresplan veröffentlicht."
   }
 }

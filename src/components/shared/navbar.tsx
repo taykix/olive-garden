@@ -28,6 +28,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
     { href: '/admin/yillik-isler', label: t('annual_works') },
     { href: '/admin/belgeler',     label: t('documents') },
     { href: '/admin/raporlar',     label: t('reports') },
+    { href: '/admin/planlama',     label: t('planning') },
     { href: '/admin/import',       label: t('import') },
     { href: '/admin/kullanicilar', label: t('users') },
   ]
@@ -39,6 +40,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
     { href: '/resident/odemeler',  label: t('payments') },
     { href: '/resident/belgeler',  label: t('documents') },
     { href: '/resident/raporlar',  label: t('reports') },
+    { href: '/resident/planlama',  label: t('planning') },
   ]
 
   const links = role === 'admin' ? adminLinks : role === 'resident' ? residentLinks : []
@@ -55,9 +57,9 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="px-3 py-1.5 text-sm rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
+              <Link key={l.href} href={l.href} className="px-2.5 py-1.5 text-sm rounded-md text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap">
                 {l.label}
               </Link>
             ))}
@@ -75,7 +77,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
             )}
             {links.length > 0 && (
               <button
-                className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
                 onClick={() => setOpen(!open)}
               >
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -87,7 +89,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t bg-white px-4 py-3 flex flex-col gap-1">
+        <div className="lg:hidden border-t bg-white px-4 py-3 flex flex-col gap-1">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="px-3 py-2 text-sm rounded-md text-gray-700 hover:bg-gray-100" onClick={() => setOpen(false)}>
               {l.label}

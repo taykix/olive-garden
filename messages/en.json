@@ -5,7 +5,7 @@
     "payments": "Dues", "announcements": "Announcements",
     "annual_works": "Annual Works", "reports": "Reports",
     "import": "Import Data", "users": "Users", "resident_home": "Home",
-    "documents": "Documents"
+    "documents": "Documents", "planning": "Planning"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -234,5 +234,27 @@
     "bank": "Bank Charges", "garden": "Garden / Agriculture", "paint": "Repair / Renovation",
     "security": "Security", "metal": "Iron / Metal Works", "hardware": "Hardware / Materials",
     "maintenance": "General Maintenance", "other": "Other"
+  },
+  "plan": {
+    "title": "Annual Dues Plan",
+    "subtitle": "Calculate the annual dues per apartment by selecting the optional items to be voted at the general assembly.",
+    "annual_per_apt": "Annual Dues per Apartment",
+    "grand_total": "Grand Total",
+    "fixed_total": "Fixed Items",
+    "optional_total": "Selected Optional",
+    "col_item": "Expense Item",
+    "col_type": "Type",
+    "col_amount": "Planned (₺)",
+    "type_fixed": "Fixed",
+    "type_optional": "Optional",
+    "optional_hint": "To be voted at the general assembly. Check to include in the total.",
+    "col_base": "Last Year",
+    "col_calc": "Calculation",
+    "method_manual": "Manual",
+    "method_inflation": "CPI",
+    "calc_hint": "The planned amount is set by adding the CPI (inflation) rate to last year's spending, or manually.",
+    "apts": "apartments",
+    "period": "Period",
+    "empty": "No annual plan published yet."
   }
 }

@@ -5,7 +5,7 @@
     "payments": "Aidat", "announcements": "Duyurular",
     "annual_works": "Yıllık İşler", "reports": "Raporlar",
     "import": "Veri Aktar", "users": "Kullanıcılar", "resident_home": "Ana Sayfa",
-    "documents": "Belgeler"
+    "documents": "Belgeler", "planning": "Planlama"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -234,5 +234,27 @@
     "bank": "Banka Masrafları", "garden": "Bahçe / Tarım", "paint": "Tamirat / Tadilat",
     "security": "Güvenlik", "metal": "Demir / Metal İşleri", "hardware": "Donanım / Malzeme",
     "maintenance": "Genel Bakım", "other": "Diğer"
+  },
+  "plan": {
+    "title": "Yıllık Aidat Planı",
+    "subtitle": "Genel kurulda oylanacak opsiyonel kalemleri seçerek daire başına yıllık aidatı hesaplayın.",
+    "annual_per_apt": "Daire Başına Yıllık Aidat",
+    "grand_total": "Genel Toplam",
+    "fixed_total": "Sabit Kalemler",
+    "optional_total": "Seçili Opsiyoneller",
+    "col_item": "Harcama Konusu",
+    "col_type": "Tür",
+    "col_amount": "Planlanan (₺)",
+    "type_fixed": "Sabit",
+    "type_optional": "Opsiyonel",
+    "optional_hint": "Genel kurulda oylanacak. İşaretleyerek toplama dahil edin.",
+    "col_base": "Geçen Yıl",
+    "col_calc": "Hesaplama",
+    "method_manual": "Manuel",
+    "method_inflation": "TÜFE",
+    "calc_hint": "Planlanan tutar, geçen yılın harcamasına TÜFE (enflasyon) oranı eklenerek ya da manuel olarak belirlenir.",
+    "apts": "daire",
+    "period": "Dönem",
+    "empty": "Henüz yayınlanmış bir yıllık plan bulunmuyor."
   }
 }

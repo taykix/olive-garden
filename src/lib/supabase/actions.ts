@@ -761,3 +761,234 @@ export async function bulkUpsertBudgetItems(
   revalidatePath('/admin/raporlar')
   return { success: true, count: rows.length }
 }
+
+// ─── Planlama (Yıllık Planlama) ────────────────────────────────────────────────
+
+// 2025-2026 gerçekleşen dönemi — baz tutar hesabı için
+const PLAN_BASE_PERIOD_START = '2025-09-27'
+const PLAN_BASE_PERIOD_END   = '2026-08-31'
+
+type PlanHeaderPayload = {
+  period: string
+  start_date?: string | null
+  end_date?: string | null
+  default_rate: number
+}
+
+// Belirtilen dönemdeki giderleri budget_item_id'ye göre toplayıp baz tutarları döndürür
+async function computeBaseByBudgetItem(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<Map<string, number>> {
+  const { data: expenses } = await supabase
+    .from('expenses')
+    .select('budget_item_id, amount, date')
+    .gte('date', PLAN_BASE_PERIOD_START)
+    .lte('date', PLAN_BASE_PERIOD_END)
+  const map = new Map<string, number>()
+  for (const e of expenses ?? []) {
+    if (!e.budget_item_id) continue
+    map.set(e.budget_item_id, (map.get(e.budget_item_id) ?? 0) + Number(e.amount))
+  }
+  return map
+}
+
+// Yeni plan oluşturur ve budget_items'tan kalemleri tohumlar (baz = geçen yıl gerçekleşen)
+export async function createPlan(data: PlanHeaderPayload) {
+  const supabase = await createClient()
+  const { data: plan, error } = await supabase
+    .from('plans')
+    .insert({
+      period: data.period.trim(),
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+      default_rate: data.default_rate,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
+  if (error) return { error: error.message }
+
+  const [{ data: budgetItems }, baseMap] = await Promise.all([
+    supabase.from('budget_items').select('*').order('sort_order'),
+    computeBaseByBudgetItem(supabase),
+  ])
+
+  const rows = (budgetItems ?? []).map((b, i) => ({
+    plan_id: plan.id,
+    source_budget_item_id: b.id,
+    category: b.category,
+    category_en: b.category_en,
+    sort_order: b.sort_order ?? i + 1,
+    base_amount: baseMap.get(b.id) ?? 0,
+    method: 'rate',
+    rate: data.default_rate,
+    planned_amount: null,
+    status: 'active',
+    is_new: false,
+    description_tr: b.description_tr ?? null,
+    description_en: b.description_en ?? null,
+    updated_at: new Date().toISOString(),
+  }))
+
+  if (rows.length > 0) {
+    const { error: itemsError } = await supabase.from('plan_items').insert(rows)
+    if (itemsError) return { error: itemsError.message }
+  }
+
+  revalidatePath('/admin/planlama')
+  return { success: true, id: plan.id as string }
+}
+
+export async function updatePlan(id: string, data: PlanHeaderPayload) {
+  const supabase = await createClient()
+  // eski varsayılan oranı al (override edilmemiş kalemleri yeni orana çekmek için)
+  const { data: current } = await supabase.from('plans').select('default_rate').eq('id', id).maybeSingle()
+  const oldRate = current?.default_rate != null ? Number(current.default_rate) : null
+
+  const { error } = await supabase
+    .from('plans')
+    .update({
+      period: data.period.trim(),
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+      default_rate: data.default_rate,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+  if (error) return { error: error.message }
+
+  // Varsayılan TÜFE değiştiyse, hâlâ eski varsayılana eşit (elle override edilmemiş)
+  // oran kalemlerini yeni orana güncelle. Personel gibi özel oranlar korunur.
+  if (oldRate != null && oldRate !== data.default_rate) {
+    await supabase
+      .from('plan_items')
+      .update({ rate: data.default_rate, updated_at: new Date().toISOString() })
+      .eq('plan_id', id)
+      .eq('method', 'rate')
+      .eq('rate', oldRate)
+  }
+
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+export async function deletePlan(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('plans').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+// Baz tutarları güncel 2025-2026 gerçekleşenden yeniden hesaplar
+export async function refreshPlanBase(planId: string) {
+  const supabase = await createClient()
+  const [{ data: items }, baseMap] = await Promise.all([
+    supabase.from('plan_items').select('id, source_budget_item_id').eq('plan_id', planId),
+    computeBaseByBudgetItem(supabase),
+  ])
+  for (const it of items ?? []) {
+    if (!it.source_budget_item_id) continue
+    await supabase
+      .from('plan_items')
+      .update({ base_amount: baseMap.get(it.source_budget_item_id) ?? 0, updated_at: new Date().toISOString() })
+      .eq('id', it.id)
+  }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+type PlanItemPayload = {
+  category: string
+  category_en?: string | null
+  base_amount?: number | null
+  method: 'rate' | 'manual'
+  rate?: number | null
+  planned_amount?: number | null
+  status?: 'active' | 'excluded' | 'merged'
+  optional?: boolean
+  is_new?: boolean
+  description_tr?: string | null
+  description_en?: string | null
+  sort_order?: number
+}
+
+export async function createPlanItem(planId: string, data: PlanItemPayload) {
+  const supabase = await createClient()
+  // yeni kalem en sona
+  const { data: maxRow } = await supabase
+    .from('plan_items')
+    .select('sort_order')
+    .eq('plan_id', planId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextSort = (maxRow?.sort_order ?? 0) + 1
+  const { error } = await supabase.from('plan_items').insert({
+    plan_id: planId,
+    source_budget_item_id: null,
+    category: data.category.trim(),
+    category_en: data.category_en ?? null,
+    sort_order: data.sort_order ?? nextSort,
+    base_amount: data.base_amount ?? null,
+    method: data.method,
+    rate: data.rate ?? null,
+    planned_amount: data.planned_amount ?? null,
+    status: data.status ?? 'active',
+    optional: data.optional ?? false,
+    is_new: data.is_new ?? true,
+    description_tr: data.description_tr ?? null,
+    description_en: data.description_en ?? null,
+    updated_at: new Date().toISOString(),
+  })
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+export async function updatePlanItem(id: string, data: Partial<PlanItemPayload>) {
+  const supabase = await createClient()
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  for (const k of ['category', 'category_en', 'base_amount', 'method', 'rate', 'planned_amount', 'status', 'optional', 'is_new', 'description_tr', 'description_en', 'sort_order'] as const) {
+    if (data[k] !== undefined) patch[k] = k === 'category' ? String(data[k]).trim() : data[k]
+  }
+  const { error } = await supabase.from('plan_items').update(patch).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+export async function deletePlanItem(id: string) {
+  const supabase = await createClient()
+  // bu kaleme birleştirilmiş çocukları önce serbest bırak
+  await supabase.from('plan_items').update({ merged_into: null, status: 'active' }).eq('merged_into', id)
+  const { error } = await supabase.from('plan_items').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+// Kalemleri hedef kaleme birleştirir (çocuklar status='merged', merged_into=target)
+export async function mergePlanItems(targetId: string, childIds: string[]) {
+  const supabase = await createClient()
+  const ids = childIds.filter(id => id !== targetId)
+  if (ids.length === 0) return { error: 'Birleştirilecek kalem yok.' }
+  const { error } = await supabase
+    .from('plan_items')
+    .update({ status: 'merged', merged_into: targetId, updated_at: new Date().toISOString() })
+    .in('id', ids)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+export async function unmergePlanItem(childId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('plan_items')
+    .update({ status: 'active', merged_into: null, updated_at: new Date().toISOString() })
+    .eq('id', childId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/planlama')
+  return { success: true }
+}

@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ChevronDown, Home, KeyRound, LogOut, Mail, User } from 'lucide-react'
+import { Home, KeyRound, LogOut, Mail, User } from 'lucide-react'
 
 interface ProfileDropdownProps {
   userName: string | null
@@ -31,9 +31,12 @@ export function ProfileDropdown({ userName, userEmail, apartmentNo, role }: Prof
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors rounded-lg px-2 py-1 hover:bg-gray-100 outline-none">
-          <span className="max-w-[140px] truncate">{userName || t('my_account')}</span>
-          <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <DropdownMenuTrigger
+          title={userName || userEmail || t('my_account')}
+          aria-label={userName || userEmail || t('my_account')}
+          className="flex items-center justify-center h-9 w-9 rounded-full bg-green-800 text-green-50 hover:bg-green-900 transition-colors outline-none shrink-0"
+        >
+          <User className="h-4 w-4" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-64 p-0">

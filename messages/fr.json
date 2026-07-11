@@ -5,7 +5,7 @@
     "payments": "Charges", "announcements": "Annonces",
     "annual_works": "Travaux annuels", "reports": "Rapports",
     "import": "Importer", "users": "Utilisateurs", "resident_home": "Accueil",
-    "documents": "Documents"
+    "documents": "Documents", "planning": "Planification"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -234,5 +234,27 @@
     "bank": "Frais bancaires", "garden": "Jardin / Agriculture", "paint": "Réparation / Rénovation",
     "security": "Sécurité", "metal": "Travaux fer / métal", "hardware": "Matériel / Fournitures",
     "maintenance": "Maintenance générale", "other": "Autre"
+  },
+  "plan": {
+    "title": "Plan annuel des charges",
+    "subtitle": "Calculez les charges annuelles par appartement en sélectionnant les postes optionnels à voter en assemblée générale.",
+    "annual_per_apt": "Charges annuelles par appartement",
+    "grand_total": "Total général",
+    "fixed_total": "Postes fixes",
+    "optional_total": "Optionnels sélectionnés",
+    "col_item": "Poste de dépense",
+    "col_type": "Type",
+    "col_amount": "Prévu (₺)",
+    "type_fixed": "Fixe",
+    "type_optional": "Optionnel",
+    "optional_hint": "À voter en assemblée générale. Cochez pour inclure dans le total.",
+    "col_base": "Année précédente",
+    "col_calc": "Calcul",
+    "method_manual": "Manuel",
+    "method_inflation": "IPC",
+    "calc_hint": "Le montant prévu est déterminé en ajoutant le taux d'inflation (IPC) aux dépenses de l'année précédente, ou manuellement.",
+    "apts": "appartements",
+    "period": "Période",
+    "empty": "Aucun plan annuel publié pour le moment."
   }
 }

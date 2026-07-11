@@ -127,6 +127,42 @@ export interface BudgetItem {
   updated_at: string
 }
 
+// ─── Planlama ─────────────────────────────────────────────────────────────────
+
+export interface Plan {
+  id: string
+  period: string
+  start_date: string | null
+  end_date: string | null
+  default_rate: number
+  created_at: string
+  updated_at: string
+}
+
+export type PlanMethod = 'rate' | 'manual'
+export type PlanItemStatus = 'active' | 'excluded' | 'merged'
+
+export interface PlanItem {
+  id: string
+  plan_id: string
+  source_budget_item_id: string | null
+  category: string
+  category_en: string | null
+  sort_order: number
+  base_amount: number | null
+  method: PlanMethod
+  rate: number | null
+  planned_amount: number | null
+  status: PlanItemStatus
+  optional: boolean
+  is_new: boolean
+  merged_into: string | null
+  description_tr: string | null
+  description_en: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface SiteDocument {
   id: string
   title_tr: string
