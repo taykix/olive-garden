@@ -1,8 +1,9 @@
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, MONTHS } from '@/lib/utils'
+import { formatCurrency, MONTHS, getMonthName } from '@/lib/utils'
 import { PaymentForm } from '@/components/admin/payment-form'
+import { PrintButton } from '@/app/admin/raporlar/print-button'
 import { Payment, ApartmentSettings } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -109,10 +110,10 @@ export default async function OdemelerPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Aidat / Ödeme Takibi</h1>
           {table.length > 0 && (
@@ -120,6 +121,7 @@ export default async function OdemelerPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {table.length > 0 && <PrintButton />}
           <Link href="/admin/odemeler/toplu">
             <Button variant="outline" size="sm" className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50">
               <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -132,7 +134,7 @@ export default async function OdemelerPage() {
 
       {/* Top stats */}
       {table.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 print:hidden">
           <Card className="border-red-100">
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-gray-500">Alınacak (Kalan)</CardTitle>
@@ -168,7 +170,7 @@ export default async function OdemelerPage() {
 
       {/* Summary cards */}
       {table.length > 0 && (
-        <div className="grid lg:grid-cols-2 gap-4">
+        <div className="grid lg:grid-cols-2 gap-4 print:hidden">
 
           {/* Eksik ödemeler */}
           <Card className="border-red-100">
@@ -268,29 +270,44 @@ export default async function OdemelerPage() {
 
       {/* Wide table */}
       {table.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-700">
+        <Card className="print:border-0 print:shadow-none">
+          <CardHeader className="pb-2 print:hidden">
+            <CardTitle className="text-sm text-gray-700 print:text-[11px]">
               Tüm Daireler — Aylık Ödeme Tablosu
-              <span className="text-xs font-normal text-gray-400 ml-2">(daire adına tıklayarak detay görüntüleyin)</span>
+              <span className="font-normal text-gray-400"> / All Apartments — Monthly Payment Table</span>
+              <span className="block text-xs font-normal text-gray-400 mt-0.5 print:hidden">(daire adına tıklayarak detay görüntüleyin / click an apartment name to view details)</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="text-xs w-full min-w-max">
+            <style>{'@media print{@page{size:A4 landscape;margin:4mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}#odeme-print{font-size:8px!important}#odeme-print td,#odeme-print th{padding-top:2px!important;padding-bottom:2px!important;padding-left:3px!important;padding-right:3px!important}}'}</style>
+            <div className="overflow-x-auto print:overflow-visible">
+              <table id="odeme-print" className="text-xs w-full min-w-max print:min-w-0">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">Daire</th>
-                    <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Sakin</th>
-                    <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">Geçen Yıl</th>
-                    <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">Yıllık Aidat</th>
+                    <th className="sticky left-0 print:static bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">
+                      Daire<span className="block text-[10px] font-normal text-gray-400">Apt.</span>
+                    </th>
+                    <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap print:hidden">
+                      Sakin<span className="block text-[10px] font-normal text-gray-400">Resident</span>
+                    </th>
+                    <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">
+                      Geçen Yıl<span className="block text-[10px] font-normal text-amber-400">Last Year</span>
+                    </th>
+                    <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">
+                      Yıllık Aidat<span className="block text-[10px] font-normal text-gray-400">Annual Dues</span>
+                    </th>
                     {PERIOD_MONTHS.map(pm => (
                       <th key={`${pm.year}-${pm.month}`} className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">
                         {MONTHS[pm.month].slice(0, 3)}<span className="text-gray-300"> '{String(pm.year).slice(2)}</span>
+                        <span className="block text-[10px] font-normal text-gray-400">{getMonthName(pm.month, 'en', true)}</span>
                       </th>
                     ))}
-                    <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">Toplam</th>
-                    <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">Kalan</th>
+                    <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">
+                      Toplam<span className="block text-[10px] font-normal text-green-500">Total</span>
+                    </th>
+                    <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">
+                      Kalan<span className="block text-[10px] font-normal text-red-400">Remaining</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -304,12 +321,12 @@ export default async function OdemelerPage() {
                       : 'text-gray-300'
                     return (
                       <tr key={row.apartment_no} className={`border-b border-gray-100 ${isOdd ? 'bg-gray-50/40' : 'bg-white'} hover:bg-blue-50/30 transition-colors`}>
-                        <td className={`sticky left-0 z-10 border-r border-gray-100 px-3 py-1.5 ${isOdd ? 'bg-gray-50/80' : 'bg-white'}`}>
+                        <td className={`sticky left-0 print:static z-10 border-r border-gray-100 px-3 py-1.5 ${isOdd ? 'bg-gray-50/80' : 'bg-white'}`}>
                           <Link href={`/admin/odemeler/${row.apartment_no}`} className="font-mono font-semibold text-green-700 hover:underline whitespace-nowrap">
                             {row.apartment_no}
                           </Link>
                         </td>
-                        <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate">{row.resident_name || '—'}</td>
+                        <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate print:hidden">{row.resident_name || '—'}</td>
                         <td className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${prevColor}`}>
                           {row.previous_balance === 0 ? '—' : `${row.previous_balance > 0 ? '+' : ''}${fmt(row.previous_balance)}`}
                         </td>
@@ -344,10 +361,10 @@ export default async function OdemelerPage() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-300 bg-gray-100 font-semibold">
-                    <td className="sticky left-0 bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
-                      TOPLAM
+                    <td className="sticky left-0 print:static bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
+                      TOPLAM<span className="block text-[10px] font-normal text-gray-400">Total</span>
                     </td>
-                    <td className="px-2 py-2" />
+                    <td className="px-2 py-2 print:hidden" />
                     <td className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
                       totalPrev > 0 ? 'text-red-600'
                       : totalPrev < 0 ? 'text-blue-600'
