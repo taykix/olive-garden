@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { CSVExportButton } from '@/components/admin/csv-export-button'
-import { Plus, Pencil, Settings, RefreshCw, GitMerge, Undo2, EyeOff, Eye, Vote } from 'lucide-react'
+import { Plus, Pencil, Settings, RefreshCw, GitMerge, Undo2, EyeOff, Eye, Vote, Printer } from 'lucide-react'
 
 const APT_COUNT = 42
 
@@ -318,15 +318,20 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
 
   return (
     <div className="space-y-6">
+      {/* Yazdırmada tek sayfaya sığması için yatay sayfa */}
+      <style>{'@media print{@page{size:A4 landscape;margin:8mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}</style>
       {/* Başlık */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Planlama — {plan.period}</h1>
           <p className="text-gray-500 text-sm mt-1">
             {dateLabel} · Varsayılan TÜFE %{fmtRate(plan.default_rate)} · {items.filter(i => i.status !== 'merged').length} kalem
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <Button size="sm" variant="outline" onClick={() => window.print()} className="gap-1.5">
+            <Printer className="h-3.5 w-3.5" /> Yazdır
+          </Button>
           <CSVExportButton data={planCSV} filename={`plan-${plan.period}`} label="CSV İndir" />
           <Button size="sm" variant="outline" onClick={handleRefreshBase} disabled={busy} className="gap-1.5 text-amber-700 border-amber-200 hover:bg-amber-50">
             <RefreshCw className="h-3.5 w-3.5" /> Bazı Güncelle
@@ -342,7 +347,7 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
 
       {/* Birleştirme çubuğu */}
       {selected.size > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm print:hidden">
           <span className="text-blue-800 font-medium">{selected.size} kalem seçili</span>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={openMerge} disabled={selected.size < 2} className="gap-1.5 text-blue-700 border-blue-300">
@@ -354,7 +359,7 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
       )}
 
       {/* Özet kartları */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 print:hidden">
         <Card className="border-gray-200">
           <CardHeader className="pb-1 pt-4 px-4"><CardTitle className="text-xs font-medium text-gray-500">Sabit Kalemler</CardTitle></CardHeader>
           <CardContent className="pb-4 px-4">
@@ -387,17 +392,17 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="text-xs w-full min-w-[860px]">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="text-xs w-full min-w-[860px] print:min-w-0 print:text-[10px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="w-8 px-2 py-2" />
+                  <th className="w-8 px-2 py-2 print:hidden" />
                   <th className="text-left px-3 py-2 font-medium text-gray-600 min-w-[240px]">Harcama Konusu</th>
                   <th className="text-right px-3 py-2 font-medium text-amber-600 whitespace-nowrap">Geçen Yıl</th>
                   <th className="text-left px-3 py-2 font-medium text-gray-500 whitespace-nowrap">Yöntem</th>
                   <th className="text-right px-3 py-2 font-medium text-gray-500 whitespace-nowrap">Oran %</th>
                   <th className="text-right px-3 py-2 font-medium text-green-600 whitespace-nowrap">Planlanan</th>
-                  <th className="w-24 px-2 py-2" />
+                  <th className="w-24 px-2 py-2 print:hidden" />
                 </tr>
               </thead>
               <tbody>
@@ -411,8 +416,8 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
                   if (it.status === 'merged') {
                     const parent = items.find(p => p.id === it.merged_into)
                     return (
-                      <tr key={it.id} className="border-b border-gray-100 bg-gray-50/60 text-gray-400">
-                        <td className="px-2 py-1.5" />
+                      <tr key={it.id} className="border-b border-gray-100 bg-gray-50/60 text-gray-400 print:break-inside-avoid">
+                        <td className="px-2 py-1.5 print:hidden" />
                         <td className="px-3 py-1.5 pl-8">
                           <span className="line-through">{it.category}</span>
                           <span className="ml-2 text-[11px] not-italic text-blue-400">↳ {parent?.category ?? 'birleştirildi'}</span>
@@ -421,7 +426,7 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
                         <td className="px-3 py-1.5 text-gray-300">birleşik</td>
                         <td className="px-3 py-1.5" />
                         <td className="px-3 py-1.5 text-right font-mono text-gray-300">—</td>
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-1.5 print:hidden">
                           <button onClick={() => runAction(() => unmergePlanItem(it.id), 'Ayrıldı.')} title="Ayır" className="p-1 text-gray-300 hover:text-blue-500">
                             <Undo2 className="h-3.5 w-3.5" />
                           </button>
@@ -432,8 +437,8 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
 
                   const excluded = it.status === 'excluded'
                   return (
-                    <tr key={it.id} className={`border-b border-gray-100 ${bg} ${excluded ? 'opacity-50' : 'hover:bg-blue-50/20'} transition-colors`}>
-                      <td className="px-2 py-1.5 text-center">
+                    <tr key={it.id} className={`border-b border-gray-100 ${bg} ${excluded ? 'opacity-50' : 'hover:bg-blue-50/20'} transition-colors print:break-inside-avoid`}>
+                      <td className="px-2 py-1.5 text-center print:hidden">
                         {!excluded && (
                           <input
                             type="checkbox"
@@ -458,7 +463,7 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
                       <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${excluded ? 'text-gray-300' : 'text-green-700 font-semibold'}`}>
                         {excluded ? '0' : fmtC(plannedVal)}
                       </td>
-                      <td className="px-2 py-1.5">
+                      <td className="px-2 py-1.5 print:hidden">
                         <div className="flex items-center gap-0.5">
                           {excluded ? (
                             <button onClick={() => runAction(() => updatePlanItem(it.id, { status: 'active' }), 'Geri alındı.')} title="Geri Al" className="p-1 text-gray-300 hover:text-green-600">
@@ -490,22 +495,22 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
-                  <td className="px-2 py-2.5" />
+                  <td className="px-2 py-2.5 print:hidden" />
                   <td className="px-3 py-2.5 text-xs text-gray-700">TOPLAM</td>
                   <td className="px-3 py-2.5" />
                   <td className="px-3 py-2.5" />
                   <td className="px-3 py-2.5" />
                   <td className="px-3 py-2.5 text-right font-mono text-green-700">{fmtC(totalPlanned)}</td>
-                  <td className="px-2 py-2.5" />
+                  <td className="px-2 py-2.5 print:hidden" />
                 </tr>
                 <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic">
-                  <td className="px-2 py-1.5" />
+                  <td className="px-2 py-1.5 print:hidden" />
                   <td className="px-3 py-1.5 text-xs not-italic font-medium">Daire Başına <span className="text-gray-400 font-normal">(÷ {APT_COUNT} daire)</span></td>
                   <td className="px-3 py-1.5" />
                   <td className="px-3 py-1.5" />
                   <td className="px-3 py-1.5" />
                   <td className="px-3 py-1.5 text-right font-mono text-gray-600">{totalPlanned ? fmtC(Math.round(totalPlanned / APT_COUNT)) : '—'}</td>
-                  <td className="px-2 py-1.5" />
+                  <td className="px-2 py-1.5 print:hidden" />
                 </tr>
               </tfoot>
             </table>
