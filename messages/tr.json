@@ -40,7 +40,8 @@
   "table": {
     "col_sno": "S.No", "col_date": "Tarih", "col_title": "Başlık",
     "col_category": "Kategori", "col_description": "Açıklama", "col_amount": "Tutar",
-    "col_document": "Belge", "col_budget_item": "İşletme Planı", "view": "Görüntüle"
+    "col_document": "Belge", "col_budget_item": "İşletme Planı", "view": "Görüntüle",
+    "total": "Toplam", "grand_total": "Genel Toplam", "unlinked": "İşletme Planı Atanmamış", "print": "Yazdır", "budget_all": "Tüm İşletme Planları", "report_title": "İşletme Planına Göre Giderler"
   },
   "budget": {
     "card_title": "Yıllık İşletme Planı",

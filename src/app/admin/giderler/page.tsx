@@ -21,8 +21,8 @@ export default async function GiderlerPage() {
   const total = expenseList.reduce((s, r) => s + Number(r.amount), 0)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 print:space-y-0">
+      <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Giderler</h1>
           <p className="text-gray-500 text-sm mt-1">Toplam: {formatCurrency(total)}</p>
@@ -34,8 +34,8 @@ export default async function GiderlerPage() {
         <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-md">Veriler yüklenirken hata oluştu.</p>
       )}
 
-      <Card>
-        <CardHeader>
+      <Card className="print:border-0 print:shadow-none">
+        <CardHeader className="print:hidden">
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingDown className="h-4 w-4 text-red-500" />
             Gider Kayıtları ({expenseList.length})

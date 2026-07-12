@@ -199,7 +199,8 @@
   "table": {
     "col_sno": "N°", "col_date": "Date", "col_title": "Titre",
     "col_category": "Catégorie", "col_description": "Description", "col_amount": "Montant",
-    "col_document": "Document", "col_budget_item": "Poste budgétaire", "view": "Voir"
+    "col_document": "Document", "col_budget_item": "Poste budgétaire", "view": "Voir",
+    "total": "Total", "grand_total": "Total général", "unlinked": "Sans poste budgétaire", "print": "Imprimer", "budget_all": "Tous les postes budgétaires", "report_title": "Dépenses par poste budgétaire"
   },
   "budget": {
     "card_title": "Plan d'exploitation annuel",

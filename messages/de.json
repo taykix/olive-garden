@@ -40,7 +40,8 @@
   "table": {
     "col_sno": "Nr.", "col_date": "Datum", "col_title": "Titel",
     "col_category": "Kategorie", "col_description": "Beschreibung", "col_amount": "Betrag",
-    "col_document": "Dokument", "col_budget_item": "Budgetposten", "view": "Ansehen"
+    "col_document": "Dokument", "col_budget_item": "Budgetposten", "view": "Ansehen",
+    "total": "Summe", "grand_total": "Gesamtsumme", "unlinked": "Kein Budgetposten", "print": "Drucken", "budget_all": "Alle Budgetposten", "report_title": "Ausgaben nach Budgetposten"
   },
   "budget": {
     "card_title": "Jährlicher Betriebsplan",

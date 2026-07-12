@@ -199,7 +199,8 @@
   "table": {
     "col_sno": "№", "col_date": "Дата", "col_title": "Название",
     "col_category": "Категория", "col_description": "Описание", "col_amount": "Сумма",
-    "col_document": "Документ", "col_budget_item": "Статья бюджета", "view": "Открыть"
+    "col_document": "Документ", "col_budget_item": "Статья бюджета", "view": "Открыть",
+    "total": "Итого", "grand_total": "Общий итог", "unlinked": "Без статьи бюджета", "print": "Печать", "budget_all": "Все статьи бюджета", "report_title": "Расходы по статьям бюджета"
   },
   "budget": {
     "card_title": "Годовой операционный план",

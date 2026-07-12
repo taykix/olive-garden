@@ -40,7 +40,8 @@
   "table": {
     "col_sno": "No.", "col_date": "Date", "col_title": "Title",
     "col_category": "Category", "col_description": "Description", "col_amount": "Amount",
-    "col_document": "Document", "col_budget_item": "Budget Item", "view": "View"
+    "col_document": "Document", "col_budget_item": "Budget Item", "view": "View",
+    "total": "Total", "grand_total": "Grand Total", "unlinked": "No Budget Item", "print": "Print", "budget_all": "All Budget Items", "report_title": "Expenses by Budget Item"
   },
   "budget": {
     "card_title": "Annual Operating Plan",
