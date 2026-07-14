@@ -18,6 +18,9 @@ import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { deleteExpense } from '@/lib/supabase/actions'
 import { Expense, BudgetItem } from '@/types'
 import { ChevronUp, ChevronDown, ChevronsUpDown, Search, Printer } from 'lucide-react'
+import enMessages from '../../../../messages/en.json'
+
+const EN_CAT = enMessages.expense_cat as Record<string, string>
 
 type SortField = 'siraNo' | 'date' | 'title' | 'amount'
 type SortDir = 'asc' | 'desc'
@@ -58,6 +61,11 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
   const catLabel = (c: string) => {
     const key = EXPENSE_CATEGORY_KEY[c]
     return key ? tCat(key) : c
+  }
+  // İngilizce kategori adı (rapor için)
+  const catLabelEn = (c: string) => {
+    const key = EXPENSE_CATEGORY_KEY[c]
+    return key ? (EN_CAT[key] ?? c) : c
   }
 
   const budgetLabel = (item: BudgetItem) =>
@@ -148,22 +156,32 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
     )
   }
 
+  // İki dilli başlık hücresi (TR üstte, EN altta)
+  const Bi = ({ tr, en, className }: { tr: string; en: string; className?: string }) => (
+    <th className={className}>
+      {tr}<span className="block text-[8px] font-normal text-gray-400">{en}</span>
+    </th>
+  )
+
   // Rapordaki tek grup tablosu
-  function ReportGroup({ heading, rows, total }: { heading: string; rows: Expense[]; total: number }) {
+  function ReportGroup({ headingTr, headingEn, rows, total }: { headingTr: string; headingEn?: string | null; rows: Expense[]; total: number }) {
     return (
       <div className="mb-4 break-inside-avoid">
         <div className="flex items-center justify-between bg-gray-100 border border-gray-300 px-2 py-1 font-semibold text-[11px]">
-          <span>{heading}</span>
+          <span className="leading-tight">
+            {headingTr}
+            {headingEn && <span className="block text-[9px] font-normal text-gray-500">{headingEn}</span>}
+          </span>
           <span className="font-mono">{formatCurrency(total)}</span>
         </div>
         <table className="w-full text-[10px] border border-t-0 border-gray-300">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-              <th className="text-left px-2 py-0.5 w-12">{t('col_sno')}</th>
-              <th className="text-left px-2 py-0.5 w-20 whitespace-nowrap">{t('col_date')}</th>
-              <th className="text-left px-2 py-0.5">{t('col_title')}</th>
-              <th className="text-left px-2 py-0.5 w-32">{t('col_category')}</th>
-              <th className="text-right px-2 py-0.5 w-24">{t('col_amount')}</th>
+            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 align-top">
+              <Bi tr="S.No" en="No." className="text-left px-2 py-0.5 w-12" />
+              <Bi tr="Tarih" en="Date" className="text-left px-2 py-0.5 w-20 whitespace-nowrap" />
+              <Bi tr="Başlık" en="Title" className="text-left px-2 py-0.5" />
+              <Bi tr="Kategori" en="Category" className="text-left px-2 py-0.5 w-32" />
+              <Bi tr="Tutar" en="Amount" className="text-right px-2 py-0.5 w-24" />
             </tr>
           </thead>
           <tbody>
@@ -174,7 +192,12 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
                   <td className="px-2 py-0.5 font-mono text-gray-500">{siraNo || '—'}</td>
                   <td className="px-2 py-0.5 whitespace-nowrap text-gray-600">{formatDate(e.date)}</td>
                   <td className="px-2 py-0.5">{e.title}</td>
-                  <td className="px-2 py-0.5 text-gray-500">{e.category ? catLabel(e.category) : '—'}</td>
+                  <td className="px-2 py-0.5 text-gray-500 leading-tight">
+                    {e.category ? catLabel(e.category) : '—'}
+                    {e.category && catLabelEn(e.category) !== catLabel(e.category) && (
+                      <span className="block text-[8px] text-gray-400">{catLabelEn(e.category)}</span>
+                    )}
+                  </td>
                   <td className="px-2 py-0.5 text-right font-mono text-red-700">{formatCurrency(Number(e.amount))}</td>
                 </tr>
               )
@@ -182,7 +205,7 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
           </tbody>
           <tfoot>
             <tr className="border-t border-gray-300 bg-gray-50 font-semibold">
-              <td colSpan={4} className="px-2 py-0.5 text-right">{t('total')}</td>
+              <td colSpan={4} className="px-2 py-0.5 text-right">Toplam <span className="font-normal text-gray-400">/ Total</span></td>
               <td className="px-2 py-0.5 text-right font-mono text-red-700">{formatCurrency(total)}</td>
             </tr>
           </tfoot>
@@ -304,15 +327,23 @@ export function ExpenseTable({ data, budgetItems = [], readOnly = false }: { dat
       {/* Yazdırma raporu — işletme planına göre gruplu (yalnızca yazdırmada) */}
       <div className="hidden print:block px-2 py-1">
         <style>{'@media print{@page{size:A4 portrait;margin:9mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}</style>
-        <h2 className="text-sm font-bold text-gray-900 mb-2">{t('report_title')}</h2>
+        <h2 className="text-sm font-bold text-gray-900 mb-2">
+          İşletme Planına Göre Giderler <span className="font-normal text-gray-400">/ Expenses by Budget Item</span>
+        </h2>
         {report.groups.map(g => (
-          <ReportGroup key={g.item.id} heading={`${g.item.sort_order}. ${budgetLabel(g.item)}`} rows={g.rows} total={g.total} />
+          <ReportGroup
+            key={g.item.id}
+            headingTr={`${g.item.sort_order}. ${g.item.category}`}
+            headingEn={g.item.category_en ? `${g.item.sort_order}. ${g.item.category_en}` : null}
+            rows={g.rows}
+            total={g.total}
+          />
         ))}
         {report.unlinked.length > 0 && (
-          <ReportGroup heading={t('unlinked')} rows={report.unlinked} total={report.unlinkedTotal} />
+          <ReportGroup headingTr="İşletme Planı Atanmamış" headingEn="No Budget Item" rows={report.unlinked} total={report.unlinkedTotal} />
         )}
         <div className="flex items-center justify-between border-t-2 border-gray-400 mt-1 px-2 py-1 font-bold text-xs">
-          <span>{t('grand_total')}</span>
+          <span>Genel Toplam <span className="font-normal text-gray-400">/ Grand Total</span></span>
           <span className="font-mono text-red-700">{formatCurrency(report.grand)}</span>
         </div>
       </div>

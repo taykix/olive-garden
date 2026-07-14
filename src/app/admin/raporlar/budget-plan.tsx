@@ -392,8 +392,8 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-sm text-gray-700">{t('card_title')}</CardTitle>
-              <p className="text-xs text-gray-400 mt-0.5">2023–2026 · {items.length} {t('card_items')} · {t('card_auto')}</p>
+              <CardTitle className="text-sm text-gray-700">{t('card_title')} <span className="font-normal text-gray-400">/ Annual Operating Plan</span></CardTitle>
+              <p className="text-xs text-gray-400 mt-0.5 print:hidden">2023–2026 · {items.length} {t('card_items')} · {t('card_auto')}</p>
             </div>
             <div className="flex items-center gap-2 print:hidden">
               <CSVExportButton data={budgetCSV} filename="yillik-isletme-plani" label="CSV İndir" />
@@ -431,7 +431,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Period group row */}
                 <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
                   <th className="sticky left-0 print:static bg-gray-50 z-10 text-left px-3 py-2 print:py-1 text-xs font-semibold text-gray-600 border-r border-gray-200 min-w-[240px] print:min-w-0">
-                    {t('col_item')}
+                    {t('col_item')}<span className="block text-[9px] font-normal text-gray-400">Expense Item</span>
                   </th>
                   <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2023-2024</th>
                   <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2024-2025</th>
@@ -441,12 +441,12 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Column labels */}
                 <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
                   <th className="sticky left-0 print:static bg-gray-50 z-10 border-r border-gray-200" />
-                  <th className={th}>{t('col_planned')}</th>
-                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}</th>
-                  <th className={th}>{t('col_planned')}</th>
-                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}</th>
-                  <th className={`${th} text-green-600`}>{t('col_planned')}</th>
-                  <th className={`${th} text-green-700 font-semibold bg-green-50/30`}>{t('col_actual_mark')}</th>
+                  <th className={th}>{t('col_planned')}<span className="block text-[9px] font-normal text-gray-400">Planned</span></th>
+                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}<span className="block text-[9px] font-normal text-gray-400">Actual</span></th>
+                  <th className={th}>{t('col_planned')}<span className="block text-[9px] font-normal text-gray-400">Planned</span></th>
+                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}<span className="block text-[9px] font-normal text-gray-400">Actual</span></th>
+                  <th className={`${th} text-green-600`}>{t('col_planned')}<span className="block text-[9px] font-normal text-green-500">Planned</span></th>
+                  <th className={`${th} text-green-700 font-semibold bg-green-50/30`}>{t('col_actual_mark')}<span className="block text-[9px] font-normal text-green-500">Actual ✦</span></th>
                   <th className="print:hidden px-2 w-16" />
                 </tr>
               </thead>
@@ -461,7 +461,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                       <td className={`sticky left-0 print:static z-10 px-3 py-2 print:py-0.5 border-r border-gray-100 ${bg} max-w-[280px] print:max-w-none`}>
                         <div className="font-medium text-gray-800 leading-tight">{item.category}</div>
                         {item.category_en && (
-                          <div className="text-gray-400 text-xs leading-tight mt-0.5 print:hidden">{item.category_en}</div>
+                          <div className="text-gray-400 text-xs leading-tight mt-0.5 print:text-[8px] print:mt-0">{item.category_en}</div>
                         )}
                       </td>
                       <td className={td}>{fmt(item.plan_2023_2024)}</td>
@@ -506,7 +506,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Totals */}
                 <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold print:break-inside-avoid">
                   <td className="sticky left-0 print:static bg-gray-100 z-10 px-3 py-2.5 print:py-1 border-r border-gray-200 text-xs text-gray-700">
-                    {t('total')}
+                    {t('total')} <span className="text-gray-400 font-normal">/ TOTAL</span>
                   </td>
                   <td className={td}>{fmtCurrency(totals.p23)}</td>
                   <td className={`${td} border-r border-gray-200`}>{fmtCurrency(totals.a23)}</td>
@@ -519,7 +519,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                 {/* Per-apartment */}
                 <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic print:break-inside-avoid">
                   <td className="sticky left-0 print:static bg-gray-50 z-10 px-3 py-1.5 print:py-1 border-r border-gray-200 text-xs not-italic font-medium">
-                    {t('per_apt')} <span className="text-gray-400 font-normal">(÷ {APT_COUNT} {t('apts')})</span>
+                    {t('per_apt')} <span className="text-gray-400 font-normal">/ Per Apartment (÷ {APT_COUNT} {t('apts')})</span>
                   </td>
                   <td className={td}>{totals.p23 ? fmtCurrency(Math.round(totals.p23 / APT_COUNT)) : '—'}</td>
                   <td className={`${td} border-r border-gray-200`}>{totals.a23 ? fmtCurrency(Math.round(totals.a23 / APT_COUNT)) : '—'}</td>
