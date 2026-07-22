@@ -73,7 +73,7 @@ export default async function SozlesmePage({
               <div>
                 <p className="font-medium text-gray-800 mb-1">Veri Sorumlusu</p>
                 <p className="text-gray-600">
-                  Olive Garden 3 Site Yönetimi — Akbük Mh, 2020. Sk 2F, 09270 Didim/Aydın, Türkiye
+                  Olive Garden 3 Site Yönetimi — Akbük Mh, 5726 Sok. No:1, 09270 Didim/Aydın, Türkiye
                 </p>
               </div>
 
