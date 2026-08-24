@@ -227,7 +227,9 @@
     "exempt": "muaf",
     "period_active": "Aktif",
     "period_archive": "Arşiv",
-    "archive_notice": "Arşiv dönemi görüntüleniyor ({period}). Bu dönem salt-okunur bir kayıttır."
+    "archive_notice": "Arşiv dönemi görüntüleniyor ({period}). Bu dönem salt-okunur bir kayıttır.",
+    "installments": "Aidat taksitleri",
+    "expected_to_date": "Bu ana kadar beklenen"
   },
   "raporlar": {
     "title": "Raporlar",

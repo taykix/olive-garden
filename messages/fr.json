@@ -206,7 +206,9 @@
     "exempt": "exonéré",
     "period_active": "Actif",
     "period_archive": "Archive",
-    "archive_notice": "Période archivée affichée ({period}). Cette période est un enregistrement en lecture seule."
+    "archive_notice": "Période archivée affichée ({period}). Cette période est un enregistrement en lecture seule.",
+    "installments": "Échéances des charges",
+    "expected_to_date": "Attendu à ce jour"
   },
   "raporlar": {
     "title": "Rapports",

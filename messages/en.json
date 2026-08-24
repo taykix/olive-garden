@@ -227,7 +227,9 @@
     "exempt": "exempt",
     "period_active": "Active",
     "period_archive": "Archive",
-    "archive_notice": "Viewing archived period ({period}). This period is a read-only record."
+    "archive_notice": "Viewing archived period ({period}). This period is a read-only record.",
+    "installments": "Dues installments",
+    "expected_to_date": "Expected to date"
   },
   "raporlar": {
     "title": "Reports",

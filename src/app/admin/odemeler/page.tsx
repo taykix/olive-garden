@@ -7,7 +7,7 @@ import { PrintButton } from '@/app/admin/raporlar/print-button'
 import { Payment, ApartmentSettings } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus, expectedDueToDate, type PeriodDef } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
 import { SeedPeriodButton } from '@/components/admin/seed-period-button'
 
@@ -22,12 +22,16 @@ interface AptRow {
   previous_balance: number
   monthPaid: Record<string, number>  // "2025-10" → amount
   total_paid: number
-  remaining: number  // annual_due + previous_balance - total_paid
+  overdue: number        // güncel kalan (taksite göre): expected + prev − paid
+  yearRemaining: number  // yıl sonu kalan: annual_due + prev − paid
+  behind: boolean        // taksit takvimine göre geride mi
+  credit: boolean        // yıllık borcun ötesinde fazla ödeme (alacak) var mı
 }
 
 function buildTable(
   settings: ApartmentSettings[],
-  payments: Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>[]
+  payments: Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>[],
+  period: PeriodDef
 ): AptRow[] {
   // Ödemeler zaten period_id ile filtrelenmiş olarak gelir (sorgu tarafında).
 
@@ -58,7 +62,7 @@ function buildTable(
     const annual_due       = sett?.annual_due ?? pay?.amount_due ?? 40000
     const previous_balance = sett?.previous_balance ?? 0
     const total_paid       = pay?.total_paid ?? 0
-    const remaining        = annual_due + previous_balance - total_paid
+    const st = duesStatus(annual_due, previous_balance, total_paid, period)
 
     rows.push({
       apartment_no:     apt,
@@ -67,7 +71,10 @@ function buildTable(
       previous_balance,
       monthPaid:        pay?.monthPaid ?? {},
       total_paid,
-      remaining,
+      overdue:          st.overdue,
+      yearRemaining:    st.yearRemaining,
+      behind:           st.behind,
+      credit:           st.credit,
     })
   }
 
@@ -101,15 +108,21 @@ export default async function OdemelerPage({
     supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no'),
   ])
 
-  const table    = buildTable(settingsData ?? [], paymentsData ?? [])
-  const unpaid   = table.filter(a => a.remaining > 0.01)
-  const paid     = table.filter(a => a.remaining <= 0.01)
+  const table    = buildTable(settingsData ?? [], paymentsData ?? [], period)
+  const unpaid   = table.filter(a => a.behind)
+  const paid     = table.filter(a => !a.behind)
   const totalPaid      = table.reduce((s, a) => s + a.total_paid, 0)
-  const totalRem       = table.reduce((s, a) => s + Math.max(0, a.remaining), 0)
-  const totalOverpaid  = table.reduce((s, a) => s + Math.max(0, -a.remaining), 0)
+  const totalRem       = table.reduce((s, a) => s + Math.max(0, a.overdue), 0)
+  const totalOverpaid  = table.reduce((s, a) => s + (a.credit ? -a.yearRemaining : 0), 0)
   const totalAnnualDue = table.reduce((s, a) => s + a.annual_due, 0)
   const totalPrev      = table.reduce((s, a) => s + a.previous_balance, 0)
-  const totalKalan     = table.reduce((s, a) => s + a.remaining, 0)
+  const totalKalan     = table.reduce((s, a) => s + a.overdue, 0)
+  // Taksit takvimi bilgisi (bu ana kadar beklenen oran + takvim etiketi)
+  const expectedPct    = expectedDueToDate(100, period) // 100 tabanında → yüzde
+  const MONTH_ABBR     = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+  const scheduleLabel  = (period.installments ?? [])
+    .map(it => `${MONTH_ABBR[it.month]} %${Math.round(it.fraction * 100)}`)
+    .join(' · ')
   const monthTotals    = Object.fromEntries(
     PERIOD_MONTHS.map(pm => {
       const key = `${pm.year}-${pm.month}`
@@ -158,12 +171,20 @@ export default async function OdemelerPage({
         </div>
       )}
 
+      {/* Taksit takvimi bilgi çubuğu */}
+      {table.length > 0 && scheduleLabel && (
+        <div className="rounded-md border border-blue-100 bg-blue-50/60 px-4 py-2.5 text-xs text-blue-800 print:hidden">
+          <strong>Aidat taksit takvimi:</strong> {scheduleLabel} · Bu ana kadar beklenen: <strong>%{expectedPct}</strong>
+          <span className="text-blue-600"> — borçlu/güncel durumu, yıllık tamamı yerine bugüne kadar beklenen taksitlere göre hesaplanır.</span>
+        </div>
+      )}
+
       {/* Top stats */}
       {table.length > 0 && (
         <div className="grid grid-cols-3 gap-3 print:hidden">
           <Card className="border-red-100">
             <CardHeader className="pb-1 pt-4 px-4">
-              <CardTitle className="text-xs font-medium text-gray-500">Alınacak (Kalan)</CardTitle>
+              <CardTitle className="text-xs font-medium text-gray-500">Alınacak (Taksite Göre)</CardTitle>
             </CardHeader>
             <CardContent className="pb-4 px-4">
               <p className={`text-lg font-bold font-mono ${totalRem > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -208,7 +229,7 @@ export default async function OdemelerPage({
             </CardHeader>
             <CardContent className="p-0">
               {unpaid.length === 0 ? (
-                <p className="text-sm text-gray-400 px-4 py-6 text-center">Tüm daireler tam ödeme yapmış.</p>
+                <p className="text-sm text-gray-400 px-4 py-6 text-center">Tüm daireler taksitlerinde güncel.</p>
               ) : (
                 <div className="overflow-x-auto max-h-72">
                   <table className="w-full text-sm">
@@ -217,7 +238,7 @@ export default async function OdemelerPage({
                         <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Daire</th>
                         <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium">Sakin</th>
                         <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium">Ödenen</th>
-                        <th className="text-right px-3 py-2 text-xs text-red-600 font-medium">Kalan</th>
+                        <th className="text-right px-3 py-2 text-xs text-red-600 font-medium">Geride (Taksit)</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -230,15 +251,15 @@ export default async function OdemelerPage({
                           </td>
                           <td className="px-3 py-2 text-gray-600 text-xs truncate max-w-[140px]">{a.resident_name || '—'}</td>
                           <td className="px-3 py-2 text-right text-green-600 text-xs font-mono">{formatCurrency(a.total_paid)}</td>
-                          <td className="px-3 py-2 text-right text-red-600 font-bold text-xs font-mono">{formatCurrency(a.remaining)}</td>
+                          <td className="px-3 py-2 text-right text-red-600 font-bold text-xs font-mono">{formatCurrency(a.overdue)}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="border-t border-red-100 bg-red-50/40">
-                        <td colSpan={3} className="px-3 py-1.5 text-xs text-gray-500 font-medium">Toplam kalan</td>
+                        <td colSpan={3} className="px-3 py-1.5 text-xs text-gray-500 font-medium">Toplam geride</td>
                         <td className="px-3 py-1.5 text-right text-red-700 font-bold text-xs font-mono">
-                          {formatCurrency(unpaid.reduce((s, a) => s + a.remaining, 0))}
+                          {formatCurrency(unpaid.reduce((s, a) => s + a.overdue, 0))}
                         </td>
                       </tr>
                     </tfoot>
@@ -253,12 +274,12 @@ export default async function OdemelerPage({
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2 text-green-700">
                 <CheckCircle2 className="h-4 w-4" />
-                Tam Ödemeler ({paid.length} daire)
+                Güncel Ödemeler ({paid.length} daire)
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {paid.length === 0 ? (
-                <p className="text-sm text-gray-400 px-4 py-6 text-center">Henüz tam ödeme yapan daire yok.</p>
+                <p className="text-sm text-gray-400 px-4 py-6 text-center">Taksitlerinde güncel daire yok.</p>
               ) : (
                 <div className="overflow-x-auto max-h-72">
                   <table className="w-full text-sm">
@@ -280,8 +301,10 @@ export default async function OdemelerPage({
                           </td>
                           <td className="px-3 py-2 text-gray-600 text-xs truncate max-w-[140px]">{a.resident_name || '—'}</td>
                           <td className="px-3 py-2 text-right text-green-600 text-xs font-mono">{formatCurrency(a.total_paid)}</td>
-                          <td className={`px-3 py-2 text-right text-xs font-medium ${a.remaining < -0.01 ? 'text-blue-600' : 'text-green-600'}`}>
-                            {a.remaining < -0.01 ? `+${formatCurrency(Math.abs(a.remaining))} alacak` : '✓ Tam'}
+                          <td className={`px-3 py-2 text-right text-xs font-medium ${a.credit ? 'text-blue-600' : 'text-green-600'}`}>
+                            {a.credit
+                              ? `+${formatCurrency(-a.yearRemaining)} alacak`
+                              : a.yearRemaining > 0.01 ? '✓ Güncel' : '✓ Tam'}
                           </td>
                         </tr>
                       ))}
@@ -332,15 +355,15 @@ export default async function OdemelerPage({
                       Toplam<span className="block text-[10px] font-normal text-green-500">Total</span>
                     </th>
                     <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">
-                      Kalan<span className="block text-[10px] font-normal text-red-400">Remaining</span>
+                      Kalan<span className="block text-[10px] font-normal text-red-400">Overdue</span>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {table.map((row, i) => {
                     const isOdd = i % 2 === 1
-                    const remainingColor = row.remaining > 0.01 ? 'text-red-600 font-bold'
-                      : row.remaining < -0.01 ? 'text-blue-600 font-medium'
+                    const remainingColor = row.behind ? 'text-red-600 font-bold'
+                      : row.credit ? 'text-blue-600 font-medium'
                       : 'text-green-600 font-medium'
                     const prevColor = row.previous_balance > 0 ? 'text-red-500'
                       : row.previous_balance < 0 ? 'text-blue-500'
@@ -376,10 +399,10 @@ export default async function OdemelerPage({
                           {fmt(row.total_paid)}
                         </td>
                         <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${remainingColor}`}>
-                          {row.remaining < -0.01
-                            ? `+${fmt(Math.abs(row.remaining))}`
-                            : row.remaining < 0.01 ? '✓'
-                            : fmt(row.remaining)}
+                          {row.behind
+                            ? fmt(row.overdue)
+                            : row.credit ? `+${fmt(-row.yearRemaining)}`
+                            : '✓'}
                         </td>
                       </tr>
                     )

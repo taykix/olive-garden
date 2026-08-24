@@ -227,7 +227,9 @@
     "exempt": "befreit",
     "period_active": "Aktiv",
     "period_archive": "Archiv",
-    "archive_notice": "Archivierter Zeitraum wird angezeigt ({period}). Dieser Zeitraum ist ein schreibgeschützter Datensatz."
+    "archive_notice": "Archivierter Zeitraum wird angezeigt ({period}). Dieser Zeitraum ist ein schreibgeschützter Datensatz.",
+    "installments": "Beitragsraten",
+    "expected_to_date": "Bisher erwartet"
   },
   "raporlar": {
     "title": "Berichte",

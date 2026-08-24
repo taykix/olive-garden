@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
-import { ACTIVE_PERIOD } from '@/lib/periods'
+import { ACTIVE_PERIOD, duesStatus } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +68,7 @@ export default async function ResidentPage({
   const annual_due       = settings?.annual_due ?? 40000
   const previous_balance = settings?.previous_balance ?? 0
   const total_paid       = payments.reduce((s, p) => s + Number(p.amount_paid), 0)
-  const remaining        = annual_due + previous_balance - total_paid
+  const st               = duesStatus(annual_due, previous_balance, total_paid, ACTIVE_PERIOD)
 
   const monthData: Record<string, { amount: number; notes: string[] }> = {}
   for (const p of payments) {
@@ -78,9 +78,9 @@ export default async function ResidentPage({
     if (p.note) monthData[key].notes.push(p.note)
   }
 
-  const remainingColor = remaining > 0.01
+  const remainingColor = st.behind
     ? 'text-red-600'
-    : remaining < -0.01 ? 'text-blue-600'
+    : st.credit ? 'text-blue-600'
     : 'text-green-600'
 
   return (
@@ -142,16 +142,16 @@ export default async function ResidentPage({
               </CardContent>
             </Card>
 
-            <Card className={`${remaining > 0.01 ? 'border-red-200' : remaining < -0.01 ? 'border-blue-200' : 'border-green-200'}`}>
+            <Card className={`${st.behind ? 'border-red-200' : st.credit ? 'border-blue-200' : 'border-green-200'}`}>
               <CardHeader className="pb-1 pt-3 px-3">
                 <CardTitle className="text-xs font-medium text-gray-500">{t('remaining_card')}</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 px-3">
                 <p className={`text-sm font-bold font-mono ${remainingColor}`}>
-                  {remaining < -0.01
-                    ? `+${fmt(Math.abs(remaining))} ${t('receivable')}`
-                    : remaining < 0.01 ? t('full_paid')
-                    : fmt(remaining)}
+                  {st.behind
+                    ? fmt(st.overdue)
+                    : st.credit ? `+${fmt(-st.yearRemaining)} ${t('receivable')}`
+                    : t('full_paid')}
                 </p>
               </CardContent>
             </Card>

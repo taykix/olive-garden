@@ -7,7 +7,7 @@ import { formatCurrency, MONTHS } from '@/lib/utils'
 import { ApartmentDuesForm } from '@/components/admin/apartment-dues-form'
 import { PaymentForm } from '@/components/admin/payment-form'
 import { Payment, ApartmentSettings } from '@/types'
-import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
@@ -61,7 +61,9 @@ export default async function ApartmentDetailPage({
   const annual_due        = settings?.annual_due ?? 40000
   const previous_balance  = settings?.previous_balance ?? 0
   const total_paid        = payments.reduce((s, p) => s + Number(p.amount_paid), 0)
-  const remaining         = annual_due + previous_balance - total_paid
+  const st                = duesStatus(annual_due, previous_balance, total_paid, period)
+  const expectedToDate    = st.expected + previous_balance  // bugüne kadar tahakkuk eden toplam
+  const remaining         = st.overdue                      // güncel kalan (taksite göre)
   const residentName      = allPayments.find(p => p.resident_name)?.resident_name ?? null
 
   // Aggregate payments by month for the period table
@@ -73,9 +75,9 @@ export default async function ApartmentDetailPage({
     if (p.note) monthData[key].notes.push(p.note)
   }
 
-  const remainingColor = remaining > 0.01
+  const remainingColor = st.behind
     ? 'text-red-600'
-    : remaining < -0.01 ? 'text-blue-600'
+    : st.credit ? 'text-blue-600'
     : 'text-green-600'
 
   return (
@@ -149,16 +151,13 @@ export default async function ApartmentDetailPage({
 
         <Card>
           <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-gray-500">Toplam Borç</CardTitle>
+            <CardTitle className="text-xs font-medium text-gray-500">Bugüne Kadar Beklenen</CardTitle>
           </CardHeader>
           <CardContent className="pb-4 px-4">
-            {annual_due + previous_balance <= 0 ? (
-              <p className="text-sm font-semibold text-blue-600 font-mono">Borç yok</p>
-            ) : (
-              <p className="text-sm font-bold text-gray-800 font-mono">
-                {formatCurrency(annual_due + previous_balance)}
-              </p>
-            )}
+            <p className="text-sm font-bold text-gray-800 font-mono">
+              {formatCurrency(expectedToDate)}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">taksit takvimine göre</p>
           </CardContent>
         </Card>
 
@@ -171,16 +170,16 @@ export default async function ApartmentDetailPage({
           </CardContent>
         </Card>
 
-        <Card className={`col-span-2 sm:col-span-1 ${remaining > 0.01 ? 'border-red-200' : remaining < -0.01 ? 'border-blue-200' : 'border-green-200'}`}>
+        <Card className={`col-span-2 sm:col-span-1 ${st.behind ? 'border-red-200' : st.credit ? 'border-blue-200' : 'border-green-200'}`}>
           <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-gray-500">Net Kalan</CardTitle>
+            <CardTitle className="text-xs font-medium text-gray-500">Güncel Kalan</CardTitle>
           </CardHeader>
           <CardContent className="pb-4 px-4">
             <p className={`text-sm font-bold font-mono ${remainingColor}`}>
-              {remaining < -0.01
-                ? `+${fmt(Math.abs(remaining))} alacak`
-                : remaining < 0.01 ? '✓ Tam'
-                : fmt(remaining)}
+              {st.behind
+                ? fmt(st.overdue)
+                : st.credit ? `+${fmt(-st.yearRemaining)} alacak`
+                : st.yearRemaining > 0.01 ? '✓ Güncel' : '✓ Tam'}
             </p>
           </CardContent>
         </Card>

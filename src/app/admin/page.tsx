@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
-import { getPeriod, getTreasuryRange, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { getPeriod, getTreasuryRange, PERIODS, ACTIVE_PERIOD, duesStatus } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
@@ -66,12 +66,13 @@ export default async function AdminDashboard({
   type AptDebt = { apartment_no: string; resident_name: string; remaining: number; partial: boolean }
   const debtApts: AptDebt[] = []
   for (const [apt_no, e] of aptMap) {
-    const remaining = e.annual_due + e.previous_balance - e.total_paid
-    if (remaining > 0.01) {
+    // Borç, yıllık tamamına göre değil taksit takvimine göre (bugüne kadar beklenen)
+    const st = duesStatus(e.annual_due, e.previous_balance, e.total_paid, period)
+    if (st.behind) {
       debtApts.push({
         apartment_no: apt_no,
         resident_name: e.resident_name,
-        remaining,
+        remaining: st.overdue,
         partial: e.total_paid > 0,
       })
     }

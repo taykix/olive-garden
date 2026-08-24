@@ -3,7 +3,7 @@ import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus, expectedDueToDate } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,10 @@ interface AptRow {
   previous_balance: number
   monthPaid: Record<string, number>
   total_paid: number
-  remaining: number
+  overdue: number
+  yearRemaining: number
+  behind: boolean
+  credit: boolean
 }
 
 export default async function ResidentOdemelerPage({
@@ -73,6 +76,7 @@ export default async function ResidentOdemelerPage({
     const annual_due = sett?.annual_due ?? pay?.amount_due ?? 40000
     const previous_balance = sett?.previous_balance ?? 0
     const total_paid = pay?.total_paid ?? 0
+    const st = duesStatus(annual_due, previous_balance, total_paid, period)
     return {
       apartment_no: apt,
       resident_name: sett ? '' : (pay?.resident_name ?? ''),
@@ -80,14 +84,22 @@ export default async function ResidentOdemelerPage({
       previous_balance,
       monthPaid: pay?.monthPaid ?? {},
       total_paid,
-      remaining: annual_due + previous_balance - total_paid,
+      overdue: st.overdue,
+      yearRemaining: st.yearRemaining,
+      behind: st.behind,
+      credit: st.credit,
     }
   })
 
   const totalAnnualDue = table.reduce((s, a) => s + a.annual_due, 0)
   const totalPaid      = table.reduce((s, a) => s + a.total_paid, 0)
   const totalPrev      = table.reduce((s, a) => s + a.previous_balance, 0)
-  const totalKalan     = table.reduce((s, a) => s + a.remaining, 0)
+  const totalKalan     = table.reduce((s, a) => s + a.overdue, 0)
+  const expectedPct    = expectedDueToDate(100, period)
+  const MONTH_ABBR     = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+  const scheduleLabel  = (period.installments ?? [])
+    .map(it => `${MONTH_ABBR[it.month]} %${Math.round(it.fraction * 100)}`)
+    .join(' · ')
   const monthTotals    = Object.fromEntries(
     PERIOD_MONTHS.map(pm => {
       const key = `${pm.year}-${pm.month}`
@@ -111,6 +123,12 @@ export default async function ResidentOdemelerPage({
       {!isActivePeriod && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
           {t('archive_notice', { period: period.label })}
+        </div>
+      )}
+
+      {scheduleLabel && (
+        <div className="rounded-md border border-blue-100 bg-blue-50/60 px-4 py-2.5 text-xs text-blue-800">
+          <strong>{t('installments')}:</strong> {scheduleLabel} · {t('expected_to_date')}: <strong>%{expectedPct}</strong>
         </div>
       )}
 
@@ -139,8 +157,8 @@ export default async function ResidentOdemelerPage({
               <tbody>
                 {table.map((row, i) => {
                   const isOdd = i % 2 === 1
-                  const remainingColor = row.remaining > 0.01 ? 'text-red-600 font-bold'
-                    : row.remaining < -0.01 ? 'text-blue-600 font-medium'
+                  const remainingColor = row.behind ? 'text-red-600 font-bold'
+                    : row.credit ? 'text-blue-600 font-medium'
                     : 'text-green-600 font-medium'
                   const prevColor = row.previous_balance > 0 ? 'text-red-500'
                     : row.previous_balance < 0 ? 'text-blue-500'
@@ -172,9 +190,9 @@ export default async function ResidentOdemelerPage({
                         {fmt(row.total_paid)}
                       </td>
                       <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${remainingColor}`}>
-                        {row.remaining < -0.01 ? `+${fmt(Math.abs(row.remaining))}`
-                          : row.remaining < 0.01 ? '✓'
-                          : fmt(row.remaining)}
+                        {row.behind ? fmt(row.overdue)
+                          : row.credit ? `+${fmt(-row.yearRemaining)}`
+                          : '✓'}
                       </td>
                     </tr>
                   )

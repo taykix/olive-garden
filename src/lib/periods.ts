@@ -13,6 +13,15 @@ export interface PeriodMonth {
   year: number
 }
 
+// Aidat taksiti: belirli ayda yıllık aidatın "fraction" oranı tahakkuk eder.
+// Örn. { month: 8, year: 2026, fraction: 0.2 } → Ağustos'ta yıllığın %20'si beklenir.
+// Oran kullanıldığından yarım aidatlı daireler otomatik olarak taksitin yarısını öder.
+export interface Installment {
+  month: number
+  year: number
+  fraction: number
+}
+
 export interface PeriodDef {
   id: string // örn. 'p2026-2027' — apartment_settings.period_id ile eşleşir
   label: string // örn. '2026–2027'
@@ -20,6 +29,7 @@ export interface PeriodDef {
   budgetStart: string // 'YYYY-MM-DD' — gider/bütçe filtresi başlangıcı
   budgetEnd: string // 'YYYY-MM-DD' — gider/bütçe filtresi bitişi
   active: boolean // aktif dönem (aynı anda yalnızca bir tane)
+  installments?: Installment[] // aidat taksit takvimi (yoksa tüm yıllık peşin beklenir)
 }
 
 // Ardışık ay listesi üretir: (8, 2026, 12) → Ağu 2026 … Tem 2027
@@ -57,6 +67,14 @@ export const PERIODS: PeriodDef[] = [
     budgetStart: '2026-08-01',
     budgetEnd: '2027-07-31',
     active: true,
+    // Genel kurul kararı: 4 taksit — Ağu 10.000 / Eki 15.000 / Oca 15.000 / May 10.000
+    // (tam aidat 50.000 üzerinden; oranlar: %20 / %30 / %30 / %20)
+    installments: [
+      { month: 8,  year: 2026, fraction: 0.2 },
+      { month: 10, year: 2026, fraction: 0.3 },
+      { month: 1,  year: 2027, fraction: 0.3 },
+      { month: 5,  year: 2027, fraction: 0.2 },
+    ],
   },
 ]
 
@@ -95,4 +113,49 @@ export function monthKey(pm: PeriodMonth): string {
 // Bir ödemenin (year, month) hangi döneme ait olduğunu bulur; hiçbiriyse null.
 export function periodOfPayment(year: number, month: number): PeriodDef | null {
   return PERIODS.find((p) => p.months.some((m) => m.year === year && m.month === month)) ?? null
+}
+
+// ─── Aidat taksit / tahakkuk hesabı ────────────────────────────────────────────
+
+// Bugüne (asOf) kadar tahakkuk etmiş taksit oranı toplamı (0..1). Taksit takvimi yoksa
+// 1 döner (tüm yıllık peşin beklenir). Bir taksit, ait olduğu ayın 1'inde tahakkuk eder.
+export function accruedFraction(period: PeriodDef, asOf: Date = new Date()): number {
+  if (!period.installments?.length) return 1
+  return period.installments.reduce(
+    (f, it) => (asOf >= new Date(it.year, it.month - 1, 1) ? f + it.fraction : f),
+    0
+  )
+}
+
+// Verilen yıllık aidat için bugüne kadar beklenen (tahakkuk eden) tutar.
+export function expectedDueToDate(annualDue: number, period: PeriodDef, asOf?: Date): number {
+  return Math.round(annualDue * accruedFraction(period, asOf))
+}
+
+export interface DuesStatus {
+  expected: number       // bugüne kadar beklenen aidat (taksit takvimine göre)
+  overdue: number        // güncel kalan = expected + devir − ödenen (>0 ise geride)
+  yearRemaining: number  // yıl sonu kalan = yıllık + devir − ödenen
+  behind: boolean        // taksit takvimine göre geride mi
+  credit: boolean        // yıllık borcun ötesinde fazla ödeme (gerçek alacak) var mı
+}
+
+// Bir dairenin taksit takvimine göre güncel aidat durumunu hesaplar.
+export function duesStatus(
+  annualDue: number,
+  previousBalance: number,
+  totalPaid: number,
+  period: PeriodDef,
+  asOf?: Date
+): DuesStatus {
+  const expected = expectedDueToDate(annualDue, period, asOf)
+  const overdue = expected + previousBalance - totalPaid
+  const yearRemaining = annualDue + previousBalance - totalPaid
+  return {
+    expected,
+    overdue,
+    yearRemaining,
+    behind: overdue > 0.01,
+    credit: yearRemaining < -0.01,
+  }
 }
