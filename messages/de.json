@@ -76,15 +76,30 @@
   },
   "forgot": {
     "title": "Passwort zurücksetzen",
-    "subtitle": "Geben Sie Ihre E-Mail ein; wir senden Ihnen ein temporäres Passwort.",
+    "subtitle": "Geben Sie Ihre E-Mail ein; wir senden Ihnen einen Link zum Zurücksetzen des Passworts.",
     "email": "E-Mail",
-    "submit": "Temporäres Passwort senden",
+    "submit": "Zurücksetzungslink senden",
     "sending": "Wird gesendet...",
-    "success": "Falls diese E-Mail registriert ist, haben wir eine Nachricht mit einem temporären Passwort gesendet. Prüfen Sie Ihren Posteingang (und Spam-Ordner). Melden Sie sich mit dem temporären Passwort an und ändern Sie es dann über das Profilmenü oben rechts.",
+    "success": "Falls diese E-Mail registriert ist, haben wir einen Link zum Zurücksetzen gesendet. Prüfen Sie Ihren Posteingang (und Spam-Ordner), klicken Sie auf den Link und legen Sie ein neues Passwort fest. Ihr aktuelles Passwort bleibt gültig, bis Sie ein neues festlegen.",
     "back_to_login": "← Zurück zur Anmeldung",
     "error_invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     "error_mail": "E-Mail konnte nicht gesendet werden. Bitte später erneut versuchen.",
     "error_generic": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
+  },
+  "reset": {
+    "title": "Neues Passwort festlegen",
+    "subtitle": "Geben Sie ein neues Passwort für Ihr Konto ein.",
+    "new_password": "Neues Passwort",
+    "confirm_password": "Neues Passwort (Wiederholung)",
+    "placeholder_min": "Mindestens 6 Zeichen",
+    "placeholder_confirm": "Passwort erneut eingeben",
+    "submit": "Passwort aktualisieren",
+    "saving": "Wird gespeichert...",
+    "success": "Ihr Passwort wurde aktualisiert. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
+    "go_login": "Zur Anmeldung",
+    "error_min": "Das Passwort muss mindestens 6 Zeichen lang sein.",
+    "error_match": "Die Passwörter stimmen nicht überein.",
+    "error_generic": "Der Link ist möglicherweise ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an."
   },
   "register": {
     "title": "Mitgliedschaftsantrag",

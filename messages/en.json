@@ -76,15 +76,30 @@
   },
   "forgot": {
     "title": "Reset Password",
-    "subtitle": "Enter your email and we'll send you a temporary password.",
+    "subtitle": "Enter your email and we'll send you a password reset link.",
     "email": "Email",
-    "submit": "Send Temporary Password",
+    "submit": "Send Reset Link",
     "sending": "Sending...",
-    "success": "If this email is registered, we've sent a message with a temporary password. Check your inbox (and spam folder). Sign in with the temporary password, then change it from the profile menu in the top-right corner.",
+    "success": "If this email is registered, we've sent a password reset link. Check your inbox (and spam folder), click the link and set a new password. Your current password stays valid until you set a new one.",
     "back_to_login": "← Back to login",
     "error_invalid": "Please enter a valid email address.",
     "error_mail": "Could not send the email. Please try again later.",
     "error_generic": "Something went wrong. Please try again."
+  },
+  "reset": {
+    "title": "Set New Password",
+    "subtitle": "Enter a new password for your account.",
+    "new_password": "New Password",
+    "confirm_password": "Confirm New Password",
+    "placeholder_min": "At least 6 characters",
+    "placeholder_confirm": "Re-enter your password",
+    "submit": "Update Password",
+    "saving": "Saving...",
+    "success": "Your password has been updated. You can now sign in with your new password.",
+    "go_login": "Go to login",
+    "error_min": "Password must be at least 6 characters.",
+    "error_match": "Passwords do not match.",
+    "error_generic": "The link may be invalid or expired. Please request a new reset link."
   },
   "register": {
     "title": "Membership Request",

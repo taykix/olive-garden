@@ -76,15 +76,30 @@
   },
   "forgot": {
     "title": "Şifre Sıfırlama",
-    "subtitle": "E-postanızı girin; size geçici bir şifre gönderelim.",
+    "subtitle": "E-postanızı girin; size şifre sıfırlama bağlantısı gönderelim.",
     "email": "E-posta",
-    "submit": "Geçici Şifre Gönder",
+    "submit": "Sıfırlama Bağlantısı Gönder",
     "sending": "Gönderiliyor...",
-    "success": "Eğer bu e-posta kayıtlıysa, geçici şifre içeren bir e-posta gönderdik. Gelen kutunuzu (ve spam klasörünü) kontrol edin. Geçici şifreyle giriş yapıp sağ üstteki profil menüsünden şifrenizi değiştirebilirsiniz.",
+    "success": "Eğer bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı içeren bir e-posta gönderdik. Gelen kutunuzu (ve spam klasörünü) kontrol edin. Bağlantıya tıklayıp yeni şifrenizi belirleyin. Mevcut şifreniz, yeni şifre belirleyene kadar geçerli kalır.",
     "back_to_login": "← Girişe dön",
     "error_invalid": "Geçerli bir e-posta adresi girin.",
     "error_mail": "E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin.",
     "error_generic": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "reset": {
+    "title": "Yeni Şifre Belirle",
+    "subtitle": "Hesabınız için yeni bir şifre girin.",
+    "new_password": "Yeni Şifre",
+    "confirm_password": "Yeni Şifre (Tekrar)",
+    "placeholder_min": "En az 6 karakter",
+    "placeholder_confirm": "Şifrenizi tekrar girin",
+    "submit": "Şifreyi Güncelle",
+    "saving": "Kaydediliyor...",
+    "success": "Şifreniz başarıyla güncellendi. Artık yeni şifrenizle giriş yapabilirsiniz.",
+    "go_login": "Giriş yap",
+    "error_min": "Şifre en az 6 karakter olmalıdır.",
+    "error_match": "Şifreler eşleşmiyor.",
+    "error_generic": "Bağlantı geçersiz veya süresi dolmuş olabilir. Lütfen yeni bir sıfırlama bağlantısı isteyin."
   },
   "register": {
     "title": "Üyelik Talebi",

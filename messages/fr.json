@@ -55,15 +55,30 @@
   },
   "forgot": {
     "title": "Réinitialiser le mot de passe",
-    "subtitle": "Saisissez votre e-mail et nous vous enverrons un mot de passe temporaire.",
+    "subtitle": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation.",
     "email": "E-mail",
-    "submit": "Envoyer un mot de passe temporaire",
+    "submit": "Envoyer le lien de réinitialisation",
     "sending": "Envoi...",
-    "success": "Si cet e-mail est enregistré, nous avons envoyé un message contenant un mot de passe temporaire. Vérifiez votre boîte de réception (et le dossier spam). Connectez-vous avec le mot de passe temporaire, puis modifiez-le depuis le menu de profil en haut à droite.",
+    "success": "Si cet e-mail est enregistré, nous avons envoyé un lien de réinitialisation. Vérifiez votre boîte de réception (et le dossier spam), cliquez sur le lien et définissez un nouveau mot de passe. Votre mot de passe actuel reste valide jusqu'à ce que vous en définissiez un nouveau.",
     "back_to_login": "← Retour à la connexion",
     "error_invalid": "Veuillez saisir une adresse e-mail valide.",
     "error_mail": "Impossible d'envoyer l'e-mail. Veuillez réessayer plus tard.",
     "error_generic": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "reset": {
+    "title": "Définir un nouveau mot de passe",
+    "subtitle": "Saisissez un nouveau mot de passe pour votre compte.",
+    "new_password": "Nouveau mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "placeholder_min": "Au moins 6 caractères",
+    "placeholder_confirm": "Ressaisissez votre mot de passe",
+    "submit": "Mettre à jour le mot de passe",
+    "saving": "Enregistrement...",
+    "success": "Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "go_login": "Aller à la connexion",
+    "error_min": "Le mot de passe doit comporter au moins 6 caractères.",
+    "error_match": "Les mots de passe ne correspondent pas.",
+    "error_generic": "Le lien est peut-être invalide ou expiré. Veuillez demander un nouveau lien."
   },
   "register": {
     "title": "Demande d'adhésion",
