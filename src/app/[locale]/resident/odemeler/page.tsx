@@ -3,7 +3,7 @@ import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus, expectedDueToDate } from '@/lib/periods'
+import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus, expectedDueToDate, currentInstallment } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
@@ -94,12 +94,16 @@ export default async function ResidentOdemelerPage({
   const totalAnnualDue = table.reduce((s, a) => s + a.annual_due, 0)
   const totalPaid      = table.reduce((s, a) => s + a.total_paid, 0)
   const totalPrev      = table.reduce((s, a) => s + a.previous_balance, 0)
-  const totalKalan     = table.reduce((s, a) => s + a.overdue, 0)
-  const expectedPct    = expectedDueToDate(100, period)
+  const totalOverdueNet = table.reduce((s, a) => s + a.overdue, 0)
+  const totalYearRem    = table.reduce((s, a) => s + a.yearRemaining, 0)
   const MONTH_ABBR     = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+  const fullDue        = table.length ? Math.max(...table.map(a => a.annual_due)) : 50000
   const scheduleLabel  = (period.installments ?? [])
-    .map(it => `${MONTH_ABBR[it.month]} %${Math.round(it.fraction * 100)}`)
+    .map(it => `${MONTH_ABBR[it.month]} ${fmt(Math.round(it.fraction * fullDue))}`)
     .join(' · ')
+  const expectedFull   = expectedDueToDate(fullDue, period)
+  const curInst        = currentInstallment(period)
+  const curInstLabel   = curInst ? getMonthName(curInst.month, locale) : ''
   const monthTotals    = Object.fromEntries(
     PERIOD_MONTHS.map(pm => {
       const key = `${pm.year}-${pm.month}`
@@ -128,7 +132,8 @@ export default async function ResidentOdemelerPage({
 
       {scheduleLabel && (
         <div className="rounded-md border border-blue-100 bg-blue-50/60 px-4 py-2.5 text-xs text-blue-800">
-          <strong>{t('installments')}:</strong> {scheduleLabel} · {t('expected_to_date')}: <strong>%{expectedPct}</strong>
+          <strong>{t('installments')}:</strong> {scheduleLabel} · {t('expected_to_date')}: <strong>{fmt(expectedFull)} ₺</strong>
+          {curInstLabel && <> · {t('current_installment')}: <strong>{curInstLabel}</strong></>}
         </div>
       )}
 
@@ -151,14 +156,18 @@ export default async function ResidentOdemelerPage({
                     </th>
                   ))}
                   <th className="text-right px-2 py-2 font-medium text-green-600 whitespace-nowrap">{t('col_total')}</th>
-                  <th className="text-right px-3 py-2 font-medium text-red-500 whitespace-nowrap">{t('col_remaining')}</th>
+                  <th className="text-right px-2 py-2 font-medium text-red-500 whitespace-nowrap">{t('col_installment')}{curInstLabel ? ` · ${curInstLabel}` : ''}</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500 whitespace-nowrap">{t('col_remaining')}</th>
                 </tr>
               </thead>
               <tbody>
                 {table.map((row, i) => {
                   const isOdd = i % 2 === 1
-                  const remainingColor = row.behind ? 'text-red-600 font-bold'
+                  const taksitColor = row.behind ? 'text-red-600 font-bold'
                     : row.credit ? 'text-blue-600 font-medium'
+                    : 'text-green-600 font-medium'
+                  const kalanColor = row.yearRemaining > 0.01 ? 'text-gray-700 font-medium'
+                    : row.yearRemaining < -0.01 ? 'text-blue-600 font-medium'
                     : 'text-green-600 font-medium'
                   const prevColor = row.previous_balance > 0 ? 'text-red-500'
                     : row.previous_balance < 0 ? 'text-blue-500'
@@ -189,10 +198,13 @@ export default async function ResidentOdemelerPage({
                       <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap text-green-700 font-medium">
                         {fmt(row.total_paid)}
                       </td>
-                      <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${remainingColor}`}>
-                        {row.behind ? fmt(row.overdue)
-                          : row.credit ? `+${fmt(-row.yearRemaining)}`
-                          : '✓'}
+                      <td className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${taksitColor}`}>
+                        {row.behind ? fmt(row.overdue) : '✓'}
+                      </td>
+                      <td className={`px-3 py-1.5 text-right font-mono whitespace-nowrap ${kalanColor}`}>
+                        {row.yearRemaining < -0.01 ? `+${fmt(-row.yearRemaining)}`
+                          : row.yearRemaining < 0.01 ? '✓'
+                          : fmt(row.yearRemaining)}
                       </td>
                     </tr>
                   )
@@ -228,14 +240,19 @@ export default async function ResidentOdemelerPage({
                   <td className="px-2 py-2 text-right font-mono text-xs text-green-700 whitespace-nowrap">
                     {fmt(totalPaid)}
                   </td>
-                  <td className={`px-3 py-2 text-right font-mono text-xs font-bold whitespace-nowrap ${
-                    totalKalan > 0.01 ? 'text-red-600'
-                    : totalKalan < -0.01 ? 'text-blue-600'
+                  <td className={`px-2 py-2 text-right font-mono text-xs font-bold whitespace-nowrap ${
+                    totalOverdueNet > 0.01 ? 'text-red-600'
+                    : totalOverdueNet < -0.01 ? 'text-blue-600'
                     : 'text-green-600'
                   }`}>
-                    {totalKalan < -0.01
-                      ? `+${fmt(Math.abs(totalKalan))}`
-                      : fmt(totalKalan)}
+                    {totalOverdueNet < -0.01 ? `+${fmt(Math.abs(totalOverdueNet))}` : fmt(totalOverdueNet)}
+                  </td>
+                  <td className={`px-3 py-2 text-right font-mono text-xs font-bold whitespace-nowrap ${
+                    totalYearRem > 0.01 ? 'text-gray-700'
+                    : totalYearRem < -0.01 ? 'text-blue-600'
+                    : 'text-green-600'
+                  }`}>
+                    {totalYearRem < -0.01 ? `+${fmt(Math.abs(totalYearRem))}` : fmt(totalYearRem)}
                   </td>
                 </tr>
               </tfoot>

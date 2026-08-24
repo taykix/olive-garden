@@ -229,7 +229,9 @@
     "period_archive": "Archive",
     "archive_notice": "Viewing archived period ({period}). This period is a read-only record.",
     "installments": "Dues installments",
-    "expected_to_date": "Expected to date"
+    "expected_to_date": "Expected to date",
+    "col_installment": "Installment",
+    "current_installment": "Current installment"
   },
   "raporlar": {
     "title": "Reports",

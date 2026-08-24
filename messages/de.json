@@ -229,7 +229,9 @@
     "period_archive": "Archiv",
     "archive_notice": "Archivierter Zeitraum wird angezeigt ({period}). Dieser Zeitraum ist ein schreibgeschützter Datensatz.",
     "installments": "Beitragsraten",
-    "expected_to_date": "Bisher erwartet"
+    "expected_to_date": "Bisher erwartet",
+    "col_installment": "Rate",
+    "current_installment": "Aktuelle Rate"
   },
   "raporlar": {
     "title": "Berichte",

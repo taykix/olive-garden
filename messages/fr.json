@@ -208,7 +208,9 @@
     "period_archive": "Archive",
     "archive_notice": "Période archivée affichée ({period}). Cette période est un enregistrement en lecture seule.",
     "installments": "Échéances des charges",
-    "expected_to_date": "Attendu à ce jour"
+    "expected_to_date": "Attendu à ce jour",
+    "col_installment": "Échéance",
+    "current_installment": "Échéance actuelle"
   },
   "raporlar": {
     "title": "Rapports",

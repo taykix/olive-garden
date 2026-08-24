@@ -208,7 +208,9 @@
     "period_archive": "Архив",
     "archive_notice": "Просмотр архивного периода ({period}). Этот период доступен только для чтения.",
     "installments": "Взносы по частям",
-    "expected_to_date": "Ожидается к настоящему моменту"
+    "expected_to_date": "Ожидается к настоящему моменту",
+    "col_installment": "Взнос",
+    "current_installment": "Текущий взнос"
   },
   "raporlar": {
     "title": "Отчёты",

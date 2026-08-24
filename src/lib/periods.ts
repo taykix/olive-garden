@@ -132,6 +132,16 @@ export function expectedDueToDate(annualDue: number, period: PeriodDef, asOf?: D
   return Math.round(annualDue * accruedFraction(period, asOf))
 }
 
+// Şu an geçerli (son tahakkuk etmiş) taksit; hiçbiri başlamadıysa null.
+export function currentInstallment(period: PeriodDef, asOf: Date = new Date()): Installment | null {
+  if (!period.installments?.length) return null
+  let cur: Installment | null = null
+  for (const it of period.installments) {
+    if (asOf >= new Date(it.year, it.month - 1, 1)) cur = it
+  }
+  return cur
+}
+
 export interface DuesStatus {
   expected: number       // bugüne kadar beklenen aidat (taksit takvimine göre)
   overdue: number        // güncel kalan = expected + devir − ödenen (>0 ise geride)
