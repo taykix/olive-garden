@@ -71,7 +71,20 @@
     "no_account": "Noch kein Konto?",
     "register_link": "Mitgliedschaft beantragen",
     "hero_tagline1": "Transparente & Zuverlässige",
-    "hero_tagline2": "Hausverwaltung"
+    "hero_tagline2": "Hausverwaltung",
+    "forgot_password": "Passwort vergessen?"
+  },
+  "forgot": {
+    "title": "Passwort zurücksetzen",
+    "subtitle": "Geben Sie Ihre E-Mail ein; wir senden Ihnen ein temporäres Passwort.",
+    "email": "E-Mail",
+    "submit": "Temporäres Passwort senden",
+    "sending": "Wird gesendet...",
+    "success": "Falls diese E-Mail registriert ist, haben wir eine Nachricht mit einem temporären Passwort gesendet. Prüfen Sie Ihren Posteingang (und Spam-Ordner). Melden Sie sich mit dem temporären Passwort an und ändern Sie es dann über das Profilmenü oben rechts.",
+    "back_to_login": "← Zurück zur Anmeldung",
+    "error_invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "error_mail": "E-Mail konnte nicht gesendet werden. Bitte später erneut versuchen.",
+    "error_generic": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
   },
   "register": {
     "title": "Mitgliedschaftsantrag",
@@ -196,7 +209,10 @@
     "col_annual": "Jahreshausgeld",
     "col_total": "Gesamt",
     "col_remaining": "Ausstehend",
-    "exempt": "befreit"
+    "exempt": "befreit",
+    "period_active": "Aktiv",
+    "period_archive": "Archiv",
+    "archive_notice": "Archivierter Zeitraum wird angezeigt ({period}). Dieser Zeitraum ist ein schreibgeschützter Datensatz."
   },
   "raporlar": {
     "title": "Berichte",
@@ -204,6 +220,15 @@
     "total_income": "Gesamteinnahmen",
     "total_expenses": "Gesamtausgaben",
     "net_balance": "Nettosaldo",
+    "carried_balance": "Übertragener Saldo",
+    "carried_note": "Aus Vorperiode",
+    "period_income": "Periodeneinnahmen",
+    "period_expense": "Periodenausgaben",
+    "current_balance": "Aktueller Saldo",
+    "incl_carry": "Inkl. Übertrag",
+    "period_active": "Aktiv",
+    "period_archive": "Archiv",
+    "archive_notice": "Archivierter Zeitraum ({period}). Die Finanzübersicht bezieht sich auf diesen Zeitraum.",
     "pie_title": "Ausgabenkategorien",
     "bar_title": "Monatlicher Einnahmen-/Ausgabentrend",
     "monthly_title": "Monatliche Einnahmen-/Ausgabenübersicht",

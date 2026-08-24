@@ -5,24 +5,42 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
+import { getPeriod, getTreasuryRange, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>
+}) {
+  const { period: periodParam } = await searchParams
+  const period = getPeriod(periodParam)
+  const isActivePeriod = period.id === ACTIVE_PERIOD.id
+  const periodOptions = PERIODS.map(p => ({ id: p.id, label: `${p.label} — ${p.active ? 'Aktif' : 'Arşiv'}` }))
+  const { start: periodStart, end: periodEnd } = getTreasuryRange(period)
+
   const supabase = await createClient()
 
   const [incomeRes, expenseRes, paymentsRes, settingsRes, announcementsRes] = await Promise.all([
-    supabase.from('income').select('amount'),
-    supabase.from('expenses').select('amount'),
-    supabase.from('payments').select('apartment_no, resident_name, amount_paid'),
-    supabase.from('apartment_settings').select('apartment_no, annual_due, previous_balance'),
+    supabase.from('income').select('date, amount'),
+    supabase.from('expenses').select('date, amount'),
+    supabase.from('payments').select('apartment_no, resident_name, amount_paid').eq('period_id', period.id),
+    supabase.from('apartment_settings').select('apartment_no, annual_due, previous_balance').eq('period_id', period.id),
     supabase.from('announcements').select('id, title, published, created_at').order('created_at', { ascending: false }).limit(5),
   ])
 
-  const totalIncome   = (incomeRes.data ?? []).reduce((s, r) => s + Number(r.amount), 0)
-  const totalExpenses = (expenseRes.data ?? []).reduce((s, r) => s + Number(r.amount), 0)
-  const balance       = totalIncome - totalExpenses
-  const announcements = announcementsRes.data ?? []
+  // Dönem aralığı [periodStart, periodEnd) ; devir = dönem başından ÖNCEki net (geçen dönemlerden devreden para)
+  const inPeriod = (d: string) => d >= periodStart && d < periodEnd
+  const beforePeriod = (d: string) => d < periodStart
+  const periodIncome  = (incomeRes.data ?? []).filter(r => inPeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const periodExpense = (expenseRes.data ?? []).filter(r => inPeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const carryIncome   = (incomeRes.data ?? []).filter(r => beforePeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const carryExpense  = (expenseRes.data ?? []).filter(r => beforePeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const carriedBalance = carryIncome - carryExpense           // geçen dönemden devreden bakiye
+  const balance        = carriedBalance + periodIncome - periodExpense  // mevcut bakiye (devir dahil)
+  const announcements  = announcementsRes.data ?? []
 
   // Build per-apartment remaining (mirrors odemeler page logic)
   type AptEntry = { resident_name: string; annual_due: number; previous_balance: number; total_paid: number }
@@ -65,40 +83,56 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Yönetim Paneli</h1>
-        <p className="text-gray-500 text-sm mt-1">Olive Garden 3 Site Yönetimi</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Yönetim Paneli
+            <span className="ml-2 text-base font-normal text-gray-400">{period.label}</span>
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Olive Garden 3 Site Yönetimi</p>
+        </div>
+        <PeriodSelector options={periodOptions} value={period.id} />
       </div>
 
+      {!isActivePeriod && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          Arşiv dönemi görüntüleniyor ({period.label}). Rakamlar bu döneme aittir.
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
-          title="Toplam Gelir"
-          value={formatCurrency(totalIncome)}
-          icon={TrendingUp}
-          iconClassName="text-green-500"
-          className="lg:col-span-1"
+          title="Devreden Bakiye"
+          value={formatCurrency(carriedBalance)}
+          icon={Wallet}
+          iconClassName={carriedBalance >= 0 ? 'text-teal-500' : 'text-orange-500'}
+          description="Geçen dönemden"
         />
         <StatCard
-          title="Toplam Gider"
-          value={formatCurrency(totalExpenses)}
+          title="Dönem Geliri"
+          value={formatCurrency(periodIncome)}
+          icon={TrendingUp}
+          iconClassName="text-green-500"
+        />
+        <StatCard
+          title="Dönem Gideri"
+          value={formatCurrency(periodExpense)}
           icon={TrendingDown}
           iconClassName="text-red-500"
-          className="lg:col-span-1"
         />
         <StatCard
           title="Mevcut Bakiye"
           value={formatCurrency(balance)}
           icon={Wallet}
           iconClassName={balance >= 0 ? 'text-blue-500' : 'text-orange-500'}
-          className="lg:col-span-1"
+          description="Devir dahil"
         />
         <StatCard
           title="Daire Sayısı"
           value={aptMap.size || [...new Set((paymentsRes.data ?? []).map(p => p.apartment_no))].length}
           icon={Home}
           iconClassName="text-purple-500"
-          className="lg:col-span-1"
         />
         <StatCard
           title="Borçlu Daire"
@@ -106,7 +140,6 @@ export default async function AdminDashboard() {
           icon={AlertCircle}
           iconClassName="text-red-500"
           description={`${unpaidCount} hiç ödemedi · ${partialCount} eksik`}
-          className="lg:col-span-1"
         />
       </div>
 

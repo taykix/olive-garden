@@ -15,11 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/shared/delete-confirm-dialog'
 import { CSVExportButton } from '@/components/admin/csv-export-button'
 import { Eye, Pencil, Plus, Upload } from 'lucide-react'
+import { getPeriod, getTreasuryRange, BUDGET_BASE_PERIOD_ID, ACTIVE_PERIOD } from '@/lib/periods'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PERIOD_START = '2025-09-27'
-const PERIOD_END   = '2026-08-31'
+// 2025-2026 "gerçekleşen": dönem aralığı [start, end) — Ağustos 2026 HARİÇ (Ağustos
+// artık yeni döneme aittir). 2026-2027 "gerçekleşen": aktif dönem giderleri.
+const RANGE_2025 = getTreasuryRange(getPeriod(BUDGET_BASE_PERIOD_ID)) // [2025-09-27, 2026-08-01)
+const RANGE_2026 = getTreasuryRange(ACTIVE_PERIOD)                    // [2026-08-01, …)
 const APT_COUNT    = 42
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -40,9 +43,13 @@ function parseAmount(s: string): number | null {
   return isNaN(n) ? null : n
 }
 
-function computeActual(itemId: string, expenses: Expense[]): { amount: number; list: Expense[] } {
+function computeActual(
+  itemId: string,
+  expenses: Expense[],
+  range: { start: string; end: string }
+): { amount: number; list: Expense[] } {
   const list = expenses.filter(
-    e => e.date >= PERIOD_START && e.date <= PERIOD_END && e.budget_item_id === itemId
+    e => e.date >= range.start && e.date < range.end && e.budget_item_id === itemId
   )
   const amount = list.reduce((s, e) => s + Number(e.amount), 0)
   return { amount, list }
@@ -233,7 +240,7 @@ function BudgetItemForm({
 // ─── ExpensesDialog ───────────────────────────────────────────────────────────
 
 function ExpensesDialog({ item, expenses }: { item: BudgetItem; expenses: Expense[] }) {
-  const { amount, list } = computeActual(item.id, expenses)
+  const { amount, list } = computeActual(item.id, expenses, RANGE_2026)
   const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date))
 
   return (
@@ -246,7 +253,7 @@ function ExpensesDialog({ item, expenses }: { item: BudgetItem; expenses: Expens
       </div>
 
       {sorted.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-8">Bu kategorilerde 2025-2026 dönemi gideri bulunamadı.</p>
+        <p className="text-sm text-gray-400 text-center py-8">Bu kategorilerde 2026-2027 dönemi gideri bulunamadı.</p>
       ) : (
         <div className="overflow-x-auto max-h-96">
           <table className="w-full text-xs">
@@ -287,9 +294,11 @@ interface Props {
   items: BudgetItem[]
   expenses: Expense[]
   readOnly?: boolean
+  // 2026-2027 İşletme Planı: budget_item id → planlanan tutar (Yıllık İşletme Planı'ndan)
+  plan2026?: Record<string, number>
 }
 
-export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
+export function BudgetPlan({ items, expenses, readOnly = false, plan2026 = {} }: Props) {
   const t = useTranslations('budget')
   const [addOpen, setAddOpen]       = useState(false)
   const [editItem, setEditItem]     = useState<BudgetItem | null>(null)
@@ -335,18 +344,27 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
     }
   }
 
-  // Compute 2025-2026 actuals per item
+  // Compute 2025-2026 actuals per item (Ağustos hariç)
   const actuals = useMemo(() => {
     const map = new Map<string, { amount: number; list: Expense[] }>()
     for (const item of items) {
-      map.set(item.id, computeActual(item.id, expenses))
+      map.set(item.id, computeActual(item.id, expenses, RANGE_2025))
+    }
+    return map
+  }, [items, expenses])
+
+  // Compute 2026-2027 actuals per item (aktif dönem)
+  const actuals26 = useMemo(() => {
+    const map = new Map<string, { amount: number; list: Expense[] }>()
+    for (const item of items) {
+      map.set(item.id, computeActual(item.id, expenses, RANGE_2026))
     }
     return map
   }, [items, expenses])
 
   // Column totals
   const totals = useMemo(() => {
-    let p23 = 0, a23 = 0, p24 = 0, a24 = 0, p25 = 0, a25 = 0
+    let p23 = 0, a23 = 0, p24 = 0, a24 = 0, p25 = 0, a25 = 0, p26 = 0, a26 = 0
     for (const item of items) {
       p23 += item.plan_2023_2024   ?? 0
       a23 += item.actual_2023_2024 ?? 0
@@ -354,9 +372,11 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
       a24 += item.actual_2024_2025 ?? 0
       p25 += item.plan_2025_2026   ?? 0
       a25 += actuals.get(item.id)?.amount ?? 0
+      p26 += plan2026[item.id]     ?? 0
+      a26 += actuals26.get(item.id)?.amount ?? 0
     }
-    return { p23, a23, p24, a24, p25, a25 }
-  }, [items, actuals])
+    return { p23, a23, p24, a24, p25, a25, p26, a26 }
+  }, [items, actuals, actuals26, plan2026])
 
   const nextSortOrder = items.length > 0 ? Math.max(...items.map(i => i.sort_order)) + 1 : 1
 
@@ -370,6 +390,8 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
       '2024-2025 Gerçekleşen': item.actual_2024_2025,
       '2025-2026 Planlanan': item.plan_2025_2026,
       '2025-2026 Gerçekleşen': actuals.get(item.id)?.amount ?? null,
+      '2026-2027 Planlanan': plan2026[item.id] ?? null,
+      '2026-2027 Gerçekleşen': actuals26.get(item.id)?.amount ?? null,
     })),
     {
       'Sıra': null,
@@ -380,8 +402,10 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
       '2024-2025 Gerçekleşen': totals.a24,
       '2025-2026 Planlanan': totals.p25,
       '2025-2026 Gerçekleşen': totals.a25,
+      '2026-2027 Planlanan': totals.p26,
+      '2026-2027 Gerçekleşen': totals.a26,
     },
-  ], [items, actuals, totals])
+  ], [items, actuals, actuals26, totals, plan2026])
 
   const th = 'px-2 py-2 print:py-1 text-xs font-medium text-gray-500 text-right whitespace-nowrap'
   const td = 'px-2 py-1.5 print:py-0.5 text-xs font-mono text-right whitespace-nowrap'
@@ -393,7 +417,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm text-gray-700">{t('card_title')} <span className="font-normal text-gray-400">/ Annual Operating Plan</span></CardTitle>
-              <p className="text-xs text-gray-400 mt-0.5 print:hidden">2023–2026 · {items.length} {t('card_items')} · {t('card_auto')}</p>
+              <p className="text-xs text-gray-400 mt-0.5 print:hidden">2023–2027 · {items.length} {t('card_items')} · {t('card_auto')}</p>
             </div>
             <div className="flex items-center gap-2 print:hidden">
               <CSVExportButton data={budgetCSV} filename="yillik-isletme-plani" label="CSV İndir" />
@@ -426,7 +450,7 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto print:overflow-visible">
-            <table className="text-xs w-full min-w-[900px] print:min-w-0 print:w-full print:text-[10px]">
+            <table className="text-xs w-full min-w-[1120px] print:min-w-0 print:w-full print:text-[10px]">
               <thead>
                 {/* Period group row */}
                 <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
@@ -435,12 +459,15 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                   </th>
                   <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2023-2024</th>
                   <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-400 border-r border-gray-100">2024-2025</th>
-                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-semibold text-green-600">2025-2026</th>
+                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-medium text-gray-500 border-r border-gray-100">2025-2026</th>
+                  <th colSpan={2} className="text-center px-2 py-2 print:py-1 text-xs font-semibold text-green-600">2026-2027</th>
                   <th className="print:hidden w-16" />
                 </tr>
                 {/* Column labels */}
                 <tr className="bg-gray-50 border-b border-gray-200 print:break-inside-avoid">
                   <th className="sticky left-0 print:static bg-gray-50 z-10 border-r border-gray-200" />
+                  <th className={th}>{t('col_planned')}<span className="block text-[9px] font-normal text-gray-400">Planned</span></th>
+                  <th className={`${th} border-r border-gray-100`}>{t('col_actual')}<span className="block text-[9px] font-normal text-gray-400">Actual</span></th>
                   <th className={th}>{t('col_planned')}<span className="block text-[9px] font-normal text-gray-400">Planned</span></th>
                   <th className={`${th} border-r border-gray-100`}>{t('col_actual')}<span className="block text-[9px] font-normal text-gray-400">Actual</span></th>
                   <th className={th}>{t('col_planned')}<span className="block text-[9px] font-normal text-gray-400">Planned</span></th>
@@ -453,9 +480,11 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
 
               <tbody>
                 {items.map((item, i) => {
-                  const actual    = actuals.get(item.id)
-                  const bg        = i % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'
-                  const hasActual = (actual?.amount ?? 0) > 0
+                  const actual      = actuals.get(item.id)
+                  const actual26    = actuals26.get(item.id)
+                  const bg          = i % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'
+                  const hasActual   = (actual?.amount ?? 0) > 0
+                  const hasActual26 = (actual26?.amount ?? 0) > 0
                   return (
                     <tr key={item.id} className={`border-b border-gray-100 last:border-0 ${bg} hover:bg-blue-50/20 transition-colors print:break-inside-avoid`}>
                       <td className={`sticky left-0 print:static z-10 px-3 py-2 print:py-0.5 border-r border-gray-100 ${bg} max-w-[280px] print:max-w-none`}>
@@ -468,9 +497,13 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                       <td className={`${td} border-r border-gray-100`}>{fmt(item.actual_2023_2024)}</td>
                       <td className={td}>{fmt(item.plan_2024_2025)}</td>
                       <td className={`${td} border-r border-gray-100`}>{fmt(item.actual_2024_2025)}</td>
-                      <td className={`${td} text-green-700`}>{fmt(item.plan_2025_2026)}</td>
-                      <td className={`${td} bg-green-50/30 ${hasActual ? 'text-red-600 font-semibold' : 'text-gray-300'}`}>
+                      <td className={td}>{fmt(item.plan_2025_2026)}</td>
+                      <td className={`${td} border-r border-gray-100 ${hasActual ? 'text-gray-600' : 'text-gray-300'}`}>
                         {hasActual ? fmtCurrency(actual!.amount) : '—'}
+                      </td>
+                      <td className={`${td} text-green-700`}>{fmt(plan2026[item.id] ?? null)}</td>
+                      <td className={`${td} bg-green-50/30 ${hasActual26 ? 'text-red-600 font-semibold' : 'text-gray-300'}`}>
+                        {hasActual26 ? fmtCurrency(actual26!.amount) : '—'}
                       </td>
                       <td className="print:hidden px-1 py-1 whitespace-nowrap">
                         <div className="flex items-center gap-0.5">
@@ -512,8 +545,10 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                   <td className={`${td} border-r border-gray-200`}>{fmtCurrency(totals.a23)}</td>
                   <td className={td}>{fmtCurrency(totals.p24)}</td>
                   <td className={`${td} border-r border-gray-200`}>{fmtCurrency(totals.a24)}</td>
-                  <td className={`${td} text-green-700`}>{fmtCurrency(totals.p25)}</td>
-                  <td className={`${td} bg-green-50/30 text-red-600`}>{totals.a25 > 0 ? fmtCurrency(totals.a25) : '—'}</td>
+                  <td className={td}>{fmtCurrency(totals.p25)}</td>
+                  <td className={`${td} border-r border-gray-200`}>{totals.a25 > 0 ? fmtCurrency(totals.a25) : '—'}</td>
+                  <td className={`${td} text-green-700`}>{fmtCurrency(totals.p26)}</td>
+                  <td className={`${td} bg-green-50/30 text-red-600`}>{totals.a26 > 0 ? fmtCurrency(totals.a26) : '—'}</td>
                   <td className="print:hidden" />
                 </tr>
                 {/* Per-apartment */}
@@ -525,8 +560,10 @@ export function BudgetPlan({ items, expenses, readOnly = false }: Props) {
                   <td className={`${td} border-r border-gray-200`}>{totals.a23 ? fmtCurrency(Math.round(totals.a23 / APT_COUNT)) : '—'}</td>
                   <td className={td}>{totals.p24 ? fmtCurrency(Math.round(totals.p24 / APT_COUNT)) : '—'}</td>
                   <td className={`${td} border-r border-gray-200`}>{totals.a24 ? fmtCurrency(Math.round(totals.a24 / APT_COUNT)) : '—'}</td>
-                  <td className={`${td} text-green-600`}>{totals.p25 ? fmtCurrency(Math.round(totals.p25 / APT_COUNT)) : '—'}</td>
-                  <td className={`${td} bg-green-50/30`}>{totals.a25 > 0 ? fmtCurrency(Math.round(totals.a25 / APT_COUNT)) : '—'}</td>
+                  <td className={td}>{totals.p25 ? fmtCurrency(Math.round(totals.p25 / APT_COUNT)) : '—'}</td>
+                  <td className={`${td} border-r border-gray-200`}>{totals.a25 > 0 ? fmtCurrency(Math.round(totals.a25 / APT_COUNT)) : '—'}</td>
+                  <td className={`${td} text-green-600`}>{totals.p26 ? fmtCurrency(Math.round(totals.p26 / APT_COUNT)) : '—'}</td>
+                  <td className={`${td} bg-green-50/30`}>{totals.a26 > 0 ? fmtCurrency(Math.round(totals.a26 / APT_COUNT)) : '—'}</td>
                   <td className="print:hidden" />
                 </tr>
               </tfoot>

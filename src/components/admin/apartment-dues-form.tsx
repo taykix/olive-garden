@@ -14,9 +14,10 @@ import { ApartmentSettings } from '@/types'
 interface Props {
   apartment_no: string
   settings: ApartmentSettings | null
+  periodId?: string
 }
 
-export function ApartmentDuesForm({ apartment_no, settings }: Props) {
+export function ApartmentDuesForm({ apartment_no, settings, periodId }: Props) {
   const [open, setOpen]             = useState(false)
   const [annualDue, setAnnualDue]   = useState(settings?.annual_due ?? 40000)
   const [prevBal, setPrevBal]       = useState(settings?.previous_balance ?? 0)
@@ -30,6 +31,7 @@ export function ApartmentDuesForm({ apartment_no, settings }: Props) {
       annual_due: annualDue,
       previous_balance: prevBal,
       notes: notes || undefined,
+      period_id: periodId,
     })
     setSaving(false)
     if (result.error) {

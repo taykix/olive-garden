@@ -5,15 +5,12 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
+import { ACTIVE_PERIOD } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
-const PERIOD_MONTHS = [
-  { month: 10, year: 2025 }, { month: 11, year: 2025 }, { month: 12, year: 2025 },
-  { month: 1,  year: 2026 }, { month: 2,  year: 2026 }, { month: 3,  year: 2026 },
-  { month: 4,  year: 2026 }, { month: 5,  year: 2026 }, { month: 6,  year: 2026 },
-  { month: 7,  year: 2026 }, { month: 8,  year: 2026 },
-]
+// Sakin panosu güncel (aktif) dönemi özetler; arşiv için Ödemeler sayfasındaki dönem seçici kullanılır.
+const PERIOD_MONTHS = ACTIVE_PERIOD.months
 
 function fmt(n: number): string {
   if (n === 0) return '—'
@@ -58,12 +55,14 @@ export default async function ResidentPage({
   let payments: Payment[] = []
   if (apartmentNo) {
     const [settRes, payRes] = await Promise.all([
-      supabase.from('apartment_settings').select('*').eq('apartment_no', apartmentNo).maybeSingle(),
+      supabase.from('apartment_settings').select('*').eq('apartment_no', apartmentNo)
+        .eq('period_id', ACTIVE_PERIOD.id).maybeSingle(),
       supabase.from('payments').select('*').eq('apartment_no', apartmentNo)
         .order('year', { ascending: true }).order('month', { ascending: true }),
     ])
     settings = settRes.data as ApartmentSettings | null
-    payments = (payRes.data ?? []) as Payment[]
+    // Yalnızca aktif döneme ait ödemeler (açık period_id ile)
+    payments = ((payRes.data ?? []) as Payment[]).filter(p => p.period_id === ACTIVE_PERIOD.id)
   }
 
   const annual_due       = settings?.annual_due ?? 40000

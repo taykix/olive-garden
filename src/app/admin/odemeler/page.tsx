@@ -7,17 +7,11 @@ import { PrintButton } from '@/app/admin/raporlar/print-button'
 import { Payment, ApartmentSettings } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { PeriodSelector } from '@/components/shared/period-selector'
+import { SeedPeriodButton } from '@/components/admin/seed-period-button'
 
 export const dynamic = 'force-dynamic'
-
-// ─── Period definition (Oct 2025 – Aug 2026) ─────────────────────────────────
-
-const PERIOD_MONTHS = [
-  { month: 10, year: 2025 }, { month: 11, year: 2025 }, { month: 12, year: 2025 },
-  { month: 1,  year: 2026 }, { month: 2,  year: 2026 }, { month: 3,  year: 2026 },
-  { month: 4,  year: 2026 }, { month: 5,  year: 2026 }, { month: 6,  year: 2026 },
-  { month: 7,  year: 2026 }, { month: 8,  year: 2026 },
-]
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 
@@ -35,6 +29,8 @@ function buildTable(
   settings: ApartmentSettings[],
   payments: Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>[]
 ): AptRow[] {
+  // Ödemeler zaten period_id ile filtrelenmiş olarak gelir (sorgu tarafında).
+
   // Index settings by apartment_no
   const settMap = new Map(settings.map(s => [s.apartment_no, s]))
 
@@ -85,12 +81,24 @@ function fmt(n: number): string {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function OdemelerPage() {
+export default async function OdemelerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>
+}) {
+  const { period: periodParam } = await searchParams
+  const period = getPeriod(periodParam)
+  const PERIOD_MONTHS = period.months
+  const isActivePeriod = period.id === ACTIVE_PERIOD.id
+  const periodOptions = PERIODS.map(p => ({
+    id: p.id,
+    label: `${p.label} — ${p.active ? 'Aktif' : 'Arşiv'}`,
+  }))
   const supabase = await createClient()
 
   const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
-    supabase.from('apartment_settings').select('*').order('apartment_no'),
-    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').order('apartment_no'),
+    supabase.from('apartment_settings').select('*').eq('period_id', period.id).order('apartment_no'),
+    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no'),
   ])
 
   const table    = buildTable(settingsData ?? [], paymentsData ?? [])
@@ -115,12 +123,17 @@ export default async function OdemelerPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Aidat / Ödeme Takibi</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Aidat / Ödeme Takibi
+            <span className="ml-2 text-base font-normal text-gray-400">{period.label}</span>
+          </h1>
           {table.length > 0 && (
             <p className="text-gray-500 text-sm mt-1">{table.length} daire</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <PeriodSelector options={periodOptions} value={period.id} />
+          {isActivePeriod && <SeedPeriodButton periodId={period.id} periodLabel={period.label} />}
           {table.length > 0 && <PrintButton />}
           <Link href="/admin/odemeler/toplu">
             <Button variant="outline" size="sm" className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50">
@@ -131,6 +144,19 @@ export default async function OdemelerPage() {
           <PaymentForm />
         </div>
       </div>
+
+      {/* Arşiv uyarısı */}
+      {!isActivePeriod && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 print:hidden">
+          Arşiv dönemi görüntüleniyor ({period.label}). Bu dönem salt-okunur bir kayıttır; güncel işlemler için aktif döneme geçin.
+        </div>
+      )}
+
+      {table.length === 0 && isActivePeriod && (
+        <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500 print:hidden">
+          Bu dönem için henüz daire aidat ayarı yok. <strong>“Yeni Dönemi Başlat”</strong> ile önceki dönemden bakiyeleri devredip aidatları oluşturabilirsiniz.
+        </div>
+      )}
 
       {/* Top stats */}
       {table.length > 0 && (

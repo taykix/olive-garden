@@ -7,15 +7,10 @@ import { formatCurrency, MONTHS } from '@/lib/utils'
 import { ApartmentDuesForm } from '@/components/admin/apartment-dues-form'
 import { PaymentForm } from '@/components/admin/payment-form'
 import { Payment, ApartmentSettings } from '@/types'
+import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
-
-const PERIOD_MONTHS = [
-  { month: 10, year: 2025 }, { month: 11, year: 2025 }, { month: 12, year: 2025 },
-  { month: 1,  year: 2026 }, { month: 2,  year: 2026 }, { month: 3,  year: 2026 },
-  { month: 4,  year: 2026 }, { month: 5,  year: 2026 }, { month: 6,  year: 2026 },
-  { month: 7,  year: 2026 }, { month: 8,  year: 2026 },
-]
 
 function fmt(n: number): string {
   if (n === 0) return '—'
@@ -24,10 +19,20 @@ function fmt(n: number): string {
 
 export default async function ApartmentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ apt: string }>
+  searchParams: Promise<{ period?: string }>
 }) {
   const { apt } = await params
+  const { period: periodParam } = await searchParams
+  const period = getPeriod(periodParam)
+  const PERIOD_MONTHS = period.months
+  const isActivePeriod = period.id === ACTIVE_PERIOD.id
+  const periodOptions = PERIODS.map(p => ({
+    id: p.id,
+    label: `${p.label} — ${p.active ? 'Aktif' : 'Arşiv'}`,
+  }))
   const apartment_no = decodeURIComponent(apt)
   const supabase = await createClient()
 
@@ -36,6 +41,7 @@ export default async function ApartmentDetailPage({
       .from('apartment_settings')
       .select('*')
       .eq('apartment_no', apartment_no)
+      .eq('period_id', period.id)
       .maybeSingle(),
     supabase
       .from('payments')
@@ -46,15 +52,17 @@ export default async function ApartmentDetailPage({
   ])
 
   const settings  = settingsData as ApartmentSettings | null
-  const payments  = (paymentsData ?? []) as Payment[]
+  const allPayments = (paymentsData ?? []) as Payment[]
+  // Seçili döneme ait ödemeler (açık period_id ile)
+  const payments = allPayments.filter(p => p.period_id === period.id)
 
-  if (!settings && payments.length === 0) notFound()
+  if (!settings && allPayments.length === 0) notFound()
 
   const annual_due        = settings?.annual_due ?? 40000
   const previous_balance  = settings?.previous_balance ?? 0
   const total_paid        = payments.reduce((s, p) => s + Number(p.amount_paid), 0)
   const remaining         = annual_due + previous_balance - total_paid
-  const residentName      = payments.find(p => p.resident_name)?.resident_name ?? null
+  const residentName      = allPayments.find(p => p.resident_name)?.resident_name ?? null
 
   // Aggregate payments by month for the period table
   const monthData: Record<string, { amount: number; notes: string[] }> = {}
@@ -94,11 +102,18 @@ export default async function ApartmentDetailPage({
             <p className="text-gray-500 text-sm mt-1">{residentName}</p>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <ApartmentDuesForm apartment_no={apartment_no} settings={settings} />
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <PeriodSelector options={periodOptions} value={period.id} />
+          <ApartmentDuesForm apartment_no={apartment_no} settings={settings} periodId={period.id} />
           <PaymentForm defaultApartmentNo={apartment_no} />
         </div>
       </div>
+
+      {!isActivePeriod && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          Arşiv dönemi görüntüleniyor ({period.label}).
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -176,7 +191,7 @@ export default async function ApartmentDetailPage({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-gray-700">
             Dönem Ödemeleri
-            <span className="text-xs font-normal text-gray-400 ml-2">Eki 2025 – Ağu 2026</span>
+            <span className="text-xs font-normal text-gray-400 ml-2">{period.label}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -219,11 +234,11 @@ export default async function ApartmentDetailPage({
         </CardContent>
       </Card>
 
-      {/* Raw payment records — for editing */}
-      {payments.length > 0 && (
+      {/* Raw payment records — full history, for editing */}
+      {allPayments.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-700">Tüm Kayıtlar</CardTitle>
+            <CardTitle className="text-sm text-gray-700">Tüm Kayıtlar <span className="text-xs font-normal text-gray-400">(tüm dönemler)</span></CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -239,7 +254,7 @@ export default async function ApartmentDetailPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((p, i) => (
+                  {allPayments.map((p, i) => (
                     <tr key={p.id} className={`border-b border-gray-100 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'}`}>
                       <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
                         {MONTHS[p.month]} {p.year}

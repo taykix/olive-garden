@@ -52,6 +52,7 @@ export interface Payment {
   note: string | null
   income_id: string | null
   serial_no: string | null
+  period_id: string | null
   created_at: string
 }
 

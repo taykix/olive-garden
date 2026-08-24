@@ -50,7 +50,20 @@
     "no_account": "Pas encore de compte ?",
     "register_link": "Demander une adhésion",
     "hero_tagline1": "Transparente et Fiable",
-    "hero_tagline2": "Gestion de Résidence"
+    "hero_tagline2": "Gestion de Résidence",
+    "forgot_password": "Mot de passe oublié ?"
+  },
+  "forgot": {
+    "title": "Réinitialiser le mot de passe",
+    "subtitle": "Saisissez votre e-mail et nous vous enverrons un mot de passe temporaire.",
+    "email": "E-mail",
+    "submit": "Envoyer un mot de passe temporaire",
+    "sending": "Envoi...",
+    "success": "Si cet e-mail est enregistré, nous avons envoyé un message contenant un mot de passe temporaire. Vérifiez votre boîte de réception (et le dossier spam). Connectez-vous avec le mot de passe temporaire, puis modifiez-le depuis le menu de profil en haut à droite.",
+    "back_to_login": "← Retour à la connexion",
+    "error_invalid": "Veuillez saisir une adresse e-mail valide.",
+    "error_mail": "Impossible d'envoyer l'e-mail. Veuillez réessayer plus tard.",
+    "error_generic": "Une erreur s'est produite. Veuillez réessayer."
   },
   "register": {
     "title": "Demande d'adhésion",
@@ -175,7 +188,10 @@
     "col_annual": "Charges annuelles",
     "col_total": "Total",
     "col_remaining": "Restant",
-    "exempt": "exonéré"
+    "exempt": "exonéré",
+    "period_active": "Actif",
+    "period_archive": "Archive",
+    "archive_notice": "Période archivée affichée ({period}). Cette période est un enregistrement en lecture seule."
   },
   "raporlar": {
     "title": "Rapports",
@@ -183,6 +199,15 @@
     "total_income": "Revenus totaux",
     "total_expenses": "Dépenses totales",
     "net_balance": "Solde net",
+    "carried_balance": "Solde reporté",
+    "carried_note": "De la période précédente",
+    "period_income": "Revenus de la période",
+    "period_expense": "Dépenses de la période",
+    "current_balance": "Solde actuel",
+    "incl_carry": "Report inclus",
+    "period_active": "Actif",
+    "period_archive": "Archive",
+    "archive_notice": "Période archivée ({period}). Le résumé financier concerne cette période.",
     "pie_title": "Catégories de dépenses",
     "bar_title": "Tendance mensuelle revenus / dépenses",
     "monthly_title": "Résumé mensuel revenus / dépenses",

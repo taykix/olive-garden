@@ -9,6 +9,9 @@ import { Income, Expense, BudgetItem } from '@/types'
 import { BudgetPlan } from '@/app/admin/raporlar/budget-plan'
 import { ExpensePieChart, MonthlyBarChart } from '@/app/admin/raporlar/charts'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getPeriod, getTreasuryRange, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { PeriodSelector } from '@/components/shared/period-selector'
+import { getActivePlanPlannedMap } from '@/lib/reports-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,23 +38,36 @@ function buildMonthlyReport(incomeList: Income[], expenseList: Expense[]) {
 
 export default async function ResidentRaporlarPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ period?: string }>
 }) {
   const { locale } = await params
+  const { period: periodParam } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations('raporlar')
 
+  const period = getPeriod(periodParam)
+  const isActivePeriod = period.id === ACTIVE_PERIOD.id
+  const periodOptions = PERIODS.map(p => ({ id: p.id, label: `${p.label} — ${p.active ? t('period_active') : t('period_archive')}` }))
+  const { start: periodStart, end: periodEnd } = getTreasuryRange(period)
+
   const supabase = await createClient()
-  const [incomeRes, expenseRes, budgetRes] = await Promise.all([
+  const [incomeRes, expenseRes, budgetRes, plan2026] = await Promise.all([
     supabase.from('income').select('*').order('date', { ascending: false }),
     supabase.from('expenses').select('*').order('date', { ascending: false }),
     supabase.from('budget_items').select('*').order('sort_order'),
+    getActivePlanPlannedMap(supabase),
   ])
 
-  const incomeList: Income[]    = incomeRes.data ?? []
-  const expenseList: Expense[]  = expenseRes.data ?? []
+  const allIncome: Income[]    = incomeRes.data ?? []
+  const allExpense: Expense[]  = expenseRes.data ?? []
   const budgetItems: BudgetItem[] = budgetRes.data ?? []
+
+  const inPeriod = (d: string) => d >= periodStart && d < periodEnd
+  const incomeList  = allIncome.filter(r => inPeriod(r.date))
+  const expenseList = allExpense.filter(r => inPeriod(r.date))
   const monthlyReport = buildMonthlyReport(incomeList, expenseList)
 
   const expenseCategoryMap = expenseList.reduce<Record<string, number>>((acc, e) => {
@@ -66,33 +82,53 @@ export default async function ResidentRaporlarPage({
     Gider: r.expense,
   }))
 
-  const totalIncome   = incomeList.reduce((s, r) => s + Number(r.amount), 0)
-  const totalExpenses = expenseList.reduce((s, r) => s + Number(r.amount), 0)
+  const periodIncome   = incomeList.reduce((s, r) => s + Number(r.amount), 0)
+  const periodExpense  = expenseList.reduce((s, r) => s + Number(r.amount), 0)
+  const carriedBalance = allIncome.filter(r => r.date < periodStart).reduce((s, r) => s + Number(r.amount), 0)
+                       - allExpense.filter(r => r.date < periodStart).reduce((s, r) => s + Number(r.amount), 0)
+  const balance = carriedBalance + periodIncome - periodExpense
+  const totalIncome   = periodIncome   // aylık tablo başlık/totalleri için
+  const totalExpenses = periodExpense
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t('title')}
+            <span className="ml-2 text-base font-normal text-gray-400">{period.label}</span>
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
+        </div>
+        <PeriodSelector options={periodOptions} value={period.id} />
       </div>
 
-      <BudgetPlan items={budgetItems} expenses={expenseList} readOnly />
+      {!isActivePeriod && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          {t('archive_notice', { period: period.label })}
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <BudgetPlan items={budgetItems} expenses={allExpense} plan2026={plan2026} readOnly />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('total_income')}</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('carried_balance')}</CardTitle></CardHeader>
+          <CardContent><p className={`text-2xl font-bold ${carriedBalance >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>{formatCurrency(carriedBalance)}</p><p className="text-xs text-gray-400 mt-1">{t('carried_note')}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('total_expenses')}</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('period_income')}</CardTitle></CardHeader>
+          <CardContent><p className="text-2xl font-bold text-green-600">{formatCurrency(periodIncome)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('net_balance')}</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('period_expense')}</CardTitle></CardHeader>
+          <CardContent><p className="text-2xl font-bold text-red-600">{formatCurrency(periodExpense)}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">{t('current_balance')}</CardTitle></CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-              {formatCurrency(totalIncome - totalExpenses)}
-            </p>
+            <p className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>{formatCurrency(balance)}</p>
+            <p className="text-xs text-gray-400 mt-1">{t('incl_carry')}</p>
           </CardContent>
         </Card>
       </div>

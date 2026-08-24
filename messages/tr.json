@@ -71,7 +71,20 @@
     "no_account": "Hesabınız yok mu?",
     "register_link": "Üyelik talebi oluşturun",
     "hero_tagline1": "Saydam & Güvenilir",
-    "hero_tagline2": "Site Yönetimi"
+    "hero_tagline2": "Site Yönetimi",
+    "forgot_password": "Şifremi unuttum?"
+  },
+  "forgot": {
+    "title": "Şifre Sıfırlama",
+    "subtitle": "E-postanızı girin; size geçici bir şifre gönderelim.",
+    "email": "E-posta",
+    "submit": "Geçici Şifre Gönder",
+    "sending": "Gönderiliyor...",
+    "success": "Eğer bu e-posta kayıtlıysa, geçici şifre içeren bir e-posta gönderdik. Gelen kutunuzu (ve spam klasörünü) kontrol edin. Geçici şifreyle giriş yapıp sağ üstteki profil menüsünden şifrenizi değiştirebilirsiniz.",
+    "back_to_login": "← Girişe dön",
+    "error_invalid": "Geçerli bir e-posta adresi girin.",
+    "error_mail": "E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin.",
+    "error_generic": "Bir hata oluştu. Lütfen tekrar deneyin."
   },
   "register": {
     "title": "Üyelik Talebi",
@@ -196,7 +209,10 @@
     "col_annual": "Yıllık Aidat",
     "col_total": "Toplam",
     "col_remaining": "Kalan",
-    "exempt": "muaf"
+    "exempt": "muaf",
+    "period_active": "Aktif",
+    "period_archive": "Arşiv",
+    "archive_notice": "Arşiv dönemi görüntüleniyor ({period}). Bu dönem salt-okunur bir kayıttır."
   },
   "raporlar": {
     "title": "Raporlar",
@@ -204,6 +220,15 @@
     "total_income": "Toplam Gelir",
     "total_expenses": "Toplam Gider",
     "net_balance": "Net Bakiye",
+    "carried_balance": "Devreden Bakiye",
+    "carried_note": "Geçen dönemden",
+    "period_income": "Dönem Geliri",
+    "period_expense": "Dönem Gideri",
+    "current_balance": "Mevcut Bakiye",
+    "incl_carry": "Devir dahil",
+    "period_active": "Aktif",
+    "period_archive": "Arşiv",
+    "archive_notice": "Arşiv dönemi görüntüleniyor ({period}). Finansal özet bu döneme aittir.",
     "pie_title": "Gider Kategorileri",
     "bar_title": "Aylık Gelir / Gider Trendi",
     "monthly_title": "Aylık Gelir / Gider Özeti",

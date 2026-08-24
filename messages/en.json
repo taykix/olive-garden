@@ -71,7 +71,20 @@
     "no_account": "Don't have an account?",
     "register_link": "Request membership",
     "hero_tagline1": "Transparent & Reliable",
-    "hero_tagline2": "Property Management"
+    "hero_tagline2": "Property Management",
+    "forgot_password": "Forgot password?"
+  },
+  "forgot": {
+    "title": "Reset Password",
+    "subtitle": "Enter your email and we'll send you a temporary password.",
+    "email": "Email",
+    "submit": "Send Temporary Password",
+    "sending": "Sending...",
+    "success": "If this email is registered, we've sent a message with a temporary password. Check your inbox (and spam folder). Sign in with the temporary password, then change it from the profile menu in the top-right corner.",
+    "back_to_login": "← Back to login",
+    "error_invalid": "Please enter a valid email address.",
+    "error_mail": "Could not send the email. Please try again later.",
+    "error_generic": "Something went wrong. Please try again."
   },
   "register": {
     "title": "Membership Request",
@@ -196,7 +209,10 @@
     "col_annual": "Annual Dues",
     "col_total": "Total",
     "col_remaining": "Remaining",
-    "exempt": "exempt"
+    "exempt": "exempt",
+    "period_active": "Active",
+    "period_archive": "Archive",
+    "archive_notice": "Viewing archived period ({period}). This period is a read-only record."
   },
   "raporlar": {
     "title": "Reports",
@@ -204,6 +220,15 @@
     "total_income": "Total Income",
     "total_expenses": "Total Expenses",
     "net_balance": "Net Balance",
+    "carried_balance": "Carried Balance",
+    "carried_note": "From previous period",
+    "period_income": "Period Income",
+    "period_expense": "Period Expenses",
+    "current_balance": "Current Balance",
+    "incl_carry": "Incl. carry-over",
+    "period_active": "Active",
+    "period_archive": "Archive",
+    "archive_notice": "Viewing archived period ({period}). The financial summary reflects this period.",
     "pie_title": "Expense Categories",
     "bar_title": "Monthly Income / Expense Trend",
     "monthly_title": "Monthly Income / Expense Summary",

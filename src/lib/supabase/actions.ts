@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from './server'
 import { createAdminClient } from './admin'
+import { getPeriod, ACTIVE_PERIOD, BUDGET_BASE_PERIOD_ID, PERIODS } from '@/lib/periods'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -240,6 +241,7 @@ export async function createPayment(data: {
   payment_date?: string
   note?: string
   serial_no?: string
+  period_id?: string
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -278,6 +280,7 @@ export async function createPayment(data: {
     ...paymentData,
     serial_no: serial_no ?? null,
     income_id,
+    period_id: data.period_id ?? ACTIVE_PERIOD.id,
   })
   if (error) {
     if (income_id) await supabase.from('income').delete().eq('id', income_id)
@@ -495,30 +498,131 @@ export async function upsertApartmentSettings(data: {
   annual_due: number
   previous_balance: number
   notes?: string
+  period_id?: string
 }) {
   const supabase = await createClient()
+  const period_id = data.period_id ?? ACTIVE_PERIOD.id
   const { error } = await supabase
     .from('apartment_settings')
-    .upsert({ ...data, updated_at: new Date().toISOString() }, { onConflict: 'apartment_no' })
+    .upsert(
+      { ...data, period_id, updated_at: new Date().toISOString() },
+      { onConflict: 'apartment_no,period_id' }
+    )
   if (error) return { error: error.message }
   revalidatePath('/admin/odemeler')
   return { success: true }
 }
 
 export async function bulkUpsertApartmentSettings(
-  rows: Array<{ apartment_no: string; annual_due: number; previous_balance: number }>
+  rows: Array<{ apartment_no: string; annual_due: number; previous_balance: number; period_id?: string }>
 ) {
   if (!rows.length) return { success: true }
   const supabase = await createClient()
   const { error } = await supabase
     .from('apartment_settings')
     .upsert(
-      rows.map(r => ({ ...r, updated_at: new Date().toISOString() })),
-      { onConflict: 'apartment_no' }
+      rows.map(r => ({
+        ...r,
+        period_id: r.period_id ?? ACTIVE_PERIOD.id,
+        updated_at: new Date().toISOString(),
+      })),
+      { onConflict: 'apartment_no,period_id' }
     )
   if (error) return { error: error.message }
   revalidatePath('/admin/odemeler')
   return { success: true }
+}
+
+// ─── Yeni döneme geçiş (devir + tohumlama) ────────────────────────────────────
+// 2026-2027 dönemi aidat kuralları (genel kurul kararı):
+const NEW_PERIOD_DEFAULT_DUE = 50000
+const NEW_PERIOD_EXEMPT_APTS = ['A-6']                       // yönetici → aidattan muaf
+const NEW_PERIOD_HALF_APTS   = ['B-7', 'D-6', 'F-2', 'F-3']  // yönetici yardımcısı (B-7, D-6) + dükkanlar (F-2, F-3) → yarım aidat
+
+function newPeriodAnnualDue(apt: string): number {
+  if (NEW_PERIOD_EXEMPT_APTS.includes(apt)) return 0
+  if (NEW_PERIOD_HALF_APTS.includes(apt)) return NEW_PERIOD_DEFAULT_DUE / 2
+  return NEW_PERIOD_DEFAULT_DUE
+}
+
+// Hedef dönem için apartment_settings satırlarını oluşturur:
+//  • previous_balance = bir önceki dönemin kalanı (borç/alacak devri)
+//  • annual_due       = yeni dönem kuralları (varsayılan / muaf / yarım)
+// Idempotent: hedef dönemde ZATEN satırı olan daireler atlanır (elle düzenlemeler korunur).
+export async function seedPeriodSettings(targetPeriodId?: string): Promise<{
+  error?: string
+  success?: boolean
+  created?: number
+  skipped?: number
+}> {
+  const supabase = await createClient()
+
+  // Yalnızca yönetici çalıştırabilir
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Oturum bulunamadı.' }
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (profile?.role !== 'admin') return { error: 'Bu işlem için yönetici yetkisi gerekli.' }
+
+  const target = getPeriod(targetPeriodId)
+  const idx = PERIODS.findIndex(p => p.id === target.id)
+  const prev = idx > 0 ? PERIODS[idx - 1] : null
+
+  // Hedef dönemde hâlihazırda ayarı olan daireler (idempotent atlama)
+  const { data: existingRows, error: exErr } = await supabase
+    .from('apartment_settings').select('apartment_no').eq('period_id', target.id)
+  if (exErr) return { error: exErr.message }
+  const existing = new Set((existingRows ?? []).map(r => r.apartment_no))
+
+  // Devir kaynağı: önceki dönemin ayarları + ödemeleri
+  const prevSettingsMap = new Map<string, { annual_due: number; previous_balance: number }>()
+  const paidByApt = new Map<string, number>()
+
+  if (prev) {
+    const { data: prevSettings } = await supabase
+      .from('apartment_settings')
+      .select('apartment_no, annual_due, previous_balance')
+      .eq('period_id', prev.id)
+    for (const s of prevSettings ?? []) {
+      prevSettingsMap.set(s.apartment_no, {
+        annual_due: Number(s.annual_due),
+        previous_balance: Number(s.previous_balance),
+      })
+    }
+    const { data: payments } = await supabase
+      .from('payments').select('apartment_no, amount_paid').eq('period_id', prev.id)
+    for (const p of payments ?? []) {
+      paidByApt.set(p.apartment_no, (paidByApt.get(p.apartment_no) ?? 0) + Number(p.amount_paid))
+    }
+  }
+
+  // Aday daireler: önceki dönem ayarı ∪ önceki dönem ödemesi olanlar
+  const candidates = new Set<string>([...prevSettingsMap.keys(), ...paidByApt.keys()])
+
+  const rows: Array<{ apartment_no: string; period_id: string; annual_due: number; previous_balance: number }> = []
+  for (const apt of candidates) {
+    if (existing.has(apt)) continue
+    const prevSet = prevSettingsMap.get(apt)
+    const prevDue = prevSet?.annual_due ?? 0
+    const prevBal = prevSet?.previous_balance ?? 0
+    const paid    = paidByApt.get(apt) ?? 0
+    // Önceki dönem kalanı: + = borç devri, − = alacak (fazla ödeme) devri
+    const carriedBalance = prevDue + prevBal - paid
+    rows.push({
+      apartment_no: apt,
+      period_id: target.id,
+      annual_due: newPeriodAnnualDue(apt),
+      previous_balance: carriedBalance,
+    })
+  }
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from('apartment_settings').insert(rows)
+    if (error) return { error: error.message }
+  }
+
+  revalidatePath('/admin/odemeler')
+  return { success: true, created: rows.length, skipped: existing.size }
 }
 
 // ─── Bulk Payment Import ─────────────────────────────────────────────────────
@@ -533,11 +637,13 @@ export async function bulkImportPayments(
     amount_paid: number
     payment_status: string
     note?: string
+    period_id?: string
   }>
 ) {
   if (!rows.length) return { error: 'İçe aktarılacak kayıt yok.' }
   const supabase = await createClient()
-  const { error } = await supabase.from('payments').insert(rows)
+  const withPeriod = rows.map(r => ({ ...r, period_id: r.period_id ?? ACTIVE_PERIOD.id }))
+  const { error } = await supabase.from('payments').insert(withPeriod)
   if (error) return { error: error.message }
   revalidatePath('/admin/odemeler')
   revalidatePath('/admin')
@@ -764,9 +870,9 @@ export async function bulkUpsertBudgetItems(
 
 // ─── Planlama (Yıllık Planlama) ────────────────────────────────────────────────
 
-// 2025-2026 gerçekleşen dönemi — baz tutar hesabı için
-const PLAN_BASE_PERIOD_START = '2025-09-27'
-const PLAN_BASE_PERIOD_END   = '2026-08-31'
+// Bir önceki (en son kapanan) dönemin gerçekleşen giderleri — yeni plan baz tutarı için
+const { budgetStart: PLAN_BASE_PERIOD_START, budgetEnd: PLAN_BASE_PERIOD_END } =
+  getPeriod(BUDGET_BASE_PERIOD_ID)
 
 type PlanHeaderPayload = {
   period: string

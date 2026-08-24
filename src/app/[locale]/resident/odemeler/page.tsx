@@ -3,15 +3,10 @@ import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getPeriod, PERIODS, ACTIVE_PERIOD } from '@/lib/periods'
+import { PeriodSelector } from '@/components/shared/period-selector'
 
 export const dynamic = 'force-dynamic'
-
-const PERIOD_MONTHS = [
-  { month: 10, year: 2025 }, { month: 11, year: 2025 }, { month: 12, year: 2025 },
-  { month: 1,  year: 2026 }, { month: 2,  year: 2026 }, { month: 3,  year: 2026 },
-  { month: 4,  year: 2026 }, { month: 5,  year: 2026 }, { month: 6,  year: 2026 },
-  { month: 7,  year: 2026 }, { month: 8,  year: 2026 },
-]
 
 function fmt(n: number) {
   if (n === 0) return '—'
@@ -30,18 +25,29 @@ interface AptRow {
 
 export default async function ResidentOdemelerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ period?: string }>
 }) {
   const { locale } = await params
+  const { period: periodParam } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations('odemeler')
+
+  const period = getPeriod(periodParam)
+  const PERIOD_MONTHS = period.months
+  const isActivePeriod = period.id === ACTIVE_PERIOD.id
+  const periodOptions = PERIODS.map(p => ({
+    id: p.id,
+    label: `${p.label} — ${p.active ? t('period_active') : t('period_archive')}`,
+  }))
 
   const supabase = await createClient()
 
   const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
-    supabase.from('apartment_settings').select('*').order('apartment_no'),
-    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').order('apartment_no'),
+    supabase.from('apartment_settings').select('*').eq('period_id', period.id).order('apartment_no'),
+    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no'),
   ])
 
   const settings: ApartmentSettings[] = settingsData ?? []
@@ -91,10 +97,22 @@ export default async function ResidentOdemelerPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <p className="text-gray-500 text-sm mt-1">{table.length} {t('apartments_suffix')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t('title')}
+            <span className="ml-2 text-base font-normal text-gray-400">{period.label}</span>
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">{table.length} {t('apartments_suffix')}</p>
+        </div>
+        <PeriodSelector options={periodOptions} value={period.id} />
       </div>
+
+      {!isActivePeriod && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          {t('archive_notice', { period: period.label })}
+        </div>
+      )}
 
       <Card>
         <CardHeader className="pb-2">
