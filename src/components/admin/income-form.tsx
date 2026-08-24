@@ -28,6 +28,7 @@ import { createClient } from '@/lib/supabase/client'
 import { INCOME_CATEGORIES, INCOME_CATEGORY_KEY } from '@/lib/utils'
 import { Income } from '@/types'
 import { Plus, Pencil } from 'lucide-react'
+import Link from 'next/link'
 
 const SIRA_RE = /Defter S[ıi]ra No:\s*(\S+)/i
 
@@ -184,11 +185,18 @@ export function IncomeForm({ income }: IncomeFormProps) {
                   <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  {INCOME_CATEGORIES.map((c) => (
+                  {INCOME_CATEGORIES.filter(c => c.toLowerCase() !== 'aidat').map((c) => (
                     <SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-1.5">
+                Aidat geliri mi ekliyorsunuz? Buradan <strong>eklemeyin</strong> — {' '}
+                <Link href="/admin/odemeler" className="underline font-medium" onClick={() => setOpen(false)}>
+                  Aidat / Ödeme Takibi
+                </Link>{' '}
+                sayfasından girin; gelire otomatik yansır.
+              </p>
             </div>
 
             <div className="space-y-1">

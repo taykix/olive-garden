@@ -128,6 +128,13 @@ export async function createIncome(data: {
   category?: string
   amount: number
 }) {
+  // Aidat gelirleri elle eklenmez — "Aidat / Ödeme Takibi" sayfasından girilir ve
+  // ödeme kaydıyla birlikte gelire otomatik yansır. Aksi halde aidat tablosuyla
+  // bağı kopuk kayıtlar oluşuyor (bkz. ödeme→gelir senkronu tek yönlü).
+  if ((data.category || '').trim().toLowerCase() === 'aidat') {
+    return { error: 'Aidat gelirleri buradan eklenemez. Lütfen "Aidat / Ödeme Takibi" sayfasından ödeme girin — gelire otomatik yansır.' }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
