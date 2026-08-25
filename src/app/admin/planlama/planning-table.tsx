@@ -48,6 +48,8 @@ const DICT = {
     operatingPlan: 'İşletme Planı',
     baseNote: '(baz: 2025-2026 gerçekleşen)',
     rateInfo: 'Bu sene için harcamalar, yıllık belirlenen TÜFE oranı geçen yılın gerçekleşen harcamalarına eklenerek oluşturulmuştur.',
+    assemblyNote1: 'Genel kurulda alınan karara göre bu dönem yıllık aidat 50.000 TL olarak belirlenmiştir.',
+    assemblyNote2: 'Artan miktar, çatı onarımı gibi ekstra proje maliyetlerinde yıl içinde sitenin ihtiyacına göre planlanacaktır.',
     removedNote: 'Not: Geçen senenin işletme planında adı geçen (harcama yapılmış ya da yapılmamış), bu sene plana dâhil edilmeyecek başlıklar çıkarılmıştır.',
     colItem: 'Harcama Konusu',
     colLastYear: 'Geçen Yıl',
@@ -143,6 +145,8 @@ const DICT = {
     operatingPlan: 'Operating Plan',
     baseNote: '(base: 2025-2026 actuals)',
     rateInfo: "This year's expenses are created by adding the annually determined CPI (inflation) rate to last year's actual spending.",
+    assemblyNote1: 'By resolution of the general assembly, the annual dues for this period have been set at 50,000 TL.',
+    assemblyNote2: "The surplus will be allocated during the year, according to the community's needs, to extra project costs such as roof repair.",
     removedNote: "Note: Titles listed in last year's operating plan (whether spent or not) that will not be included in this year's plan have been removed.",
     colItem: 'Expense Item',
     colLastYear: 'Last Year',
@@ -561,6 +565,12 @@ export function PlanningTable({ plan, items }: { plan: Plan | null; items: PlanI
             <Plus className="h-3.5 w-3.5" /> {L.addItem}
           </Button>
         </div>
+      </div>
+
+      {/* Genel kurul kararı bilgi notu */}
+      <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+        <p className="font-medium">{L.assemblyNote1}</p>
+        <p className="mt-1 text-green-800">{L.assemblyNote2}</p>
       </div>
 
       {/* Birleştirme çubuğu */}

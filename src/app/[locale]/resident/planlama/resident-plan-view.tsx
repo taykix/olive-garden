@@ -63,6 +63,12 @@ export function ResidentPlanView({ plan, items, locale }: { plan: Plan; items: P
         <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
       </div>
 
+      {/* Genel kurul kararı bilgi notu */}
+      <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+        <p className="font-medium">{t('assembly_note1')}</p>
+        <p className="mt-1 text-green-800">{t('assembly_note2')}</p>
+      </div>
+
       {/* Sonuç kartı — daire başına yıllık aidat (canlı) */}
       <Card className="border-green-200 bg-green-50/40">
         <CardContent className="py-6 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

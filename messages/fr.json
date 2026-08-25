@@ -288,6 +288,8 @@
   "plan": {
     "title": "Plan annuel des charges",
     "subtitle": "Calculez les charges annuelles par appartement en sélectionnant les postes optionnels à voter en assemblée générale.",
+    "assembly_note1": "Par décision de l'assemblée générale, les charges annuelles pour cette période ont été fixées à 50 000 TL.",
+    "assembly_note2": "L'excédent sera affecté au cours de l'année, selon les besoins de la résidence, à des coûts de projets supplémentaires comme la réparation de la toiture.",
     "annual_per_apt": "Charges annuelles par appartement",
     "grand_total": "Total général",
     "fixed_total": "Postes fixes",

@@ -288,6 +288,8 @@
   "plan": {
     "title": "Yıllık Aidat Planı",
     "subtitle": "Genel kurulda oylanacak opsiyonel kalemleri seçerek daire başına yıllık aidatı hesaplayın.",
+    "assembly_note1": "Genel kurulda alınan karara göre bu dönem yıllık aidat 50.000 TL olarak belirlenmiştir.",
+    "assembly_note2": "Artan miktar, çatı onarımı gibi ekstra proje maliyetlerinde yıl içinde sitenin ihtiyacına göre planlanacaktır.",
     "annual_per_apt": "Daire Başına Yıllık Aidat",
     "grand_total": "Genel Toplam",
     "fixed_total": "Sabit Kalemler",

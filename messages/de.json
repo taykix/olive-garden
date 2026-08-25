@@ -288,6 +288,8 @@
   "plan": {
     "title": "Jährlicher Beitragsplan",
     "subtitle": "Berechnen Sie den Jahresbeitrag pro Wohnung, indem Sie die auf der Hauptversammlung abzustimmenden optionalen Posten auswählen.",
+    "assembly_note1": "Gemäß Beschluss der Hauptversammlung wurde der Jahresbeitrag für diesen Zeitraum auf 50.000 TL festgelegt.",
+    "assembly_note2": "Der Überschuss wird im Laufe des Jahres je nach Bedarf der Anlage für zusätzliche Projektkosten wie Dachreparaturen verwendet.",
     "annual_per_apt": "Jahresbeitrag pro Wohnung",
     "grand_total": "Gesamtsumme",
     "fixed_total": "Feste Posten",

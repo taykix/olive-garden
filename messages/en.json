@@ -288,6 +288,8 @@
   "plan": {
     "title": "Annual Dues Plan",
     "subtitle": "Calculate the annual dues per apartment by selecting the optional items to be voted at the general assembly.",
+    "assembly_note1": "By resolution of the general assembly, the annual dues for this period have been set at 50,000 TL.",
+    "assembly_note2": "The surplus will be allocated during the year, according to the community's needs, to extra project costs such as roof repair.",
     "annual_per_apt": "Annual Dues per Apartment",
     "grand_total": "Grand Total",
     "fixed_total": "Fixed Items",

@@ -96,10 +96,9 @@ export default async function ResidentOdemelerPage({
   const totalPrev      = table.reduce((s, a) => s + a.previous_balance, 0)
   const totalOverdueNet = table.reduce((s, a) => s + a.overdue, 0)
   const totalYearRem    = table.reduce((s, a) => s + a.yearRemaining, 0)
-  const MONTH_ABBR     = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
   const fullDue        = table.length ? Math.max(...table.map(a => a.annual_due)) : 50000
   const scheduleLabel  = (period.installments ?? [])
-    .map(it => `${MONTH_ABBR[it.month]} ${fmt(Math.round(it.fraction * fullDue))}`)
+    .map(it => `${getMonthName(it.month, locale, true)} ${fmt(Math.round(it.fraction * fullDue))}`)
     .join(' · ')
   const expectedFull   = expectedDueToDate(fullDue, period)
   const curInst        = currentInstallment(period)
