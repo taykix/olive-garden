@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
-import { ACTIVE_PERIOD, duesStatus } from '@/lib/periods'
+import { ACTIVE_PERIOD, duesStatus, getTreasuryRange } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,8 +31,8 @@ export default async function ResidentPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   const [incomeRes, expenseRes, announcementsRes, profileRes] = await Promise.all([
-    supabase.from('income').select('amount'),
-    supabase.from('expenses').select('amount'),
+    supabase.from('income').select('amount, date'),
+    supabase.from('expenses').select('amount, date'),
     supabase
       .from('announcements')
       .select('*')
@@ -44,9 +44,16 @@ export default async function ResidentPage({
       : Promise.resolve({ data: null }),
   ])
 
-  const totalIncome   = (incomeRes.data ?? []).reduce((s, r) => s + Number(r.amount), 0)
-  const totalExpenses = (expenseRes.data ?? []).reduce((s, r) => s + Number(r.amount), 0)
-  const balance       = totalIncome - totalExpenses
+  // Finansal özet aktif döneme göre: devir (dönem başından önceki net) + dönem geliri − dönem gideri
+  const { start: pStart, end: pEnd } = getTreasuryRange(ACTIVE_PERIOD)
+  const allInc = (incomeRes.data ?? []) as { amount: number; date: string }[]
+  const allExp = (expenseRes.data ?? []) as { amount: number; date: string }[]
+  const inPeriod = (d: string) => d >= pStart && d < pEnd
+  const periodIncome   = allInc.filter(r => inPeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const periodExpense  = allExp.filter(r => inPeriod(r.date)).reduce((s, r) => s + Number(r.amount), 0)
+  const carriedBalance = allInc.filter(r => r.date < pStart).reduce((s, r) => s + Number(r.amount), 0)
+                       - allExp.filter(r => r.date < pStart).reduce((s, r) => s + Number(r.amount), 0)
+  const balance        = carriedBalance + periodIncome - periodExpense
   const announcements = announcementsRes.data ?? []
   const apartmentNo   = profileRes.data?.apartment_no ?? null
 
@@ -102,7 +109,7 @@ export default async function ResidentPage({
         <section>
           <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
             <Home className="h-5 w-5 text-green-600" />
-            {t('apt_dues_title')} {apartmentNo}
+            {t('apt_dues_title')} {apartmentNo} <span className="text-sm font-normal text-gray-400">· {ACTIVE_PERIOD.label}</span>
           </h2>
 
           {/* Stats */}
@@ -201,26 +208,38 @@ export default async function ResidentPage({
         </section>
       )}
 
-      {/* Financial summary */}
+      {/* Financial summary — aktif döneme göre */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('financial_title')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          {t('financial_title')} <span className="text-sm font-normal text-gray-400">· {ACTIVE_PERIOD.label}</span>
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-500">{t('income')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-gray-500">{t('carried_balance')}</CardTitle>
+              <Wallet className={`h-4 w-4 ${carriedBalance >= 0 ? 'text-teal-500' : 'text-orange-500'}`} />
             </CardHeader>
             <CardContent>
-              <p className="text-xl font-bold text-green-600">{formatCurrency(totalIncome)}</p>
+              <p className={`text-xl font-bold ${carriedBalance >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>{formatCurrency(carriedBalance)}</p>
+              <p className="text-xs text-gray-400 mt-1">{t('carried_note')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-500">{t('expenses')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500">{t('period_income')}</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-green-600">{formatCurrency(periodIncome)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-500">{t('period_expense')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <p className="text-xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p>
+              <p className="text-xl font-bold text-red-600">{formatCurrency(periodExpense)}</p>
             </CardContent>
           </Card>
           <Card>
@@ -232,6 +251,7 @@ export default async function ResidentPage({
               <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                 {formatCurrency(balance)}
               </p>
+              <p className="text-xs text-gray-400 mt-1">{t('incl_carry')}</p>
             </CardContent>
           </Card>
         </div>
