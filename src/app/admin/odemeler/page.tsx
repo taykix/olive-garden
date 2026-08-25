@@ -341,9 +341,6 @@ export default async function OdemelerPage({
                     <th className="sticky left-0 print:static bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">
                       Daire<span className="block text-[10px] font-normal text-gray-400">Apt.</span>
                     </th>
-                    <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap print:hidden">
-                      Sakin<span className="block text-[10px] font-normal text-gray-400">Resident</span>
-                    </th>
                     <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">
                       Geçen Yıl<span className="block text-[10px] font-normal text-amber-400">Last Year</span>
                     </th>
@@ -386,7 +383,6 @@ export default async function OdemelerPage({
                             {row.apartment_no}
                           </Link>
                         </td>
-                        <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate print:hidden">{row.resident_name || '—'}</td>
                         <td className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${prevColor}`}>
                           {row.previous_balance === 0 ? '—' : `${row.previous_balance > 0 ? '+' : ''}${fmt(row.previous_balance)}`}
                         </td>
@@ -427,7 +423,6 @@ export default async function OdemelerPage({
                     <td className="sticky left-0 print:static bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
                       TOPLAM<span className="block text-[10px] font-normal text-gray-400">Total</span>
                     </td>
-                    <td className="px-2 py-2 print:hidden" />
                     <td className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
                       totalPrev > 0 ? 'text-red-600'
                       : totalPrev < 0 ? 'text-blue-600'

@@ -147,7 +147,6 @@ export default async function ResidentOdemelerPage({
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="sticky left-0 bg-gray-50 z-10 text-left px-3 py-2 font-medium text-gray-600 whitespace-nowrap border-r border-gray-200">{t('col_apt')}</th>
-                  <th className="text-left px-2 py-2 font-medium text-gray-500 whitespace-nowrap">{t('col_resident')}</th>
                   <th className="text-right px-2 py-2 font-medium text-amber-600 whitespace-nowrap">{t('col_prev')}</th>
                   <th className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">{t('col_annual')}</th>
                   {PERIOD_MONTHS.map(pm => (
@@ -177,7 +176,6 @@ export default async function ResidentOdemelerPage({
                       <td className={`sticky left-0 z-10 border-r border-gray-100 px-3 py-1.5 font-mono font-semibold text-green-700 whitespace-nowrap ${isOdd ? 'bg-gray-50/80' : 'bg-white'}`}>
                         {row.apartment_no}
                       </td>
-                      <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate">{row.resident_name || '—'}</td>
                       <td className={`px-2 py-1.5 text-right font-mono whitespace-nowrap ${prevColor}`}>
                         {row.previous_balance === 0 ? '—' : `${row.previous_balance > 0 ? '+' : ''}${fmt(row.previous_balance)}`}
                       </td>
@@ -215,7 +213,6 @@ export default async function ResidentOdemelerPage({
                   <td className="sticky left-0 bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
                     TOPLAM
                   </td>
-                  <td className="px-2 py-2" />
                   <td className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
                     totalPrev > 0 ? 'text-red-600'
                     : totalPrev < 0 ? 'text-blue-600'
