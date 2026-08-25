@@ -85,11 +85,6 @@ export default async function ResidentPage({
     if (p.note) monthData[key].notes.push(p.note)
   }
 
-  const remainingColor = st.behind
-    ? 'text-red-600'
-    : st.credit ? 'text-blue-600'
-    : 'text-green-600'
-
   return (
     <div className="space-y-8">
       <div>
@@ -113,7 +108,7 @@ export default async function ResidentPage({
           </h2>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
             <Card>
               <CardHeader className="pb-1 pt-3 px-3">
                 <CardTitle className="text-xs font-medium text-gray-500">{t('annual_due')}</CardTitle>
@@ -149,16 +144,31 @@ export default async function ResidentPage({
               </CardContent>
             </Card>
 
-            <Card className={`${st.behind ? 'border-red-200' : st.credit ? 'border-blue-200' : 'border-green-200'}`}>
+            <Card className={`${st.behind ? 'border-red-200' : 'border-green-200'}`}>
               <CardHeader className="pb-1 pt-3 px-3">
-                <CardTitle className="text-xs font-medium text-gray-500">{t('remaining_card')}</CardTitle>
+                <CardTitle className="text-xs font-medium text-gray-500">{t('installment_remaining')}</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 px-3">
-                <p className={`text-sm font-bold font-mono ${remainingColor}`}>
-                  {st.behind
-                    ? fmt(st.overdue)
-                    : st.credit ? `+${fmt(-st.yearRemaining)} ${t('receivable')}`
-                    : t('full_paid')}
+                <p className={`text-sm font-bold font-mono ${st.behind ? 'text-red-600' : 'text-green-600'}`}>
+                  {st.behind ? fmt(st.overdue) : t('current_ok')}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('current_installment_note')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className={`${st.yearRemaining < -0.01 ? 'border-blue-200' : st.yearRemaining < 0.01 ? 'border-green-200' : 'border-gray-200'}`}>
+              <CardHeader className="pb-1 pt-3 px-3">
+                <CardTitle className="text-xs font-medium text-gray-500">{t('year_remaining')}</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-3 px-3">
+                <p className={`text-sm font-bold font-mono ${
+                  st.yearRemaining < -0.01 ? 'text-blue-600'
+                  : st.yearRemaining < 0.01 ? 'text-green-600'
+                  : 'text-gray-800'
+                }`}>
+                  {st.yearRemaining < -0.01 ? `+${fmt(-st.yearRemaining)} ${t('receivable')}`
+                    : st.yearRemaining < 0.01 ? t('full_paid')
+                    : fmt(st.yearRemaining)}
                 </p>
               </CardContent>
             </Card>
