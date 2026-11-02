@@ -19,12 +19,5 @@ export function chargeStatus(amountDue: number, paid: number, dueDate: string, t
   return paid > 0.01 ? 'partial' : 'pending'
 }
 
-// Ünvan/açıklama metninden daire numarası tahmini: "A-5", "a 5", "Daire B7", "F-12" …
-export function guessApartment(text: string, known: string[]): string | null {
-  const re = /\b([A-Fa-f])\s*[-–/]?\s*(\d{1,2})\b/g
-  for (const m of text.matchAll(re)) {
-    const apt = `${m[1].toUpperCase()}-${Number(m[2])}`
-    if (known.includes(apt)) return apt
-  }
-  return null
-}
+// Ünvan/açıklama metninden daire numarası tahmini (ortak yardımcı)
+export { guessApartmentFromText as guessApartment } from './reconcile'

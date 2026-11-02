@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { AlertCircle, CheckCircle2, Clock, Droplets, Link2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { chargeStatus, guessApartment, isShop, type ChargeStatus } from '@/lib/special-charges'
 import type { Income, SpecialCharge, SpecialChargeItem, SpecialChargePayment } from '@/types'
@@ -63,7 +64,7 @@ export default async function SpecialChargesPage({
     supabase.from('special_charge_items').select('*').eq('charge_id', charge.id),
     supabase.from('special_charge_payments').select('*').eq('charge_id', charge.id).order('payment_date'),
     supabase.from('profiles').select('full_name, apartment_no').not('apartment_no', 'is', null),
-    supabase.from('payments').select('income_id').not('income_id', 'is', null),
+    fetchAll<{ income_id: string }>((f, t) => supabase.from('payments').select('income_id').not('income_id', 'is', null).order('id').range(f, t)),
   ])
 
   const items = ((itemsRes.data ?? []) as SpecialChargeItem[]).sort((a, b) => aptSort(a.apartment_no, b.apartment_no))
@@ -120,11 +121,13 @@ export default async function SpecialChargesPage({
     ...payments.map(p => p.income_id).filter(Boolean) as string[],
   ])
   const sinceDate = new Date(new Date(charge.due_date).getTime() - 365 * 86400000).toISOString().slice(0, 10)
-  const { data: incomeData } = await supabase
+  const { data: incomeData } = await fetchAll<Pick<Income, 'id' | 'date' | 'title' | 'description' | 'category' | 'amount' | 'apartment_no'>>((f, t) => supabase
     .from('income')
     .select('id, date, title, description, category, amount, apartment_no')
     .gte('date', sinceDate)
     .order('date', { ascending: false })
+    .order('id')
+    .range(f, t))
 
   const knownApts = items.map(i => i.apartment_no)
   const dueAmounts = new Set(items.map(i => Number(i.amount_due)).filter(a => a > 0))

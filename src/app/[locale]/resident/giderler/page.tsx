@@ -1,6 +1,7 @@
 import { TrendingDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency } from '@/lib/utils'
 import { Expense, BudgetItem } from '@/types'
 import { ExpenseTable } from '@/app/admin/giderler/expense-table'
@@ -19,7 +20,7 @@ export default async function ResidentGiderlerPage({
 
   const supabase = await createClient()
   const [{ data }, { data: budgetData }] = await Promise.all([
-    supabase.from('expenses').select('*').order('date', { ascending: false }),
+    fetchAll<Expense>((f, t) => supabase.from('expenses').select('*').order('date', { ascending: false }).order('id').range(f, t)),
     supabase.from('budget_items').select('*').order('sort_order'),
   ])
   const expenseList: Expense[]    = data ?? []

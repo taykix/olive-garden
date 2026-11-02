@@ -3,6 +3,7 @@ import { StatCard } from '@/components/shared/stat-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { getPeriod, getTreasuryRange, PERIODS, ACTIVE_PERIOD, duesStatus } from '@/lib/periods'
@@ -24,9 +25,9 @@ export default async function AdminDashboard({
   const supabase = await createClient()
 
   const [incomeRes, expenseRes, paymentsRes, settingsRes, announcementsRes] = await Promise.all([
-    supabase.from('income').select('date, amount'),
-    supabase.from('expenses').select('date, amount'),
-    supabase.from('payments').select('apartment_no, resident_name, amount_paid').eq('period_id', period.id),
+    fetchAll<{ date: string; amount: number }>((f, t) => supabase.from('income').select('date, amount').order('id').range(f, t)),
+    fetchAll<{ date: string; amount: number }>((f, t) => supabase.from('expenses').select('date, amount').order('id').range(f, t)),
+    fetchAll<{ apartment_no: string; resident_name: string | null; amount_paid: number }>((f, t) => supabase.from('payments').select('apartment_no, resident_name, amount_paid').eq('period_id', period.id).order('id').range(f, t)),
     supabase.from('apartment_settings').select('apartment_no, annual_due, previous_balance').eq('period_id', period.id),
     supabase.from('announcements').select('id, title, published, created_at').order('created_at', { ascending: false }).limit(5),
   ])

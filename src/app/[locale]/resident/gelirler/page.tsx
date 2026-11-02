@@ -1,6 +1,7 @@
 import { TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency } from '@/lib/utils'
 import { Income } from '@/types'
 import { IncomeTable } from '@/app/admin/gelirler/income-table'
@@ -18,7 +19,7 @@ export default async function ResidentGelirlerPage({
   const t = await getTranslations('gelirler')
 
   const supabase = await createClient()
-  const { data } = await supabase.from('income').select('*').order('date', { ascending: false })
+  const { data } = await fetchAll<Income>((f, t) => supabase.from('income').select('*').order('date', { ascending: false }).order('id').range(f, t))
   const incomeList: Income[] = data ?? []
   const total = incomeList.reduce((s, r) => s + Number(r.amount), 0)
 

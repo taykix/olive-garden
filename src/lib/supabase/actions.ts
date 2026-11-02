@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from './server'
 import { createAdminClient } from './admin'
-import { getPeriod, ACTIVE_PERIOD, BUDGET_BASE_PERIOD_ID, PERIODS } from '@/lib/periods'
+import { getPeriod, ACTIVE_PERIOD, BUDGET_BASE_PERIOD_ID, PERIODS, periodOfPayment } from '@/lib/periods'
+import { isAidatCategory as isAidatCat } from '@/lib/reconcile'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -131,7 +132,7 @@ export async function createIncome(data: {
   // Aidat gelirleri elle eklenmez — "Aidat / Ödeme Takibi" sayfasından girilir ve
   // ödeme kaydıyla birlikte gelire otomatik yansır. Aksi halde aidat tablosuyla
   // bağı kopuk kayıtlar oluşuyor (bkz. ödeme→gelir senkronu tek yönlü).
-  if ((data.category || '').trim().toLowerCase() === 'aidat') {
+  if (isAidatCat(data.category)) {
     return { error: 'Aidat gelirleri buradan eklenemez. Lütfen "Aidat / Ödeme Takibi" sayfasından ödeme girin — gelire otomatik yansır.' }
   }
 
@@ -162,15 +163,41 @@ export async function updateIncome(
   }
 ) {
   const supabase = await createClient()
-  const { error } = await supabase.from('income').update(data).eq('id', id)
+
+  // Bu gelir bir aidat ödemesine bağlı mı?
+  const [{ data: linkedPayment }, { data: current }] = await Promise.all([
+    supabase.from('payments').select('id').eq('income_id', id).maybeSingle(),
+    supabase.from('income').select('category').eq('id', id).maybeSingle(),
+  ])
+
+  // Bağlantısız bir geliri sonradan "Aidat" yapmak tabloyu bozar → engelle.
+  // (Zaten Aidat olan bağlantısız eski kayıtların düzenlenmesine izin verilir; Mutabakat'tan bağlanmalı.)
+  if (!linkedPayment && isAidatCat(data.category) && !isAidatCat(current?.category)) {
+    return { error: 'Aidat gelirleri buradan eklenemez. Ödemeyi "Aidat / Ödeme Takibi" sayfasından girin ya da Mutabakat sayfasından bir ödemeye bağlayın.' }
+  }
+
+  // Bağlı aidat gelirinin kategorisi değiştirilemez (aksi halde aidat tablosuyla bağ kopar)
+  const payload = linkedPayment ? { ...data, category: 'Aidat' } : data
+
+  const { error } = await supabase.from('income').update(payload).eq('id', id)
   if (error) return { error: error.message }
+
+  // Aidat tablosu ile Gelirler senkron kalsın: tutar/tarih değişikliği ödemeye de yansır.
+  // (Eskiden yansımıyordu — aidat tablosu ile gelirlerin ayrışmasının ana sebebi.)
+  if (linkedPayment) {
+    const { error: pErr } = await supabase.from('payments')
+      .update({ amount_paid: data.amount, payment_date: data.date })
+      .eq('id', linkedPayment.id)
+    if (pErr) return { error: `Gelir güncellendi ama aidat kaydı güncellenemedi: ${pErr.message}` }
+  }
+
   // Gelir bir ek ödemeye (ör. ASKİ) bağlıysa tutar/tarih senkron kalsın
   await supabase.from('special_charge_payments')
     .update({ amount_paid: data.amount, payment_date: data.date })
     .eq('income_id', id)
   revalidatePath('/admin/gelirler')
   revalidatePath('/admin/ek-odemeler')
-  revalidatePath('/admin')
+  revalidateAidat()
   return { success: true }
 }
 
@@ -243,6 +270,37 @@ export async function deleteExpense(id: string) {
 
 // ─── Payments ────────────────────────────────────────────────────────────────
 
+// Aidat ödemesinin Gelirler'deki karşılığı (başlık/açıklama/tarih) — tek kaynak.
+function aidatIncomeFields(d: {
+  apartment_no: string
+  resident_name?: string | null
+  month: number
+  year: number
+  amount_paid?: number | null
+  payment_date?: string | null
+  serial_no?: string | null
+}) {
+  const TR_MONTHS = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
+  const monthName = TR_MONTHS[d.month] ?? ''
+  const namePart = d.resident_name ? ` · ${d.resident_name}` : ''
+  const siraPrefix = d.serial_no ? `Defter Sıra No: ${d.serial_no} · ` : ''
+  return {
+    date: d.payment_date || `${d.year}-${String(d.month).padStart(2, '0')}-01`,
+    title: d.resident_name ? `${d.resident_name} - Aidat Ödemesi` : `Daire ${d.apartment_no} - Aidat Ödemesi`,
+    description: `${siraPrefix}Daire ${d.apartment_no}${namePart} · ${monthName} ${d.year} Aidat Ödemesi`,
+    category: 'Aidat',
+    amount: Number(d.amount_paid ?? 0),
+    apartment_no: d.apartment_no,
+  }
+}
+
+function revalidateAidat() {
+  revalidatePath('/admin/odemeler')
+  revalidatePath('/admin/odemeler/mutabakat')
+  revalidatePath('/admin/gelirler')
+  revalidatePath('/admin')
+}
+
 export async function createPayment(data: {
   apartment_no: string
   resident_name?: string
@@ -260,34 +318,20 @@ export async function createPayment(data: {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { serial_no, ...paymentData } = data
+  const paid = Number(data.amount_paid ?? 0)
 
-  // income tablosuna Aidat kaydı ekle
-  const TR_MONTHS = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
-  const incomeDate = data.payment_date
-    ?? `${data.year}-${String(data.month).padStart(2, '0')}-01`
-  const monthName = TR_MONTHS[data.month] ?? ''
-  const namePart = data.resident_name ? ` · ${data.resident_name}` : ''
-  const incomeTitle = data.resident_name
-    ? `${data.resident_name} - Aidat Ödemesi`
-    : `Daire ${data.apartment_no} - Aidat Ödemesi`
-  const siraPrefix = serial_no ? `Defter Sıra No: ${serial_no} · ` : ''
-  const incomeDescription = `${siraPrefix}Daire ${data.apartment_no}${namePart} · ${monthName} ${data.year} Aidat Ödemesi`
-
-  const { data: incomeRow, error: incomeError } = await supabase
-    .from('income')
-    .insert({
-      date: incomeDate,
-      title: incomeTitle,
-      description: incomeDescription ?? null,
-      category: 'Aidat',
-      amount: data.amount_paid ?? 0,
-      apartment_no: data.apartment_no,
-      created_by: user?.id ?? null,
-    })
-    .select('id')
-    .single()
-
-  const income_id = incomeError ? null : (incomeRow?.id as string)
+  // Yalnızca pozitif tahsilatlar gelire yansır (gelir tutarı > 0 olmak zorunda).
+  // Eskiden gelir eklenemezse ödeme yine de bağlantısız kaydediliyordu → tablolar ayrışıyordu.
+  let income_id: string | null = null
+  if (paid > 0) {
+    const { data: incomeRow, error: incomeError } = await supabase
+      .from('income')
+      .insert({ ...aidatIncomeFields(data), created_by: user?.id ?? null })
+      .select('id')
+      .single()
+    if (incomeError || !incomeRow) return { error: `Gelir kaydı oluşturulamadı: ${incomeError?.message ?? ''}` }
+    income_id = incomeRow.id as string
+  }
 
   const { error } = await supabase.from('payments').insert({
     ...paymentData,
@@ -300,9 +344,7 @@ export async function createPayment(data: {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/odemeler')
-  revalidatePath('/admin/gelirler')
-  revalidatePath('/admin')
+  revalidateAidat()
   return { success: true }
 }
 
@@ -322,43 +364,40 @@ export async function updatePayment(
   }
 ) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Mevcut income_id'yi al
   const { data: existing } = await supabase
-    .from('payments')
-    .select('income_id')
-    .eq('id', id)
-    .maybeSingle()
+    .from('payments').select('income_id').eq('id', id).maybeSingle()
+  let income_id = (existing?.income_id as string | null) ?? null
+  const paid = Number(data.amount_paid ?? 0)
+  const fields = aidatIncomeFields(data)
 
-  const income_id = existing?.income_id as string | null
-
-  if (income_id) {
-    const TR_MONTHS = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
-    const incomeDate = data.payment_date
-      ?? `${data.year}-${String(data.month).padStart(2, '0')}-01`
-    const monthName = TR_MONTHS[data.month] ?? ''
-    const namePart = data.resident_name ? ` · ${data.resident_name}` : ''
-    const incomeTitle = data.resident_name
-      ? `${data.resident_name} - Aidat Ödemesi`
-      : `Daire ${data.apartment_no} - Aidat Ödemesi`
-    const siraPrefix = data.serial_no ? `Defter Sıra No: ${data.serial_no} · ` : ''
-    const incomeDescription = `${siraPrefix}Daire ${data.apartment_no}${namePart} · ${monthName} ${data.year} Aidat Ödemesi`
-    await supabase.from('income').update({
-      date: incomeDate,
-      title: incomeTitle,
-      description: incomeDescription,
-      amount: data.amount_paid ?? 0,
-    }).eq('id', income_id)
+  if (paid > 0 && income_id) {
+    // Bağlı geliri ödemeyle birebir eşitle (daire no ve kategori dahil)
+    const { error } = await supabase.from('income').update(fields).eq('id', income_id)
+    if (error) return { error: `Gelir kaydı güncellenemedi: ${error.message}` }
+  } else if (paid > 0 && !income_id) {
+    // Gelirsiz ödemeye gelir kaydı oluştur
+    const { data: row, error } = await supabase
+      .from('income').insert({ ...fields, created_by: user?.id ?? null }).select('id').single()
+    if (error || !row) return { error: `Gelir kaydı oluşturulamadı: ${error?.message ?? ''}` }
+    income_id = row.id as string
   }
 
   const { error } = await supabase.from('payments').update({
     ...data,
     serial_no: data.serial_no ?? null,
+    income_id: paid > 0 ? income_id : null,
   }).eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/odemeler')
-  revalidatePath('/admin/gelirler')
-  revalidatePath('/admin')
+
+  // Tutar 0/negatif yapıldıysa artık gelir karşılığı yok → eski geliri kaldır.
+  // (Önce bağlantı koparıldı; aksi halde ON DELETE CASCADE ödemeyi de silerdi.)
+  if (paid <= 0 && income_id) {
+    await supabase.from('income').delete().eq('id', income_id)
+  }
+
+  revalidateAidat()
   return { success: true }
 }
 
@@ -478,6 +517,12 @@ export async function bulkImportData(
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Aidat gelirleri toplu aktarımla da eklenmez (aidat tablosuyla bağı kopuk kayıt oluşturur)
+  const aidatRows = incomeRows.filter(r => isAidatCat(r.category))
+  if (aidatRows.length) {
+    return { error: `${aidatRows.length} satır "Aidat" kategorisinde. Aidat ödemelerini "Aidat / Ödeme Takibi" sayfasından girin; gelire otomatik yansır.` }
+  }
 
   const incomeData = incomeRows.map((r) => ({ ...r, created_by: user?.id }))
   const expenseData = expenseRows.map((r) => ({ ...r, created_by: user?.id }))
@@ -1255,5 +1300,136 @@ export async function updateSpecialChargeItem(chargeId: string, apartmentNo: str
   )
   if (error) return { error: error.message }
   revalidateSpecialCharges()
+  return { success: true }
+}
+
+// ─── Aidat ↔ Gelirler mutabakatı: düzeltme işlemleri ──────────────────────────
+
+type PaymentRow = {
+  id: string; apartment_no: string; resident_name: string | null; month: number; year: number
+  amount_paid: number; payment_date: string | null; income_id: string | null; serial_no: string | null
+}
+
+async function loadPayment(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
+  const { data } = await supabase
+    .from('payments')
+    .select('id, apartment_no, resident_name, month, year, amount_paid, payment_date, income_id, serial_no')
+    .eq('id', id).maybeSingle()
+  return data as PaymentRow | null
+}
+
+// Aidat tablosu esas alınır → bağlı gelir kaydı ödemeye eşitlenir (tutar, tarih, daire, kategori).
+export async function reconSyncIncomeFromPayment(paymentId: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  const p = await loadPayment(supabase, paymentId)
+  if (!p?.income_id) return { error: 'Ödemeye bağlı gelir kaydı yok.' }
+  if (!(Number(p.amount_paid) > 0)) return { error: 'Ödeme tutarı 0 veya negatif; gelire yansıtılamaz.' }
+  const { error } = await supabase.from('income').update(aidatIncomeFields(p)).eq('id', p.income_id)
+  if (error) return { error: error.message }
+  revalidateAidat()
+  return { success: true }
+}
+
+// Gelirler esas alınır → aidat kaydının tutarı/tarihi gelire eşitlenir; gelirin daire/kategori bilgisi düzeltilir.
+export async function reconSyncPaymentFromIncome(paymentId: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  const p = await loadPayment(supabase, paymentId)
+  if (!p?.income_id) return { error: 'Ödemeye bağlı gelir kaydı yok.' }
+  const { data: inc } = await supabase.from('income').select('amount, date').eq('id', p.income_id).maybeSingle()
+  if (!inc) return { error: 'Gelir kaydı bulunamadı.' }
+  const { error } = await supabase.from('payments')
+    .update({ amount_paid: Number(inc.amount), payment_date: inc.date }).eq('id', p.id)
+  if (error) return { error: error.message }
+  await supabase.from('income').update({ category: 'Aidat', apartment_no: p.apartment_no }).eq('id', p.income_id)
+  revalidateAidat()
+  return { success: true }
+}
+
+// Gelirsiz ödemeye gelir kaydı oluşturur.
+export async function reconCreateIncomeForPayment(paymentId: string) {
+  const { supabase, user, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  const p = await loadPayment(supabase, paymentId)
+  if (!p) return { error: 'Ödeme bulunamadı.' }
+  if (p.income_id) return { error: 'Bu ödemenin zaten gelir kaydı var.' }
+  if (!(Number(p.amount_paid) > 0)) return { error: 'Ödeme tutarı 0 veya negatif; gelir oluşturulamaz.' }
+  const { data: row, error } = await supabase
+    .from('income').insert({ ...aidatIncomeFields(p), created_by: user?.id ?? null }).select('id').single()
+  if (error || !row) return { error: error?.message ?? 'Gelir oluşturulamadı.' }
+  const { error: uErr } = await supabase.from('payments').update({ income_id: row.id }).eq('id', p.id)
+  if (uErr) {
+    await supabase.from('income').delete().eq('id', row.id)
+    return { error: uErr.message }
+  }
+  revalidateAidat()
+  return { success: true }
+}
+
+// Bağlantısız bir "Aidat" gelirini gelirsiz bir ödemeye bağlar (tutarlar farklıysa sonra eşitlenebilir).
+export async function reconLinkIncomeToPayment(incomeId: string, paymentId: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  const p = await loadPayment(supabase, paymentId)
+  if (!p) return { error: 'Ödeme bulunamadı.' }
+  if (p.income_id) return { error: 'Bu ödemenin zaten gelir kaydı var.' }
+  const { data: taken } = await supabase.from('payments').select('id').eq('income_id', incomeId).maybeSingle()
+  if (taken) return { error: 'Bu gelir başka bir ödemeye bağlı.' }
+  const { error } = await supabase.from('payments').update({ income_id: incomeId }).eq('id', p.id)
+  if (error) return { error: error.message }
+  await supabase.from('income').update({ category: 'Aidat', apartment_no: p.apartment_no }).eq('id', incomeId)
+  revalidateAidat()
+  return { success: true }
+}
+
+// Bağlantısız "Aidat" gelirinden aidat ödemesi oluşturur (ay/yıl gelir tarihinden).
+export async function reconCreatePaymentFromIncome(incomeId: string, apartmentNo: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!apartmentNo) return { error: 'Daire seçin.' }
+  const [{ data: inc }, { data: taken }] = await Promise.all([
+    supabase.from('income').select('id, date, amount, title').eq('id', incomeId).maybeSingle(),
+    supabase.from('payments').select('id').eq('income_id', incomeId).maybeSingle(),
+  ])
+  if (!inc) return { error: 'Gelir kaydı bulunamadı.' }
+  if (taken) return { error: 'Bu gelir zaten bir ödemeye bağlı.' }
+
+  const [y, m] = (inc.date as string).split('-').map(Number)
+  const period = periodOfPayment(y, m)
+  if (!period) return { error: `${inc.date} tarihi hiçbir aidat dönemine düşmüyor.` }
+  const { data: sett } = await supabase.from('apartment_settings')
+    .select('annual_due').eq('apartment_no', apartmentNo).eq('period_id', period.id).maybeSingle()
+  const annual = Number(sett?.annual_due ?? 0)
+  const amount = Number(inc.amount)
+
+  const { error } = await supabase.from('payments').insert({
+    apartment_no: apartmentNo,
+    month: m,
+    year: y,
+    amount_due: annual > 0 ? annual : amount,
+    amount_paid: amount,
+    payment_status: annual > 0 && amount < annual ? 'partial' : 'paid',
+    payment_date: inc.date,
+    note: 'Mutabakat: gelir kaydından oluşturuldu',
+    income_id: incomeId,
+    period_id: period.id,
+  })
+  if (error) return { error: error.message }
+  await supabase.from('income').update({ category: 'Aidat', apartment_no: apartmentNo }).eq('id', incomeId)
+  revalidateAidat()
+  return { success: true }
+}
+
+// Yanlışlıkla "Aidat" kategorisine girilmiş (aidat olmayan) geliri başka kategoriye taşır.
+export async function reconRecategorizeIncome(incomeId: string, category: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!category || isAidatCat(category)) return { error: 'Geçerli bir kategori seçin.' }
+  const { data: taken } = await supabase.from('payments').select('id').eq('income_id', incomeId).maybeSingle()
+  if (taken) return { error: 'Bu gelir bir aidat ödemesine bağlı; kategorisi değiştirilemez.' }
+  const { error } = await supabase.from('income').update({ category }).eq('id', incomeId)
+  if (error) return { error: error.message }
+  revalidateAidat()
   return { success: true }
 }

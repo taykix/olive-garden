@@ -18,6 +18,7 @@ import { createPayment, updatePayment, deletePayment } from '@/lib/supabase/acti
 import { createClient } from '@/lib/supabase/client'
 import { MONTHS } from '@/lib/utils'
 import { Payment } from '@/types'
+import { ACTIVE_PERIOD } from '@/lib/periods'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
 interface PaymentFormProps {
@@ -35,7 +36,8 @@ async function lookupApartment(aptNo: string): Promise<{ name: string; annualDue
 
   const [{ data: payData }, { data: settData }, { data: profData }] = await Promise.all([
     supabase.from('payments').select('resident_name').eq('apartment_no', aptNo).not('resident_name', 'is', null).limit(1),
-    supabase.from('apartment_settings').select('annual_due').eq('apartment_no', aptNo).maybeSingle(),
+    // Dönem bazlı: aynı daire için her dönemin ayrı satırı var (maybeSingle aksi halde hata verir)
+    supabase.from('apartment_settings').select('annual_due').eq('apartment_no', aptNo).eq('period_id', ACTIVE_PERIOD.id).maybeSingle(),
     supabase.from('profiles').select('full_name').eq('apartment_no', aptNo).maybeSingle(),
   ])
 

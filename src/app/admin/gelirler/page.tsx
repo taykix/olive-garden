@@ -1,6 +1,7 @@
 import { TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency } from '@/lib/utils'
 import { IncomeForm } from '@/components/admin/income-form'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -11,10 +12,12 @@ export const dynamic = 'force-dynamic'
 
 export default async function GelirlerPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data, error } = await fetchAll<Income>((f, t) => supabase
     .from('income')
     .select('*')
     .order('date', { ascending: false })
+    .order('id')
+    .range(f, t))
 
   const incomeList: Income[] = data ?? []
   const total = incomeList.reduce((s, r) => s + Number(r.amount), 0)

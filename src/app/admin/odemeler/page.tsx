@@ -1,6 +1,7 @@
-import { AlertCircle, CheckCircle2, FileSpreadsheet, Plus } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FileSpreadsheet, Plus, Scale } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, MONTHS, getMonthName } from '@/lib/utils'
 import { PaymentForm } from '@/components/admin/payment-form'
 import { PrintButton } from '@/app/admin/raporlar/print-button'
@@ -105,7 +106,7 @@ export default async function OdemelerPage({
 
   const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
     supabase.from('apartment_settings').select('*').eq('period_id', period.id).order('apartment_no'),
-    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no'),
+    fetchAll<Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>>((f, t) => supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no').order('id').range(f, t)),
   ])
 
   const table    = buildTable(settingsData ?? [], paymentsData ?? [], period)
@@ -152,6 +153,12 @@ export default async function OdemelerPage({
           <PeriodSelector options={periodOptions} value={period.id} />
           {isActivePeriod && <SeedPeriodButton periodId={period.id} periodLabel={period.label} />}
           {table.length > 0 && <PrintButton />}
+          <Link href={`/admin/odemeler/mutabakat?period=${period.id}`}>
+            <Button variant="outline" size="sm" className="gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Scale className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Gelirlerle Mutabakat</span>
+            </Button>
+          </Link>
           <Link href="/admin/odemeler/toplu">
             <Button variant="outline" size="sm" className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50">
               <FileSpreadsheet className="h-3.5 w-3.5" />

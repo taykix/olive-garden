@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Payment, ApartmentSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -50,7 +51,7 @@ export default async function ResidentOdemelerPage({
 
   const [{ data: settingsData }, { data: paymentsData }] = await Promise.all([
     supabase.from('apartment_settings').select('*').eq('period_id', period.id).order('apartment_no'),
-    supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no'),
+    fetchAll<Pick<Payment, 'apartment_no' | 'resident_name' | 'month' | 'year' | 'amount_due' | 'amount_paid'>>((f, t) => supabase.from('payments').select('apartment_no, resident_name, month, year, amount_due, amount_paid').eq('period_id', period.id).order('apartment_no').order('id').range(f, t)),
   ])
 
   const settings: ApartmentSettings[] = settingsData ?? []

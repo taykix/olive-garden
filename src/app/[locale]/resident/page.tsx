@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { TrendingUp, TrendingDown, Wallet, Megaphone, Home, Droplets } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils'
 import { chargeStatus } from '@/lib/special-charges'
 import { Payment, ApartmentSettings, SpecialCharge, SpecialChargeItem, SpecialChargePayment } from '@/types'
@@ -32,8 +33,8 @@ export default async function ResidentPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   const [incomeRes, expenseRes, announcementsRes, profileRes] = await Promise.all([
-    supabase.from('income').select('amount, date'),
-    supabase.from('expenses').select('amount, date'),
+    fetchAll<{ amount: number; date: string }>((f, t) => supabase.from('income').select('amount, date').order('id').range(f, t)),
+    fetchAll<{ amount: number; date: string }>((f, t) => supabase.from('expenses').select('amount, date').order('id').range(f, t)),
     supabase
       .from('announcements')
       .select('*')

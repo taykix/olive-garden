@@ -4,6 +4,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, getMonthName } from '@/lib/utils'
 import { Income, Expense, BudgetItem } from '@/types'
 import { BudgetPlan } from '@/app/admin/raporlar/budget-plan'
@@ -55,8 +56,8 @@ export default async function ResidentRaporlarPage({
 
   const supabase = await createClient()
   const [incomeRes, expenseRes, budgetRes, plan2026] = await Promise.all([
-    supabase.from('income').select('*').order('date', { ascending: false }),
-    supabase.from('expenses').select('*').order('date', { ascending: false }),
+    fetchAll<Income>((f, t) => supabase.from('income').select('*').order('date', { ascending: false }).order('id').range(f, t)),
+    fetchAll<Expense>((f, t) => supabase.from('expenses').select('*').order('date', { ascending: false }).order('id').range(f, t)),
     supabase.from('budget_items').select('*').order('sort_order'),
     getActivePlanPlannedMap(supabase),
   ])

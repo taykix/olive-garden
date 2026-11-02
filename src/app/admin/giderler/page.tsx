@@ -1,6 +1,7 @@
 import { TrendingDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency } from '@/lib/utils'
 import { ExpenseForm } from '@/components/admin/expense-form'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export default async function GiderlerPage() {
   const supabase = await createClient()
   const [{ data, error }, { data: budgetData }] = await Promise.all([
-    supabase.from('expenses').select('*').order('date', { ascending: false }),
+    fetchAll<Expense>((f, t) => supabase.from('expenses').select('*').order('date', { ascending: false }).order('id').range(f, t)),
     supabase.from('budget_items').select('*').order('sort_order'),
   ])
 
