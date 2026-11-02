@@ -53,9 +53,7 @@ export function ResidentPlanView({ plan, items, locale, dues }: {
   // kısım havuz ve çatı tamirine ayrılır. Belirlenmemişse eski hesap (toplam ÷ daire sayısı).
   const shares = dues?.shares ?? APT_COUNT
   const surplus = dues ? dues.total - grand : 0
-  const expensesPerApt = grand ? Math.round(grand / shares) : 0
-  const perApt = dues ? dues.full : expensesPerApt
-  const surplusPerApt = dues ? dues.full - expensesPerApt : 0
+  const perApt = dues ? dues.full : (grand ? Math.round(grand / shares) : 0)
 
   function toggle(id: string) {
     setSelected(prev => {
@@ -93,11 +91,6 @@ export function ResidentPlanView({ plan, items, locale, dues }: {
             <div>
               <p className="text-sm text-gray-500">{t('annual_per_apt')}</p>
               <p className="text-3xl font-bold text-green-700 font-mono leading-tight">{fmtC(perApt)} ₺</p>
-              {dues && (
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {t('per_apt_breakdown', { expenses: fmtC(expensesPerApt), surplus: fmtC(surplusPerApt) })}
-                </p>
-              )}
             </div>
           </div>
           {dues ? (
@@ -108,10 +101,10 @@ export function ResidentPlanView({ plan, items, locale, dues }: {
             </div>
             <div>
               <p className="text-xs text-gray-400">{t('surplus_short')}</p>
-              <p className={`font-mono font-semibold ${surplus >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{fmtC(surplus)}</p>
+              <p className={`font-mono font-semibold ${surplus >= 0 ? 'text-gray-700' : 'text-red-600'}`}>{fmtC(surplus)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">{t('dues_total')}</p>
+              <p className="text-xs text-gray-400">{t('grand_total')}</p>
               <p className="font-mono font-bold text-green-700">{fmtC(dues.total)}</p>
             </div>
           </div>
@@ -196,32 +189,21 @@ export function ResidentPlanView({ plan, items, locale, dues }: {
                     </tr>
                   )
                 })}
-                {dues && (
-                  <tr className="border-t border-blue-100 bg-blue-50/50">
-                    <td className="px-2 py-2 text-center"><span className="text-blue-400 text-xs">＋</span></td>
-                    <td className="px-3 py-2 font-medium text-blue-900">{t('surplus_row')}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">{t('type_surplus')}</span>
-                    </td>
-                    <td className="px-3 py-2 text-right font-mono text-gray-300">—</td>
-                    <td className="px-3 py-2 text-gray-500 text-xs whitespace-nowrap">
-                      {t('calc_surplus', { dues: fmtC(dues.total), expenses: fmtC(grand) })}
-                    </td>
-                    <td className={`px-3 py-2 text-right font-mono font-semibold ${surplus >= 0 ? 'text-blue-700' : 'text-red-600'}`}>{fmtC(surplus)}</td>
+                {dues && surplus > 0 && (
+                  <tr className={`border-b border-gray-100 last:border-0 ${active.length % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'}`}>
+                    <td className="px-2 py-2 text-center"><span className="text-gray-300 text-xs">✓</span></td>
+                    <td className="px-3 py-2 text-gray-800">{t('surplus_row')}</td>
+                    <td className="px-3 py-2" />
+                    <td className="px-3 py-2 text-right font-mono text-gray-500">—</td>
+                    <td className="px-3 py-2" />
+                    <td className="px-3 py-2 text-right font-mono text-gray-700">{fmtC(surplus)}</td>
                   </tr>
                 )}
               </tbody>
               <tfoot>
-                {dues && (
-                  <tr className="border-t-2 border-gray-300 bg-gray-50 text-gray-600">
-                    <td className="px-2 py-2" />
-                    <td className="px-3 py-2 text-xs font-medium" colSpan={4}>{t('expenses_total')}</td>
-                    <td className="px-3 py-2 text-right font-mono">{fmtC(grand)}</td>
-                  </tr>
-                )}
-                <tr className={`${dues ? 'border-t' : 'border-t-2'} border-gray-300 bg-gray-100 font-bold`}>
+                <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
                   <td className="px-2 py-2.5" />
-                  <td className="px-3 py-2.5 text-xs text-gray-700" colSpan={4}>{dues ? t('dues_total') : t('grand_total')}</td>
+                  <td className="px-3 py-2.5 text-xs text-gray-700" colSpan={4}>{t('grand_total')}</td>
                   <td className="px-3 py-2.5 text-right font-mono text-green-700">{fmtC(dues ? dues.total : grand)}</td>
                 </tr>
                 <tr className="bg-gray-50 border-t border-gray-200 text-gray-500 italic">
