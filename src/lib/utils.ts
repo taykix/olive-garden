@@ -80,6 +80,7 @@ export const INCOME_CATEGORY_KEY: Record<string, string> = {
   'Kira Geliri': 'rental',
   'Bağış': 'donation',
   'Diğer': 'other',
+  'Su / ASKİ': 'water',
 }
 
 export const EXPENSE_CATEGORY_KEY: Record<string, string> = {

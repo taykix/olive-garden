@@ -5,7 +5,7 @@
     "payments": "Beiträge", "announcements": "Ankündigungen",
     "annual_works": "Jahresarbeiten", "reports": "Berichte",
     "import": "Daten importieren", "users": "Benutzer", "resident_home": "Startseite",
-    "documents": "Dokumente", "planning": "Planung"
+    "documents": "Dokumente", "planning": "Planung", "special_charges": "Sonderzahlungen"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -178,6 +178,18 @@
     "pw_error_match": "Die Passwörter stimmen nicht überein."
   },
   "resident": {
+    "sc_title": "Sonderzahlungen",
+    "sc_due": "Betrag",
+    "sc_paid": "Bezahlt",
+    "sc_remaining": "Offen",
+    "sc_deadline": "Fällig am",
+    "sc_note": "Wird getrennt vom Hausgeld erhoben.",
+    "sc_st_paid": "Bezahlt",
+    "sc_st_partial": "Teilweise bezahlt",
+    "sc_st_overdue": "Überfällig",
+    "sc_st_pending": "Ausstehend",
+    "sc_st_exempt": "Befreit",
+    "sc_st_credit": "Überzahlt",
     "greeting": "Hallo",
     "subtitle": "Olive Garden 3 Bewohnerportal",
     "financial_title": "Finanzübersicht",
@@ -279,7 +291,7 @@
   "income_cat": {
     "all": "Alle Kategorien",
     "aidat": "Hausgeld", "deferred": "Übertrag", "kasa": "Kassenzahlung",
-    "rental": "Mieteinnahmen", "donation": "Spende", "other": "Sonstiges"
+    "rental": "Mieteinnahmen", "donation": "Spende", "other": "Sonstiges", "water": "Wasser / ASKİ"
   },
   "expense_cat": {
     "all": "Alle Kategorien",

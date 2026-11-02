@@ -193,3 +193,33 @@ export interface ApartmentSettings {
   notes: string | null
   updated_at: string
 }
+
+// ─── Ek Ödemeler (aidat dışı tek seferlik tahsilatlar, ör. ASKİ) ───────────────
+
+export interface SpecialCharge {
+  id: string
+  slug: string | null
+  title: string
+  description: string | null
+  due_date: string
+  income_category: string
+  created_at: string
+}
+
+export interface SpecialChargeItem {
+  charge_id: string
+  apartment_no: string
+  amount_due: number
+  note: string | null
+}
+
+export interface SpecialChargePayment {
+  id: string
+  charge_id: string
+  apartment_no: string
+  amount_paid: number
+  payment_date: string
+  note: string | null
+  income_id: string | null
+  created_at: string
+}

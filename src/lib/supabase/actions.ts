@@ -164,7 +164,12 @@ export async function updateIncome(
   const supabase = await createClient()
   const { error } = await supabase.from('income').update(data).eq('id', id)
   if (error) return { error: error.message }
+  // Gelir bir ek ödemeye (ör. ASKİ) bağlıysa tutar/tarih senkron kalsın
+  await supabase.from('special_charge_payments')
+    .update({ amount_paid: data.amount, payment_date: data.date })
+    .eq('income_id', id)
   revalidatePath('/admin/gelirler')
+  revalidatePath('/admin/ek-odemeler')
   revalidatePath('/admin')
   return { success: true }
 }
@@ -175,6 +180,7 @@ export async function deleteIncome(id: string) {
   if (error) return { error: error.message }
   revalidatePath('/admin/gelirler')
   revalidatePath('/admin/odemeler')
+  revalidatePath('/admin/ek-odemeler')
   revalidatePath('/admin')
   return { success: true }
 }
@@ -1103,5 +1109,151 @@ export async function unmergePlanItem(childId: string) {
     .eq('id', childId)
   if (error) return { error: error.message }
   revalidatePath('/admin/planlama')
+  return { success: true }
+}
+
+// ─── Ek Ödemeler (aidat dışı, ör. ASKİ su bağlantısı) ─────────────────────────
+// Ödemeler special_charge_payments tablosunda tutulur ve her biri bir Gelir kaydına
+// (income_id) bağlıdır. Aidat tabloları/hesapları etkilenmez.
+
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { supabase, user: null, error: 'Oturum bulunamadı.' }
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (profile?.role !== 'admin') return { supabase, user, error: 'Bu işlem için yönetici yetkisi gerekli.' }
+  return { supabase, user, error: null }
+}
+
+function revalidateSpecialCharges() {
+  revalidatePath('/admin/ek-odemeler')
+  revalidatePath('/admin/gelirler')
+  revalidatePath('/admin')
+  revalidatePath('/[locale]/resident', 'page')
+}
+
+export async function addSpecialChargePayment(data: {
+  charge_id: string
+  apartment_no: string
+  amount_paid: number
+  payment_date: string
+  resident_name?: string
+  serial_no?: string
+  note?: string
+}) {
+  const { supabase, user, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!(data.amount_paid > 0)) return { error: 'Tutar 0’dan büyük olmalı.' }
+
+  const { data: charge, error: cErr } = await supabase
+    .from('special_charges').select('title, income_category').eq('id', data.charge_id).maybeSingle()
+  if (cErr || !charge) return { error: cErr?.message ?? 'Ödeme tanımı bulunamadı.' }
+
+  const namePart = data.resident_name ? ` · ${data.resident_name}` : ''
+  const siraPrefix = data.serial_no ? `Defter Sıra No: ${data.serial_no} · ` : ''
+  const notePart = data.note ? ` · ${data.note}` : ''
+
+  const { data: incomeRow, error: incErr } = await supabase
+    .from('income')
+    .insert({
+      date: data.payment_date,
+      title: `${data.resident_name || `Daire ${data.apartment_no}`} - ${charge.title}`,
+      description: `${siraPrefix}Daire ${data.apartment_no}${namePart} · ${charge.title}${notePart}`,
+      category: charge.income_category,
+      amount: data.amount_paid,
+      apartment_no: data.apartment_no,
+      created_by: user?.id ?? null,
+    })
+    .select('id')
+    .single()
+  if (incErr || !incomeRow) return { error: incErr?.message ?? 'Gelir kaydı oluşturulamadı.' }
+
+  const { error } = await supabase.from('special_charge_payments').insert({
+    charge_id: data.charge_id,
+    apartment_no: data.apartment_no,
+    amount_paid: data.amount_paid,
+    payment_date: data.payment_date,
+    note: data.note || null,
+    income_id: incomeRow.id,
+  })
+  if (error) {
+    await supabase.from('income').delete().eq('id', incomeRow.id)
+    return { error: error.message }
+  }
+
+  revalidateSpecialCharges()
+  return { success: true }
+}
+
+// Ödemeyi siler. Gelir kaydından oluşturulduysa (removeIncome=true) gelir de silinir;
+// eşleştirmeyi geri almak için removeIncome=false → gelir kalır, yalnızca bağlantı kopar.
+export async function deleteSpecialChargePayment(id: string, removeIncome: boolean) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+
+  const { data: existing } = await supabase
+    .from('special_charge_payments').select('income_id').eq('id', id).maybeSingle()
+  const income_id = existing?.income_id as string | null
+
+  if (removeIncome && income_id) {
+    const { error } = await supabase.from('income').delete().eq('id', income_id) // CASCADE ödemeyi de siler
+    if (error) return { error: error.message }
+  } else {
+    const { error } = await supabase.from('special_charge_payments').delete().eq('id', id)
+    if (error) return { error: error.message }
+  }
+
+  revalidateSpecialCharges()
+  return { success: true }
+}
+
+// Gelirler'e daha önce "normal gelir" olarak girilmiş bir kaydı ek ödemeye bağlar.
+// Gelir tutarı ve tarihi aynen korunur; yalnızca kategori ve daire no güncellenir.
+export async function linkIncomeToSpecialCharge(incomeId: string, chargeId: string, apartmentNo: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!apartmentNo) return { error: 'Daire seçin.' }
+
+  const [{ data: income }, { data: charge }, { data: aidatLink }] = await Promise.all([
+    supabase.from('income').select('id, date, amount').eq('id', incomeId).maybeSingle(),
+    supabase.from('special_charges').select('income_category').eq('id', chargeId).maybeSingle(),
+    supabase.from('payments').select('id').eq('income_id', incomeId).maybeSingle(),
+  ])
+  if (!income) return { error: 'Gelir kaydı bulunamadı.' }
+  if (!charge) return { error: 'Ödeme tanımı bulunamadı.' }
+  if (aidatLink) return { error: 'Bu gelir bir aidat ödemesine bağlı; ek ödemeye bağlanamaz.' }
+
+  const { error } = await supabase.from('special_charge_payments').insert({
+    charge_id: chargeId,
+    apartment_no: apartmentNo,
+    amount_paid: Number(income.amount),
+    payment_date: income.date,
+    income_id: incomeId,
+  })
+  if (error) {
+    if (error.code === '23505') return { error: 'Bu gelir zaten bir ek ödemeye bağlı.' }
+    return { error: error.message }
+  }
+
+  await supabase.from('income')
+    .update({ category: charge.income_category, apartment_no: apartmentNo })
+    .eq('id', incomeId)
+
+  revalidateSpecialCharges()
+  return { success: true }
+}
+
+// Birim borcunu değiştirir (0 = muaf).
+export async function updateSpecialChargeItem(chargeId: string, apartmentNo: string, amountDue: number, note?: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!(amountDue >= 0)) return { error: 'Tutar negatif olamaz.' }
+  const { error } = await supabase.from('special_charge_items').upsert(
+    { charge_id: chargeId, apartment_no: apartmentNo, amount_due: amountDue, note: note || null },
+    { onConflict: 'charge_id,apartment_no' }
+  )
+  if (error) return { error: error.message }
+  revalidateSpecialCharges()
   return { success: true }
 }

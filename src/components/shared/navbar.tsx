@@ -24,6 +24,7 @@ export function Navbar({ role, userName, userEmail, userApartmentNo, showLanguag
     { href: '/admin/gelirler',     label: t('income') },
     { href: '/admin/giderler',     label: t('expenses') },
     { href: '/admin/odemeler',     label: t('payments') },
+    { href: '/admin/ek-odemeler',  label: t('special_charges') },
     { href: '/admin/duyurular',    label: t('announcements') },
     { href: '/admin/yillik-isler', label: t('annual_works') },
     { href: '/admin/belgeler',     label: t('documents') },

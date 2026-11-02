@@ -5,7 +5,7 @@
     "payments": "Взносы", "announcements": "Объявления",
     "annual_works": "Годовые работы", "reports": "Отчёты",
     "import": "Импорт данных", "users": "Пользователи", "resident_home": "Главная",
-    "documents": "Документы", "planning": "Планирование"
+    "documents": "Документы", "planning": "Планирование", "special_charges": "Доп. платежи"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -157,6 +157,18 @@
     "pw_error_match": "Пароли не совпадают."
   },
   "resident": {
+    "sc_title": "Дополнительные платежи",
+    "sc_due": "К оплате",
+    "sc_paid": "Оплачено",
+    "sc_remaining": "Остаток",
+    "sc_deadline": "Срок оплаты",
+    "sc_note": "Взимается отдельно от взносов.",
+    "sc_st_paid": "Оплачено",
+    "sc_st_partial": "Частично оплачено",
+    "sc_st_overdue": "Просрочено",
+    "sc_st_pending": "Ожидается",
+    "sc_st_exempt": "Освобождён",
+    "sc_st_credit": "Переплата",
     "greeting": "Здравствуйте",
     "subtitle": "Портал жителей Olive Garden 3",
     "financial_title": "Финансовая сводка",
@@ -279,7 +291,7 @@
   "income_cat": {
     "all": "Все категории",
     "aidat": "Взносы", "deferred": "Перенос", "kasa": "Кассовый платёж",
-    "rental": "Доходы от аренды", "donation": "Пожертвование", "other": "Прочее"
+    "rental": "Доходы от аренды", "donation": "Пожертвование", "other": "Прочее", "water": "Вода / ASKİ"
   },
   "expense_cat": {
     "all": "Все категории",

@@ -1,9 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { TrendingUp, TrendingDown, Wallet, Megaphone, Home } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Megaphone, Home, Droplets } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, getMonthName } from '@/lib/utils'
-import { Payment, ApartmentSettings } from '@/types'
+import { formatCurrency, formatDate, getMonthName } from '@/lib/utils'
+import { chargeStatus } from '@/lib/special-charges'
+import { Payment, ApartmentSettings, SpecialCharge, SpecialChargeItem, SpecialChargePayment } from '@/types'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
 import { ACTIVE_PERIOD, duesStatus, getTreasuryRange } from '@/lib/periods'
 
@@ -70,6 +71,25 @@ export default async function ResidentPage({
     settings = settRes.data as ApartmentSettings | null
     // Yalnızca aktif döneme ait ödemeler (açık period_id ile)
     payments = ((payRes.data ?? []) as Payment[]).filter(p => p.period_id === ACTIVE_PERIOD.id)
+  }
+
+  // Ek ödemeler (aidat dışı, ör. ASKİ) — tablolar henüz yoksa sessizce atlanır
+  let extraCharges: { charge: SpecialCharge; due: number; paid: number }[] = []
+  if (apartmentNo) {
+    const [chRes, itRes, scPayRes] = await Promise.all([
+      supabase.from('special_charges').select('*').order('due_date', { ascending: false }),
+      supabase.from('special_charge_items').select('*').eq('apartment_no', apartmentNo),
+      supabase.from('special_charge_payments').select('*').eq('apartment_no', apartmentNo),
+    ])
+    const items = (itRes.data ?? []) as SpecialChargeItem[]
+    const scPays = (scPayRes.data ?? []) as SpecialChargePayment[]
+    extraCharges = ((chRes.data ?? []) as SpecialCharge[])
+      .map(charge => ({
+        charge,
+        due: Number(items.find(i => i.charge_id === charge.id)?.amount_due ?? 0),
+        paid: scPays.filter(p => p.charge_id === charge.id).reduce((s, p) => s + Number(p.amount_paid), 0),
+      }))
+      .filter(x => x.due > 0 || x.paid > 0)
   }
 
   const annual_due       = settings?.annual_due ?? 40000
@@ -215,6 +235,54 @@ export default async function ResidentPage({
               </table>
             </CardContent>
           </Card>
+        </section>
+      )}
+
+      {/* Ek ödemeler (aidat dışı) */}
+      {extraCharges.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold text-gray-800 mb-1 flex items-center gap-2">
+            <Droplets className="h-5 w-5 text-sky-500" /> {t('sc_title')}
+          </h2>
+          <p className="text-xs text-gray-400 mb-3">{t('sc_note')}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {extraCharges.map(({ charge, due, paid }) => {
+              const st = chargeStatus(due, paid, charge.due_date)
+              const remaining = due - paid
+              const badge = {
+                paid: 'bg-green-100 text-green-800', credit: 'bg-blue-100 text-blue-700',
+                partial: 'bg-amber-100 text-amber-800', overdue: 'bg-red-100 text-red-700',
+                pending: 'bg-gray-100 text-gray-600', exempt: 'bg-gray-50 text-gray-400',
+              }[st]
+              return (
+                <Card key={charge.id} className={st === 'overdue' ? 'border-red-200' : st === 'paid' ? 'border-green-200' : ''}>
+                  <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-sm font-semibold text-gray-800">{charge.title}</CardTitle>
+                      <p className="text-xs text-gray-400 mt-0.5">{t('sc_deadline')}: {formatDate(charge.due_date)}</p>
+                    </div>
+                    <span className={`rounded px-1.5 py-0.5 text-xs font-medium whitespace-nowrap ${badge}`}>{t(`sc_st_${st}`)}</span>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500">{t('sc_due')}</p>
+                      <p className="font-mono font-semibold text-gray-800">{formatCurrency(due)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">{t('sc_paid')}</p>
+                      <p className="font-mono font-semibold text-green-700">{formatCurrency(paid)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">{t('sc_remaining')}</p>
+                      <p className={`font-mono font-semibold ${remaining > 0.01 ? 'text-red-600' : 'text-gray-400'}`}>
+                        {remaining > 0.01 ? formatCurrency(remaining) : '—'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </section>
       )}
 

@@ -5,7 +5,7 @@
     "payments": "Charges", "announcements": "Annonces",
     "annual_works": "Travaux annuels", "reports": "Rapports",
     "import": "Importer", "users": "Utilisateurs", "resident_home": "Accueil",
-    "documents": "Documents", "planning": "Planification"
+    "documents": "Documents", "planning": "Planification", "special_charges": "Paiements supplémentaires"
   },
   "lang": { "tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "ru": "Русский" },
   "home": {
@@ -157,6 +157,18 @@
     "pw_error_match": "Les mots de passe ne correspondent pas."
   },
   "resident": {
+    "sc_title": "Paiements supplémentaires",
+    "sc_due": "Montant dû",
+    "sc_paid": "Payé",
+    "sc_remaining": "Restant",
+    "sc_deadline": "Échéance",
+    "sc_note": "Perçu séparément des charges.",
+    "sc_st_paid": "Payé",
+    "sc_st_partial": "Partiellement payé",
+    "sc_st_overdue": "En retard",
+    "sc_st_pending": "En attente",
+    "sc_st_exempt": "Exonéré",
+    "sc_st_credit": "Trop-perçu",
     "greeting": "Bonjour",
     "subtitle": "Portail des résidents Olive Garden 3",
     "financial_title": "Résumé financier",
@@ -279,7 +291,7 @@
   "income_cat": {
     "all": "Toutes les catégories",
     "aidat": "Charges", "deferred": "Report", "kasa": "Paiement caisse",
-    "rental": "Revenus locatifs", "donation": "Don", "other": "Autre"
+    "rental": "Revenus locatifs", "donation": "Don", "other": "Autre", "water": "Eau / ASKİ"
   },
   "expense_cat": {
     "all": "Toutes les catégories",
