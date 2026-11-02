@@ -544,7 +544,7 @@ export async function bulkUpsertApartmentSettings(
 // 2026-2027 dönemi aidat kuralları (genel kurul kararı):
 const NEW_PERIOD_DEFAULT_DUE = 50000
 const NEW_PERIOD_EXEMPT_APTS = ['A-6']                       // yönetici → aidattan muaf
-const NEW_PERIOD_HALF_APTS   = ['B-7', 'D-6', 'F-2', 'F-3']  // yönetici yardımcısı (B-7, D-6) + dükkanlar (F-2, F-3) → yarım aidat
+const NEW_PERIOD_HALF_APTS   = ['B-7', 'D-6', 'F-1', 'F-2']  // yönetici yardımcısı (B-7, D-6) + dükkanlar (F-1, F-2) → yarım aidat · F-3, F-4 daire → tam aidat
 
 function newPeriodAnnualDue(apt: string): number {
   if (NEW_PERIOD_EXEMPT_APTS.includes(apt)) return 0
