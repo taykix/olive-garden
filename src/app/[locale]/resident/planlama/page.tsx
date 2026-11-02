@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Plan, PlanItem } from '@/types'
 import { ResidentPlanView } from './resident-plan-view'
 import { Card, CardContent } from '@/components/ui/card'
+import { ACTIVE_PERIOD, PERIODS } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,18 @@ export default async function ResidentPlanlamaPage({
     items = (data ?? []) as PlanItem[]
   }
 
+  // Genel kurulda belirlenen aidat → gerçek aidat geliri (muaf/yarım aidatlı birimler dahil).
+  // Planlanan giderlerden artan tutar havuz ve çatı tamirine ayrılır.
+  let dues: { total: number; full: number; shares: number } | null = null
+  if (plan) {
+    const periodId = PERIODS.find(p => p.id === `p${plan.period}`)?.id ?? ACTIVE_PERIOD.id
+    const { data: sett } = await supabase.from('apartment_settings').select('annual_due').eq('period_id', periodId)
+    const amounts = (sett ?? []).map(s => Number(s.annual_due) || 0)
+    const total = amounts.reduce((a, b) => a + b, 0)
+    const full = amounts.length ? Math.max(...amounts) : 0
+    if (total > 0 && full > 0) dues = { total, full, shares: total / full }
+  }
+
   if (!plan) {
     return (
       <div className="space-y-6">
@@ -44,5 +57,5 @@ export default async function ResidentPlanlamaPage({
     )
   }
 
-  return <ResidentPlanView plan={plan} items={items} locale={locale} />
+  return <ResidentPlanView plan={plan} items={items} locale={locale} dues={dues} />
 }
