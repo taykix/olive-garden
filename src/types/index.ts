@@ -204,6 +204,8 @@ export interface SpecialCharge {
   due_date: string
   income_category: string
   created_at: string
+  title_i18n?: Partial<Record<string, string>> | null
+  description_i18n?: Partial<Record<string, string>> | null
 }
 
 export interface SpecialChargeItem {
@@ -211,6 +213,23 @@ export interface SpecialChargeItem {
   apartment_no: string
   amount_due: number
   note: string | null
+}
+
+// Toplanan ek ödemenin kuruma (ör. ASKİ) aktarılması — dekontuyla birlikte
+export interface SpecialChargeDisbursement {
+  id: string
+  charge_id: string
+  date: string
+  title: string
+  title_i18n: Partial<Record<string, string>> | null
+  recipient: string | null
+  amount: number
+  fee: number
+  reference: string | null
+  receipt_path: string | null
+  receipt_name: string | null
+  expense_id: string | null
+  created_at: string
 }
 
 export interface SpecialChargePayment {

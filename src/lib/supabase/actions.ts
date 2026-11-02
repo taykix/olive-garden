@@ -6,6 +6,7 @@ import { createClient } from './server'
 import { createAdminClient } from './admin'
 import { getPeriod, ACTIVE_PERIOD, BUDGET_BASE_PERIOD_ID, PERIODS, periodOfPayment } from '@/lib/periods'
 import { isAidatCategory as isAidatCat } from '@/lib/reconcile'
+import { RECEIPT_BUCKET, RECEIPT_PREFIX } from '@/lib/special-charges'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -1300,6 +1301,84 @@ export async function updateSpecialChargeItem(chargeId: string, apartmentNo: str
   )
   if (error) return { error: error.message }
   revalidateSpecialCharges()
+  return { success: true }
+}
+
+// ─── Ek Ödemeler: kuruma yapılan ödemeler (ör. ASKİ) + dekontlar ─────────────
+// Dosya istemciden 'documents' bucket'ına (dekontlar/ klasörü) yüklenir; burada yalnızca yolu kaydedilir.
+
+function validReceiptPath(path: string | null | undefined) {
+  return !path || (path.startsWith(RECEIPT_PREFIX) && !path.includes('..'))
+}
+
+export async function addSpecialChargeDisbursement(data: {
+  charge_id: string
+  date: string
+  title: string
+  recipient?: string
+  amount: number
+  fee?: number
+  reference?: string
+  receipt_path?: string | null
+  receipt_name?: string | null
+}) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!data.title.trim()) return { error: 'Açıklama zorunlu.' }
+  if (!(data.amount > 0)) return { error: 'Tutar 0’dan büyük olmalı.' }
+  if (!((data.fee ?? 0) >= 0)) return { error: 'Masraf negatif olamaz.' }
+  if (!validReceiptPath(data.receipt_path)) return { error: 'Geçersiz dosya yolu.' }
+
+  const { error } = await supabase.from('special_charge_disbursements').insert({
+    charge_id: data.charge_id,
+    date: data.date,
+    title: data.title.trim(),
+    recipient: data.recipient?.trim() || null,
+    amount: data.amount,
+    fee: data.fee ?? 0,
+    reference: data.reference?.trim() || null,
+    receipt_path: data.receipt_path || null,
+    receipt_name: data.receipt_name || null,
+  })
+  if (error) {
+    if (data.receipt_path) await supabase.storage.from(RECEIPT_BUCKET).remove([data.receipt_path])
+    if (error.code === '23505') return { error: 'Bu dekont numarası zaten kayıtlı.' }
+    return { error: error.message }
+  }
+  revalidateSpecialCharges()
+  revalidatePath('/[locale]/resident/odemeler', 'page')
+  return { success: true }
+}
+
+// Dekontu ekler/değiştirir; eski dosya silinir.
+export async function setSpecialChargeDisbursementReceipt(id: string, receiptPath: string, receiptName: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  if (!receiptPath || !validReceiptPath(receiptPath)) return { error: 'Geçersiz dosya yolu.' }
+  const { data: existing } = await supabase
+    .from('special_charge_disbursements').select('receipt_path').eq('id', id).maybeSingle()
+  if (!existing) return { error: 'Kayıt bulunamadı.' }
+  const { error } = await supabase.from('special_charge_disbursements')
+    .update({ receipt_path: receiptPath, receipt_name: receiptName }).eq('id', id)
+  if (error) return { error: error.message }
+  if (existing.receipt_path && existing.receipt_path !== receiptPath) {
+    await supabase.storage.from(RECEIPT_BUCKET).remove([existing.receipt_path])
+  }
+  revalidateSpecialCharges()
+  revalidatePath('/[locale]/resident/odemeler', 'page')
+  return { success: true }
+}
+
+export async function deleteSpecialChargeDisbursement(id: string) {
+  const { supabase, error: authErr } = await requireAdmin()
+  if (authErr) return { error: authErr }
+  const { data: existing } = await supabase
+    .from('special_charge_disbursements').select('receipt_path').eq('id', id).maybeSingle()
+  const { error } = await supabase.from('special_charge_disbursements').delete().eq('id', id)
+  if (error) return { error: error.message }
+  if (existing?.receipt_path) await supabase.storage.from(RECEIPT_BUCKET).remove([existing.receipt_path])
+  revalidateSpecialCharges()
+  revalidatePath('/[locale]/resident/odemeler', 'page')
   return { success: true }
 }
 

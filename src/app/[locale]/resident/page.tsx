@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils'
-import { chargeStatus } from '@/lib/special-charges'
+import { chargeStatus, localized } from '@/lib/special-charges'
 import { Payment, ApartmentSettings, SpecialCharge, SpecialChargeItem, SpecialChargePayment } from '@/types'
 import { ExpandableAnnouncement } from '@/components/shared/expandable-announcement'
 import { ACTIVE_PERIOD, duesStatus, getTreasuryRange } from '@/lib/periods'
@@ -259,7 +259,7 @@ export default async function ResidentPage({
                 <Card key={charge.id} className={st === 'overdue' ? 'border-red-200' : st === 'paid' ? 'border-green-200' : ''}>
                   <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
                     <div>
-                      <CardTitle className="text-sm font-semibold text-gray-800">{charge.title}</CardTitle>
+                      <CardTitle className="text-sm font-semibold text-gray-800">{localized(charge.title, charge.title_i18n, locale)}</CardTitle>
                       <p className="text-xs text-gray-400 mt-0.5">{t('sc_deadline')}: {formatDate(charge.due_date)}</p>
                     </div>
                     <span className={`rounded px-1.5 py-0.5 text-xs font-medium whitespace-nowrap ${badge}`}>{t(`sc_st_${st}`)}</span>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPeriod, PERIODS, ACTIVE_PERIOD, duesStatus, expectedDueToDate, currentInstallment } from '@/lib/periods'
 import { PeriodSelector } from '@/components/shared/period-selector'
+import { ExtraCharges } from './extra-charges'
 
 export const dynamic = 'force-dynamic'
 
@@ -211,7 +212,7 @@ export default async function ResidentOdemelerPage({
               <tfoot>
                 <tr className="border-t-2 border-gray-300 bg-gray-100 font-semibold">
                   <td className="sticky left-0 bg-gray-100 z-10 border-r border-gray-200 px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
-                    TOPLAM
+                    {t('total_row')}
                   </td>
                   <td className={`px-2 py-2 text-right font-mono text-xs whitespace-nowrap ${
                     totalPrev > 0 ? 'text-red-600'
@@ -257,6 +258,8 @@ export default async function ResidentOdemelerPage({
           </div>
         </CardContent>
       </Card>
+
+      {isActivePeriod && <ExtraCharges locale={locale} />}
     </div>
   )
 }

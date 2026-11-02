@@ -1,11 +1,13 @@
 import Link from 'next/link'
-import { AlertCircle, CheckCircle2, Clock, Droplets, Link2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Clock, Download, Droplets, Landmark, Link2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { fetchAll } from '@/lib/supabase/fetch-all'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { chargeStatus, guessApartment, isShop, type ChargeStatus } from '@/lib/special-charges'
-import type { Income, SpecialCharge, SpecialChargeItem, SpecialChargePayment } from '@/types'
+import type { Income, SpecialCharge, SpecialChargeDisbursement, SpecialChargeItem, SpecialChargePayment } from '@/types'
+import { DeleteDisbursementButton, DisbursementDialog, ReceiptUploadButton } from '@/components/admin/special-charge-disbursement-forms'
+import { RECEIPT_BUCKET } from '@/lib/special-charges'
 import {
   LinkIncomeControl,
   SpecialChargeItemDialog,
@@ -60,12 +62,17 @@ export default async function SpecialChargesPage({
     return <p className="text-sm text-gray-500">Henüz tanımlı ek ödeme yok.</p>
   }
 
-  const [itemsRes, paysRes, profilesRes, aidatLinksRes] = await Promise.all([
+  const [itemsRes, paysRes, profilesRes, aidatLinksRes, disbRes] = await Promise.all([
     supabase.from('special_charge_items').select('*').eq('charge_id', charge.id),
     supabase.from('special_charge_payments').select('*').eq('charge_id', charge.id).order('payment_date'),
     supabase.from('profiles').select('full_name, apartment_no').not('apartment_no', 'is', null),
     fetchAll<{ income_id: string }>((f, t) => supabase.from('payments').select('income_id').not('income_id', 'is', null).order('id').range(f, t)),
+    supabase.from('special_charge_disbursements').select('*').eq('charge_id', charge.id).order('date').order('created_at'),
   ])
+  const disbursements = (disbRes.data ?? []) as SpecialChargeDisbursement[]
+  const disbTotal = disbursements.reduce((s, d) => s + Number(d.amount), 0)
+  const disbFees = disbursements.reduce((s, d) => s + Number(d.fee), 0)
+  const receiptUrl = (path: string, name: string | null) => supabase.storage.from(RECEIPT_BUCKET).getPublicUrl(path, { download: name || true }).data.publicUrl
 
   const items = ((itemsRes.data ?? []) as SpecialChargeItem[]).sort((a, b) => aptSort(a.apartment_no, b.apartment_no))
   const payments = (paysRes.data ?? []) as SpecialChargePayment[]
@@ -272,6 +279,77 @@ export default async function SpecialChargesPage({
                   )
                 })}
               </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payments made to the institution (e.g. ASKİ) with receipts */}
+      <Card>
+        <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Landmark className="h-4 w-4 text-sky-600" /> Kuruma yapılan ödemeler
+            </CardTitle>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Toplanan tutarın kuruma aktarımı ve dekontları. Sakinler bu listeyi Aidat / Ödeme Takibi sayfasında görür ve dekontları indirebilir.
+            </p>
+          </div>
+          {!disbRes.error && <span className="print:hidden"><DisbursementDialog chargeId={charge.id} defaultRecipient={disbursements[0]?.recipient ?? undefined} /></span>}
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          {disbRes.error ? (
+            <p className="px-4 py-4 text-sm text-amber-800 bg-amber-50">
+              Tablo bulunamadı. <code className="font-mono">supabase/special-charge-disbursements.sql</code> dosyasını Supabase → SQL Editor&apos;da bir kez çalıştırın.
+            </p>
+          ) : disbursements.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-gray-500 text-center">Henüz kayıt yok.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-200 text-xs text-gray-500">
+                  <th className="text-left px-3 py-2 font-medium">Tarih</th>
+                  <th className="text-left px-3 py-2 font-medium">Açıklama</th>
+                  <th className="text-right px-3 py-2 font-medium">Kuruma geçen</th>
+                  <th className="text-right px-3 py-2 font-medium">Masraf</th>
+                  <th className="text-right px-3 py-2 font-medium">Toplam</th>
+                  <th className="text-left px-3 py-2 font-medium">Dekont</th>
+                  <th className="px-3 py-2 print:hidden" />
+                </tr>
+              </thead>
+              <tbody>
+                {disbursements.map(d => (
+                  <tr key={d.id} className="border-b border-gray-100">
+                    <td className="px-3 py-2 whitespace-nowrap text-gray-600">{formatDate(d.date)}</td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-gray-800">{d.title}</div>
+                      <div className="text-xs text-gray-400">{[d.recipient, d.reference && `No: ${d.reference}`].filter(Boolean).join(' · ')}</div>
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono whitespace-nowrap">{formatCurrency(Number(d.amount))}</td>
+                    <td className="px-3 py-2 text-right font-mono whitespace-nowrap text-gray-500">{Number(d.fee) ? formatCurrency(Number(d.fee)) : '—'}</td>
+                    <td className="px-3 py-2 text-right font-mono whitespace-nowrap font-semibold">{formatCurrency(Number(d.amount) + Number(d.fee))}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {d.receipt_path
+                        ? <a href={receiptUrl(d.receipt_path, d.receipt_name)} rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-sky-700 hover:underline text-xs"><Download className="h-3.5 w-3.5" /> İndir</a>
+                        : <span className="text-xs text-amber-600">Dekont yok</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap print:hidden">
+                      <ReceiptUploadButton id={d.id} hasReceipt={!!d.receipt_path} />
+                      <DeleteDisbursementButton id={d.id} label={d.title} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 font-semibold text-sm">
+                  <td className="px-3 py-2" colSpan={2}>Toplam · tahsil edilen {formatCurrency(totalPaid)} · fark {formatCurrency(totalPaid - disbTotal - disbFees)}</td>
+                  <td className="px-3 py-2 text-right font-mono whitespace-nowrap">{formatCurrency(disbTotal)}</td>
+                  <td className="px-3 py-2 text-right font-mono whitespace-nowrap text-gray-500">{formatCurrency(disbFees)}</td>
+                  <td className="px-3 py-2 text-right font-mono whitespace-nowrap">{formatCurrency(disbTotal + disbFees)}</td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
             </table>
           )}
         </CardContent>

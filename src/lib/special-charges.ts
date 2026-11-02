@@ -21,3 +21,13 @@ export function chargeStatus(amountDue: number, paid: number, dueDate: string, t
 
 // Ünvan/açıklama metninden daire numarası tahmini (ortak yardımcı)
 export { guessApartmentFromText as guessApartment } from './reconcile'
+
+// Çok dilli alan: ilgili dil yoksa Türkçe (temel) metin döner.
+export function localized(base: string, i18n: Partial<Record<string, string>> | null | undefined, locale: string): string {
+  const v = i18n?.[locale]
+  return v && v.trim() ? v : base
+}
+
+// Dekontlar 'documents' bucket'ında bu klasörde tutulur.
+export const RECEIPT_BUCKET = 'documents'
+export const RECEIPT_PREFIX = 'dekontlar/'
