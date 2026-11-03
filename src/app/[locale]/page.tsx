@@ -62,8 +62,9 @@ export default async function HomePage({
 
       {/* ── Hero: Tam ekran video (yedek: fotoğraf) ─────────────────────────── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Yedek görsel = videonun ilk karesi; video başlayınca geçiş fark edilmez */}
         <Image
-          src="/images/olive-grove.jpg"
+          src="/videos/hero-poster.jpg"
           alt="Olive Garden 3 - Didim Akbük"
           fill
           className="object-cover"
