@@ -65,8 +65,9 @@ export default async function SpecialChargesPage({
   const [itemsRes, paysRes, profilesRes, aidatLinksRes, disbRes] = await Promise.all([
     supabase.from('special_charge_items').select('*').eq('charge_id', charge.id),
     supabase.from('special_charge_payments').select('*').eq('charge_id', charge.id).order('payment_date'),
-    supabase.from('profiles').select('full_name, apartment_no').not('apartment_no', 'is', null),
-    fetchAll<{ income_id: string }>((f, t) => supabase.from('payments').select('income_id').not('income_id', 'is', null).order('id').range(f, t)),
+    supabase.from('profiles').select('full_name, apartment_no, role').not('apartment_no', 'is', null),
+    fetchAll<{ income_id: string | null; apartment_no: string; resident_name: string | null; year: number; month: number }>((f, t) => supabase
+      .from('payments').select('income_id, apartment_no, resident_name, year, month').order('id').range(f, t)),
     supabase.from('special_charge_disbursements').select('*').eq('charge_id', charge.id).order('date').order('created_at'),
   ])
   const disbursements = (disbRes.data ?? []) as SpecialChargeDisbursement[]
@@ -76,8 +77,18 @@ export default async function SpecialChargesPage({
 
   const items = ((itemsRes.data ?? []) as SpecialChargeItem[]).sort((a, b) => aptSort(a.apartment_no, b.apartment_no))
   const payments = (paysRes.data ?? []) as SpecialChargePayment[]
+  // Sakin adı: önce aidat kayıtlarındaki (defterdeki) en güncel isim, yoksa sakin profili.
+  // Yönetici profilleri kullanılmaz — bir yöneticiye daire no atanmışsa adı o dairede görünmesin.
   const nameByApt = new Map<string, string>()
-  for (const p of profilesRes.data ?? []) if (p.apartment_no && p.full_name) nameByApt.set(p.apartment_no, p.full_name)
+  const latestPay = new Map<string, number>()
+  for (const p of aidatLinksRes.data ?? []) {
+    const name = p.resident_name?.trim()
+    const key = p.year * 100 + p.month
+    if (name && key >= (latestPay.get(p.apartment_no) ?? -1)) { latestPay.set(p.apartment_no, key); nameByApt.set(p.apartment_no, name) }
+  }
+  for (const p of profilesRes.data ?? []) {
+    if (p.apartment_no && p.full_name && p.role !== 'admin' && !nameByApt.has(p.apartment_no)) nameByApt.set(p.apartment_no, p.full_name)
+  }
 
   const payByApt = new Map<string, SpecialChargePayment[]>()
   for (const p of payments) {
@@ -124,7 +135,7 @@ export default async function SpecialChargesPage({
 
   // ─── Eşleştirme adayları: henüz hiçbir ödemeye bağlı olmayan gelir kayıtları ──
   const linked = new Set<string>([
-    ...((aidatLinksRes.data ?? []).map(r => r.income_id as string)),
+    ...((aidatLinksRes.data ?? []).map(r => r.income_id).filter(Boolean) as string[]),
     ...payments.map(p => p.income_id).filter(Boolean) as string[],
   ])
   const sinceDate = new Date(new Date(charge.due_date).getTime() - 365 * 86400000).toISOString().slice(0, 10)

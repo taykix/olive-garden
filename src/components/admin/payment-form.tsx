@@ -38,7 +38,7 @@ async function lookupApartment(aptNo: string): Promise<{ name: string; annualDue
     supabase.from('payments').select('resident_name').eq('apartment_no', aptNo).not('resident_name', 'is', null).limit(1),
     // Dönem bazlı: aynı daire için her dönemin ayrı satırı var (maybeSingle aksi halde hata verir)
     supabase.from('apartment_settings').select('annual_due').eq('apartment_no', aptNo).eq('period_id', ACTIVE_PERIOD.id).maybeSingle(),
-    supabase.from('profiles').select('full_name').eq('apartment_no', aptNo).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('apartment_no', aptNo).neq('role', 'admin').limit(1).maybeSingle(),
   ])
 
   const name =
