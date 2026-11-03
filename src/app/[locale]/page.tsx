@@ -77,13 +77,6 @@ export default async function HomePage({
 
         {/* İçerik */}
         <div className="relative z-10 text-center text-white max-w-3xl mx-auto px-6 space-y-6">
-          <div className="flex justify-center">
-            <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 px-4 py-1.5 rounded-full text-sm">
-              <Image src="/images/olive-branch.png" alt="" width={18} height={18} className="object-contain opacity-90" />
-              {t('badge')}
-            </span>
-          </div>
-
           <h1 className="text-5xl sm:text-6xl font-bold leading-tight drop-shadow-xl">
             {t('hero_title')}<br />
             <span className="text-green-300">{t('hero_title_accent')}</span>
