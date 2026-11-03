@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { HeroVideo } from '@/components/shared/hero-video'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Megaphone, LogIn, ShieldCheck, Bell, Users, ChevronDown, MapPin, Mail } from 'lucide-react'
@@ -59,7 +60,7 @@ export default async function HomePage({
         </div>
       </header>
 
-      {/* ── Hero: Tam ekran fotoğraf ─────────────────────────── */}
+      {/* ── Hero: Tam ekran video (yedek: fotoğraf) ─────────────────────────── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <Image
           src="/images/olive-grove.jpg"
@@ -68,6 +69,8 @@ export default async function HomePage({
           className="object-cover"
           priority
         />
+        {/* Arka plan videosu (site sakininin drone çekimi) — yüklenemezse fotoğraf görünür */}
+        <HeroVideo poster="/videos/hero-poster.jpg" />
         {/* Gradient katmanı */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
