@@ -1,32 +1,32 @@
-15-second 16:9 cinematic drone shot over the Olive Garden 3 residential complex in Didim Akbük, Turkey. ONE single continuous camera move from the first frame to the last, brisk but smooth: the drone rises and circles around the swimming pool, keeps circling until the sea and Akbük bay come into view, then descends toward the pool with the sea behind it. No cuts of any kind.
+15-second 16:9 cinematic drone shot over the Olive Garden 3 residential complex in Didim Akbük, Turkey, made as a SEAMLESS LOOP. ONE single continuous camera move: starting low beside the swimming pool, the drone rises and circles the complex, swings round until the turquoise Akbük bay fills the horizon, then descends back to exactly the view it started from. The last frame is the same view as the first frame, so the clip can play end-to-start without a visible jump. No cuts of any kind.
 
 REFERENCES
-@video1 — real drone footage of exactly this flight over this complex. Follow its camera path, direction and order of views closely; its pace is the target pace. Take the architecture, the pool shape and the landscape from it. Ignore its vertical framing, low resolution and compression artefacts; the output is a clean horizontal 16:9 frame.
-@image1 — the first frame: the pool seen from low and close, the stone deck with blue and white loungers in front, the residential blocks and the mountain ridge behind. THE VERY FIRST FRAME OF THE CLIP IS THIS VIEW, reframed wide for 16:9.
-@image2 — the high view around 6s: the pool small in the centre, lawns and blocks around it, olive and pine trees, the hillside town on the slope behind.
-@image3 — the sea view around 12s: the pool and deck in the lower half, olive groves beyond, the turquoise Akbük bay across the horizon.
-@image4 — the last frame: lower and closer to the pool again, the long pool on the right, a block behind, the bay and mountains on the horizon.
-All four images are frames from @video1.
+[Video 1] — real drone footage of exactly this flight over this complex; it already ends where it began. Follow its camera path, direction, order of views and pace closely. Take the architecture, the pool shape and the landscape from it. Ignore its vertical framing, low resolution and compression artefacts; the output is a clean horizontal 16:9 frame.
+[Image 1] — the FIRST AND THE LAST FRAME: low and close above the long pool, the pool running diagonally from the lower left with its small square shallow section on the left edge, beige stone deck with white loungers, the residential blocks with dark brown roofs behind, the mountain ridge and a clear blue sky. Reframed wide for 16:9.
+[Image 2] — the high view around 6s: the pool small in the centre with the pergola and white canopy beside it, lawns and blocks around, pine forest and the hillside town on the slope behind.
+[Image 3] — the sea view around 11.5s: the pool and deck in the lower half, olive groves beyond, the turquoise Akbük bay across the horizon.
+All three images are frames from [Video 1].
 
 LOOK
 Clean modern digital cinema look, 4K drone footage, 24mm-equivalent wide lens, smooth stabilised gimbal. Bright late-morning Aegean summer light, clear deep-blue sky. Rich saturated colours true to the references: turquoise pool water, beige stone deck, cream-white façades, dark brown roofs, green lawns, silver-green olives, dark green pines, deep blue sea. Never washed out or hazy. Premium real-estate showcase.
 
 THE PLACE — exactly as the references
-A long rectangular pool with one small square shallow section on its long edge, beige stone deck, blue and white sun loungers, white railings and a white fence, a pergola with a white canopy beside the pool. Three-storey blocks with cream-white walls, white balcony railings and dark brown pitched roofs around green lawns, hedges and paths. Olive groves and pine forest around the complex, a hillside town and a mountain ridge behind, the turquoise Akbük bay on one side.
+A long rectangular pool with one small square shallow section on its long edge, beige stone deck, white sun loungers, white railings and a white fence, a pergola with a white canopy beside the pool. Three-storey blocks with cream-white walls, white balcony railings and dark brown pitched roofs around green lawns, hedges and paths. Olive groves and pine forest around the complex, a hillside town and a mountain ridge behind, the turquoise Akbük bay on one side.
 
 THE MOVE — 0–15s, one continuous shot
-0–6s: starting exactly at @image1, the drone pulls back and rises quickly while circling the pool; the pergola canopy passes through the foreground. By 6s it reaches the high view of @image2. BACKGROUND: the blocks, the pine forest and the hillside town behind.
-6–12s: without stopping, the drone keeps circling at height; the view swings round past olive groves until the turquoise Akbük bay fills the horizon, as in @image3. BACKGROUND: olive groves, low buildings, the deep blue bay, the far shore.
-12–15s: still the same move, the drone descends toward the pool and ends on @image4: the long pool close on the right, a block behind, the bay and mountains on the horizon.
-The camera keeps moving the whole time at an even, brisk pace; it never stops and never jumps. The sea comes into view only because the circling move turns toward it.
+0–6s: starting exactly at [Image 1], the drone turns along the pool and rises while pulling back, circling the pool; the pergola canopy passes below. By 6s it reaches the high view of [Image 2]. BACKGROUND: the blocks, the pine forest and the hillside town behind.
+6–11.5s: without stopping, the drone keeps circling at height; the view swings round past olive groves until the turquoise Akbük bay fills the horizon, as in [Image 3]. BACKGROUND: olive groves, low buildings, the deep blue bay, the far shore.
+11.5–15s: still the same move, the drone keeps circling while descending toward the pool, the blocks and the mountain ridge come round behind it again, and it settles into exactly the view of [Image 1] on the last frame: same height, same angle, same pool position and size in frame.
+The camera keeps moving the whole time at an even pace; it never stops and never jumps. The sea comes into view only because the circling move turns toward it.
 
 SOUND
 Silent: no music, ambience, wind, voices or effects.
 
 KEEP CONSISTENT
 One single continuous shot for all 15 seconds — no cuts, no jump cuts, no dissolves, no flashes, no morphing.
+The first frame and the last frame show the same view of [Image 1], so the clip loops seamlessly.
 The sea appears through the circling move itself, never through a cut.
-Even, brisk speed matching @video1; no shaking, no whip pans.
+Even speed matching [Video 1]; no shaking, no whip pans.
 The pool shape is the same in every frame: one long rectangle with one small square shallow section on its edge.
 Buildings keep their real look; no new buildings or structures.
 No people, animals, moving cars or boats.

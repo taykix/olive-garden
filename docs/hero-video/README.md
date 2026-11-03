@@ -18,6 +18,16 @@ Kaynak dikey ve düşük çözünürlüklü (480×854) olduğu için video Seeda
   havuza geri dönüş yok, sağ altta "AI generated" damgası. Damga kırpma/bulanıklaştırma ile **silinmeyecek**;
   çözüm API'den `watermark: false` ile üretmek (sağlayıcının kendi seçeneği).
 
+## Güncel durum (döngü denemesi)
+
+- Yeni referans: `refs/og_drone_15s.mp4` (kullanıcının yüklediği, ilk ve son karesi neredeyse aynı → doğal döngü).
+  API video referansını yalnızca web URL olarak kabul ediyor (base64 → 400); kullanıcı Drive'a herkese açık yükledi:
+  `https://drive.usercontent.google.com/download?id=1pSK2hi3kzGn_A9IzUjVz8ADq8hG-wTKU&export=download`
+- Görsel referanslar: `og_loop_s1_start_end.jpg` (0 sn = son kare), `og_loop_s2_high.jpg` (6 sn), `og_loop_s3_sea.jpg` (11,5 sn).
+- API'de ilk/son kare modu referans video ile birlikte kullanılamıyor; döngü prompt ile (son kare = [Image 1])
+  ve sonradan sonu-başı yumuşak geçişle kuruluyor.
+- Model kimliği: `dreamina-seedance-2-5-260628`. Prompt'ta referanslar `[Video 1]`, `[Image 1]`… olarak yazıldı.
+
 ## Yeni oturumda yapılacaklar
 
 1. `ARK_API_KEY` ortam değişkeninin var olduğunu kontrol et (değerini yazdırma).
