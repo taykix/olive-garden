@@ -22,9 +22,10 @@ Kaynak dikey ve düşük çözünürlüklü (480×854) olduğu için video Seeda
 
 1. `ARK_API_KEY` ortam değişkeninin var olduğunu kontrol et (değerini yazdırma).
    API adresi: `https://ark.ap-southeast.bytepluses.com/api/v3` (ağ erişimi açık; anahtarsız istek 401 döner).
-2. Referansları üret: `docs/hero-video/build-refs.sh <scratchpad>/refs`
-   - `og_orbit_sea_15s.mp4` → video referansı (havuzdan yükselip denize dönen kesintisiz uçuş, 15 sn)
+2. Referanslar hazır: `docs/hero-video/refs/` (sitede yayınlanmaz, `public/` dışında).
+   - `og_orbit_sea_15s.mp4` → video referansı (havuzdan yükselip denize dönen kesintisiz uçuş, 15 sn, 480×854)
    - `og_s1_start.jpg`, `og_s2_high.jpg`, `og_s3_sea.jpg`, `og_s4_end.jpg` → görsel referanslar (sırasıyla image1–4)
+   - Instagram ağ erişimi kapalı; `build-refs.sh` yalnızca erişim açılırsa ve referanslar yeniden üretilecekse kullanılır.
 3. Seedance video üretim görevini API ile oluştur: `POST /contents/generations/tasks`, sonra görevi sorgula ve videoyu indir.
    - Model: Seedance 2.5 (konsolda görünen model kimliğini kullan; kullanıcının hesabında etkin olan "Dreamina-Seedance-2.5").
    - Ayarlar: 16:9, **480p** (ilk deneme), 15 sn, sessiz, 1 adet, **`watermark: false`**.
