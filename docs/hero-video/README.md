@@ -11,7 +11,7 @@ Kaynak dikey ve düşük çözünürlüklü (480×854) olduğu için video Seeda
 ## Şu ana kadar yapılanlar
 
 - `src/components/shared/hero-video.tsx` ve `src/app/[locale]/page.tsx`: video arka plan altyapısı hazır
-  (`/videos/hero.webm`, `/videos/hero.mp4`, `/videos/hero-poster.jpg` dosyalarını bekliyor; yoksa fotoğraf görünür).
+  (`/videos/hero.mp4`, `/videos/hero-poster.jpg`; yoksa fotoğraf görünür).
 - `scripts/process-hero-video.sh`: üretilen videoyu web için sıkıştırır (sessiz, MP4 + WebM + kapak → `public/videos/`).
 - Bu altyapı yalnızca `claude/tender-rubin-qx7qlk` dalında; video eklenmeden main'e alınmayacak.
 - İlk Seedance denemesi (ModelArk Playground, 2.5, 480p) başarısız oldu: 3,7 ve 8. saniyelerde keskin kesmeler,
@@ -28,7 +28,16 @@ Kaynak dikey ve düşük çözünürlüklü (480×854) olduğu için video Seeda
   ve sonradan sonu-başı yumuşak geçişle kuruluyor.
 - Model kimliği: `dreamina-seedance-2-5-260628`. Prompt'ta referanslar `[Video 1]`, `[Image 1]`… olarak yazıldı.
 
-## Yeni oturumda yapılacaklar
+## Sonuç (3 Kasım 2026)
+
+- 480p deneme `cgt-20261103231101-b5b3e` (seed 35579): kesme yok, damga yok, kullanıcı onayladı.
+- 1080p `cgt-20261103231714-z28yb` (aynı seed, ~1,46 M token ≈ 9,3–10,2 USD): kesme yok, damga yok.
+  Son kare ilk kareye yakın ama biraz kaymış; döngü için ilk 1 sn son 1 sn'nin üstüne bindirildi (xfade, 14,04 sn):
+  `ffmpeg -i hero_1080p.mp4 -filter_complex "[0]split[x][y];[x]trim=start=1,setpts=PTS-STARTPTS[a];[y]trim=end=1,setpts=PTS-STARTPTS[b];[a][b]xfade=transition=fade:duration=1:offset=13.041667,format=yuv420p[v]" -map "[v]" -an -c:v libx264 -crf 12 hero_1080p_loop.mp4`
+- `scripts/process-hero-video.sh hero_1080p_loop.mp4` → `public/videos/hero.mp4` (1280×720, 24 fps, 2,8 MB) + kapak.
+- `src/proxy.ts` eşleyicisi `.mp4/.webm` dosyalarını dil yönlendirmesinden hariç tutuyor (yoksa video 404 dönüyordu).
+
+## Yeni oturumda yapılacaklar (ilk oturumun planı — tamamlandı)
 
 1. `ARK_API_KEY` ortam değişkeninin var olduğunu kontrol et (değerini yazdırma).
    API adresi: `https://ark.ap-southeast.bytepluses.com/api/v3` (ağ erişimi açık; anahtarsız istek 401 döner).

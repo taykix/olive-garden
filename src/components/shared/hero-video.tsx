@@ -32,7 +32,6 @@ export function HeroVideo({ poster }: { poster: string }) {
       aria-hidden="true"
       tabIndex={-1}
     >
-      <source src="/videos/hero.webm" type="video/webm" />
       <source src="/videos/hero.mp4" type="video/mp4" />
     </video>
   )
