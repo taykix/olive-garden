@@ -37,6 +37,14 @@ Kaynak dikey ve düşük çözünürlüklü (480×854) olduğu için video Seeda
 - `scripts/process-hero-video.sh hero_1080p_loop.mp4` → `public/videos/hero.mp4` (1280×720, 24 fps, 2,8 MB) + kapak.
 - `src/proxy.ts` eşleyicisi `.mp4/.webm` dosyalarını dil yönlendirmesinden hariç tutuyor (yoksa video 404 dönüyordu).
 
+- Kullanıcı isteğiyle yavaşlatıldı (hareket enterpolasyonu): önce 45 sn (3,2×, fazla yavaş bulundu), sonra 30 sn (2,14×).
+  Döngü sınırı bozulmasın diye döngünün sonundan/başından 1'er sn eklenip işlendi, sonra kırpıldı:
+  `ffmpeg -sseof -1 -i L.mp4 -i L.mp4 -t 1 -i L.mp4 -filter_complex "[0][1][2]concat=n=3,scale=1280:720" -crf 8 padded.mp4`
+  `ffmpeg -i padded.mp4 -vf "setpts=2.13650*PTS,minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,trim=start_frame=51:end_frame=771,setpts=PTS-STARTPTS" -crf 14 hero_slow30.mp4`
+  (45 sn için: `setpts=3.20475*PTS`, `trim=start_frame=77:end_frame=1157`)
+  → `scripts/process-hero-video.sh hero_slow30.mp4` (1280×720, 24 fps, 30 sn, 4,4 MB).
+- Yedek görsel artık `/videos/hero-poster.jpg` (eski fotoğrafın kısa süre görünmesi giderildi).
+
 ## Yeni oturumda yapılacaklar (ilk oturumun planı — tamamlandı)
 
 1. `ARK_API_KEY` ortam değişkeninin var olduğunu kontrol et (değerini yazdırma).
